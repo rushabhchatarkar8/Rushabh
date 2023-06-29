@@ -1,0 +1,140 @@
+//Best.. and not null
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.json.JsonSanitizer;
+
+import org.springframework.stereotype.Service;
+
+import java.util.ArrayList;
+import java.util.List;
+
+@Service
+public class DataService {
+
+	private final Gson gson;
+
+	public DataService(Gson gson) {
+		this.gson = gson;
+	}
+
+	public List<JsonObject> processJsonData(String jsonData) {
+
+		String sanitizedData = JsonSanitizer.sanitize(jsonData);
+		JsonElement element = gson.fromJson(sanitizedData, JsonElement.class);
+		List<JsonObject> jsonObjects = new ArrayList<>();
+
+		if (element.isJsonArray()) {
+			JsonArray jsonArray = element.getAsJsonArray();
+			for (JsonElement arrayElement : jsonArray) {
+				JsonObject jsonObject = new JsonObject();
+				JsonObject currentObject = jsonObject;
+
+				for (String key : arrayElement.getAsJsonObject().keySet()) {
+					String cleanedKey = key.replace(".0.", ".").replace(".1.", ".");
+					String[] keyParts = cleanedKey.split("\\.");
+					for (int i = 0; i < keyParts.length - 1; i++) {
+						String keyPart = keyParts[i];
+						JsonObject nestedObject = currentObject.getAsJsonObject(keyPart);
+						if (nestedObject == null) {
+							nestedObject = new JsonObject();
+							currentObject.add(keyPart, nestedObject);
+						}
+						currentObject = nestedObject;
+					}
+
+					// Check if the key is an array index
+					if (keyParts[keyParts.length - 1].matches("\\d+")) {
+						// Handle array elements
+						int index = Integer.parseInt(keyParts[keyParts.length - 1]);
+						JsonArray array = currentObject.getAsJsonArray(keyParts[keyParts.length - 2]);
+						if (array == null) {
+							array = new JsonArray();
+							currentObject.add(keyParts[keyParts.length - 2], array);
+						}
+						if (array.size() <= index) {
+							// Add empty objects to the array until the desired index
+							for (int j = array.size(); j <= index; j++) {
+								JsonObject emptyObject = new JsonObject();
+								array.add(emptyObject);
+							}
+						}
+						currentObject = array.get(index).getAsJsonObject();
+					} else {
+						String value = arrayElement.getAsJsonObject().get(key).getAsString();
+						currentObject.addProperty(keyParts[keyParts.length - 1], value);
+						currentObject = jsonObject;
+					}
+				}
+
+				jsonObjects.add(jsonObject);
+			}
+		}
+
+		return jsonObjects;
+	}
+}
+
+
+
+
+
+
+
+
+
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+
+@RestController
+public class DataController {
+
+	private final DataService dataService;
+	private final Gson gson;
+
+	@Autowired
+	public DataController(DataService dataService, Gson gson) {
+		this.dataService = dataService;
+		this.gson = gson;
+	}
+
+	@PostMapping("/data")
+	public ResponseEntity<String> processData(@RequestBody String jsonData) {
+		try {
+			
+			if(jsonData ==null) {
+				throw new IllegalArgumentException("JSON Data Can't be null");
+			}
+			List<JsonObject> processedData = dataService.processJsonData(jsonData);
+			String processedJson = gson.toJson(processedData);
+			return ResponseEntity.ok(processedJson);
+		} catch (IllegalArgumentException e) {
+			return ResponseEntity.badRequest().body(e.getMessage());
+		}
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
