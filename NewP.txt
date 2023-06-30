@@ -1,0 +1,584 @@
+package com.example.demo.d;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class DataControllerB {
+	private final DataServiceC dataService;
+
+	public DataControllerB(DataServiceC dataService) {
+		this.dataService = dataService;
+	}
+
+	@PostMapping("/surveySubmission1")
+	public ResponseEntity<String> processJson(@RequestBody(required = false) String json) {
+
+		if (json == null || json.isEmpty()) {
+			// JSON is empty or not present
+			return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No JSON found");
+		}
+		try {
+			dataService.processJson(json);
+			// Return a response indicating success
+			return ResponseEntity.ok("JSON received successfully");
+		} catch (InvalidJsonException e) {
+			// Invalid JSON format or single value detected
+			return ResponseEntity.badRequest().body("Invalid JSON: " + e.getMessage());
+		} catch (Exception e) {
+			// Other exceptions
+//			return ResponseEntity.internalServerError().body("An error occurred");
+			return ResponseEntity.badRequest().body("Invalid JSON format");
+		}
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+package com.example.demo.d;
+
+import org.springframework.stereotype.Service;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.google.json.JsonSanitizer;
+
+@Service
+public class DataServiceC {
+	public void processJson(String json) throws InvalidJsonException {
+		// Parse the JSON string into a JsonElement
+
+		JsonElement jsonElement;
+		jsonElement = JsonParser.parseString(json);
+		
+		// Check if the JSON is a single value (string or number)
+		// want in pair of {"key": "value"}
+		if (isSingleValue(jsonElement)) {
+			throw new InvalidJsonException("Cannot accept single input");
+		}
+
+		// Example: Print the received JSON
+		String sanitizedJson = JsonSanitizer.sanitize(json);
+		System.out.println("Received JSON: " + sanitizedJson);
+	}
+
+	// Helper method to check if the JSON element is a single value
+	private boolean isSingleValue(JsonElement jsonElement) {
+		return !jsonElement.isJsonObject() && !jsonElement.isJsonArray();
+	}
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+package com.example.demo.d;
+public class InvalidJsonException extends Exception {
+    public InvalidJsonException(String message) {
+        super(message);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+package com.example.demo;
+import org.junit.jupiter.api.Test;
+
+import com.example.demo.d.InvalidJsonException;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import org.junit.jupiter.api.Assertions;
+
+public class InvalidJsonExceptionTest {
+
+    @Test
+    public void testConstructor_WithMessage_SetsMessageCorrectly() {
+        // Arrange
+        String message = "Invalid JSON format";
+
+        // Act
+        InvalidJsonException exception = new InvalidJsonException(message);
+
+        // Assert
+        assertEquals(message, exception.getMessage());
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+package com.example.demo;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.http.ResponseEntity;
+
+import com.example.demo.d.DataServiceC;
+import com.example.demo.d.InvalidJsonException;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+import org.junit.jupiter.api.Assertions;
+
+public class DataServiceCTest {
+
+	@Test
+	public void testProcessJson_ValidJson() throws InvalidJsonException {
+		// Arrange
+		DataServiceC dataService = new DataServiceC();
+		String json = "{\"name\": \"John\", \"age\": 30}";
+
+		// Act
+		dataService.processJson(json);
+
+		// No exception is thrown, the test passes
+	}
+
+	@Test
+	public void testProcessJson_SingleValueJson() {
+		// Arrange
+		DataServiceC dataService = new DataServiceC();
+		String json = "\"John\"";
+
+		// Act & Assert
+		Assertions.assertThrows(InvalidJsonException.class, () -> {
+			dataService.processJson(json);
+		});
+	}
+
+	@Test
+	public void testProcessJson_ValidJson_NoExceptionThrown() {
+		// Arrange
+		DataServiceC dataService = new DataServiceC();
+		String json = "{\"key\": \"value\"}";
+
+		// Act & Assert
+		assertDoesNotThrow(() -> dataService.processJson(json));
+	}
+
+	@Test
+	public void testProcessJson_SingleValueJson_ThrowsInvalidJsonException() {
+		// Arrange
+		DataServiceC dataService = new DataServiceC();
+		String json = "\"value\"";
+
+		// Act & Assert
+		assertThrows(InvalidJsonException.class, () -> dataService.processJson(json));
+	}
+
+	@Test
+	public void testProcessJson_InvalidJson_ThrowsInvalidJsonException() {
+		// Arrange
+		DataServiceC dataService = new DataServiceC();
+		String json = "123";// invalid JSON string
+
+		// Act & Assert
+		try {
+			dataService.processJson(json);
+			fail("Expected InvalidJsonException to be thrown");
+		} catch (InvalidJsonException e) {
+			// Assert
+			assertEquals("Cannot accept single input", e.getMessage());
+		}
+	}
+
+		@Test
+	public void testProcessJsonWithSingleValueJson() {
+		// Given
+		DataServiceC dataService = new DataServiceC();
+		String json = "123"; // Single value JSON
+
+		// When & Then (InvalidJsonException should be thrown)
+		assertThrows(InvalidJsonException.class, () -> dataService.processJson(json));
+	}
+
+}
+
+
+
+
+
+
+
+
+
+
+
+package com.example.demo;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
+import com.example.demo.d.DataControllerB;
+import com.example.demo.d.DataServiceC;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import org.junit.jupiter.api.Assertions;
+
+@SpringBootTest
+class DemoApplicationTests {
+
+//	@Test
+//	void contextLoads() {
+//	}
+
+	//public class DataControllerBTest {
+
+	 @Test
+	    public void testProcessJson_ValidJson() {
+	        // Arrange
+	        DataServiceC dataService = new DataServiceC();
+	        DataControllerB dataController = new DataControllerB(dataService);
+	        String json = "{\"name\": \"John\", \"age\": 30}";
+
+	        // Act
+	        ResponseEntity<String> response = dataController.processJson(json);
+
+	        // Assert
+	        Assertions.assertEquals(HttpStatus.OK, response.getStatusCode());
+	        Assertions.assertEquals("JSON received successfully", response.getBody());
+	    }
+
+	    @Test
+	    public void testProcessJson_InvalidJson() {
+	        // Arrange
+	        DataServiceC dataService = new DataServiceC();
+	        DataControllerB dataController = new DataControllerB(dataService);
+	        String json = "{\"name\": \"John\", \"age\":}";
+
+	        // Act
+	        ResponseEntity<String> response = dataController.processJson(json);
+
+	        // Assert
+	        Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+	        Assertions.assertTrue(response.getBody().startsWith("Invalid JSON format"));
+	    }
+
+	    @Test
+	    public void testProcessJson_EmptyJson() {
+	        // Arrange
+	        DataServiceC dataService = new DataServiceC();
+	        DataControllerB dataController = new DataControllerB(dataService);
+	        String json = "";
+
+	        // Act
+	        ResponseEntity<String> response = dataController.processJson(json);
+
+	        // Assert
+	        Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+	        Assertions.assertEquals("No JSON found", response.getBody());
+	    }
+
+	    @Test
+	    public void testProcessJson_NullJson() {
+	        // Arrange
+	        DataServiceC dataService = new DataServiceC();
+	        DataControllerB dataController = new DataControllerB(dataService);
+	        String json = null;
+
+	        // Act
+	        ResponseEntity<String> response = dataController.processJson(json);
+
+	        // Assert
+	        Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+	        Assertions.assertEquals("No JSON found", response.getBody());
+	    }
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	    @Test
+	    public void testProcessJson_ValidJson_ReturnsSuccessResponse() {
+	        // Arrange
+	        DataServiceC dataService = new DataServiceC();
+	        DataControllerB dataController = new DataControllerB(dataService);
+	        String json = "{\"key\": \"value\"}";
+
+	        // Act
+	        ResponseEntity<String> response = dataController.processJson(json);
+
+	        // Assert
+	        assertEquals(HttpStatus.OK, response.getStatusCode());
+	        assertEquals("JSON received successfully", response.getBody());
+	    }
+
+	   
+
+	    @Test
+	    public void testProcessJson_InvalidJson_ReturnsBadRequestResponse() {
+	        // Arrange
+	        DataServiceC dataService = new DataServiceC();
+	        DataControllerB dataController = new DataControllerB(dataService);
+	        String json = "invalid";
+
+	        // Act
+	        ResponseEntity<String> response = dataController.processJson(json);
+
+	        // Assert
+	        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+	        assertEquals("Invalid JSON: Cannot accept single input", response.getBody());
+	    }
+//
+	    @Test
+	    public void testProcessJson_ExceptionThrown_ReturnsInternalServerErrorResponse() {
+	        // Arrange
+	        DataServiceC dataService = new DataServiceC();
+	        DataControllerB dataController = new DataControllerB(dataService);
+	        String json = "[ {\n";
+
+	        // Act
+	        ResponseEntity<String> response = dataController.processJson(json);
+
+	        // Assert
+	        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+	        assertEquals("Invalid JSON format", response.getBody());
+	    }
+	    
+	    
+	  
+	    
+	    
+	    
+	    
+	    
+	    
+	    
+	    
+	    
+	    
+	    
+	    
+	    
+	    
+	    
+	    
+	    
+	      
+
+	      
+
+	     
+
+	        @Test
+	        public void testProcessJsonWithInvalidJson() {
+	            // Given
+	            DataServiceC dataService = new DataServiceC();
+	            DataControllerB dataController = new DataControllerB(dataService);
+	            String json = "{\"key\": \"value\","; // Invalid JSON
+
+	            // When
+	            ResponseEntity<String> response = dataController.processJson(json);
+
+	            // Then
+	            assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+	            assertEquals("Invalid JSON format", response.getBody());
+	        }
+
+	        
+	        
+	            @Test
+	            public void testProcessJson_InvalidJson_BadRequest() {
+	                DataServiceC dataService = new DataServiceC();
+	                DataControllerB dataController = new DataControllerB(dataService);
+	                String json = "invalid json";
+
+	                ResponseEntity<String> response = dataController.processJson(json);
+
+	                Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+	                Assertions.assertEquals("Invalid JSON format", response.getBody());
+//		            assertEquals("Invalid JSON format", response.getBody());
+
+	            }
+
+	            @Test
+	            public void testProcessJson_SingleValueJson_BadRequest() {
+	                DataServiceC dataService = new DataServiceC();
+	                DataControllerB dataController = new DataControllerB(dataService);
+	                String json = "123";
+
+	                ResponseEntity<String> response = dataController.processJson(json);
+
+	                Assertions.assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+	                Assertions.assertTrue(response.getBody().startsWith("Invalid JSON:"));
+	            }
+	        }
+
+	    
+
+	
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
