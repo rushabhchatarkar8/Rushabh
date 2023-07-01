@@ -1,3 +1,48 @@
+import org.springframework.stereotype.Service;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.google.json.JsonSanitizer;
+
+
+@Service
+public class DataServiceC {
+    public void processJson(String json) throws InvalidJsonException {
+        // Parse the JSON string into a JsonElement
+        JsonElement jsonElement = JsonParser.parseString(json);
+
+        // Check if the JSON is a single value (string or number) or empty object/array
+        if (isSingleValue(jsonElement) || isEmptyObject(jsonElement) || isEmptyArray(jsonElement)) {
+            throw new InvalidJsonException("Invalid JSON format");
+        }
+
+        // Example: Print the received JSON
+        String sanitizedJson = JsonSanitizer.sanitize(json);
+        System.out.println("Received JSON: " + sanitizedJson);
+    }
+
+    // Helper method to check if the JSON element is a single value
+    private boolean isSingleValue(JsonElement jsonElement) {
+        return !jsonElement.isJsonObject() && !jsonElement.isJsonArray();
+    }
+
+    // Helper method to check if the JSON element is an empty object ({})
+    private boolean isEmptyObject(JsonElement jsonElement) {
+        return jsonElement.isJsonObject() && jsonElement.getAsJsonObject().entrySet().isEmpty();
+    }
+
+    // Helper method to check if the JSON element is an empty array ([])
+    private boolean isEmptyArray(JsonElement jsonElement) {
+        return jsonElement.isJsonArray() && jsonElement.getAsJsonArray().size() == 0;
+    }
+}
+
+
+
+
+
+
+
+
 			<!-- Other dependencies -->
 
 			<!-- Validation dependencies -->
