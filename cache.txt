@@ -287,3 +287,138 @@ public class TokenCache {
 //        return token != null ? token.getTokenValue() : null;
 //    }
 //}
+
+........................................
+111111111111
+
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Component;
+
+@Component
+public class TokenCache {
+    @Cacheable(value = "tokens", key = "#jwtToken")
+    public String getToken(String jwtToken) {
+        String cachedToken = retrieveTokenFromCache(jwtToken);
+        if (cachedToken != null) {
+            // Token is available in the cache
+            System.out.println("Retrieved token from the cache: " + cachedToken);
+            return cachedToken;
+        }
+
+        // Token not found in the cache, generate a new token
+        String newToken = generateNewToken(jwtToken);
+        System.out.println("Generated new token: " + newToken);
+
+        // Store the new token in the cache
+        cacheToken(jwtToken, newToken);
+
+        return newToken;
+    }
+
+    private String retrieveTokenFromCache(String jwtToken) {
+        // Retrieve the token from the cache implementation
+        // Return null if the token is not found in the cache
+        // Implement this based on your chosen cache implementation
+        return null;
+    }
+
+    private String generateNewToken(String jwtToken) {
+        // Perform the actual token generation logic
+        // Implement this based on your requirements
+        return "Generated Token";
+    }
+
+    private void cacheToken(String jwtToken, String token) {
+        // Store the token in the cache implementation
+        // Implement this based on your chosen cache implementation
+    }
+}
+........
+
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Component;
+
+@Component
+public class TokenCache {
+    @Cacheable(value = "tokens", key = "#jwtToken")
+    public String getToken(String jwtToken) {
+        // This log statement is just for demonstration purposes
+        System.out.println("Retrieving token from the cache or generating a new token...");
+
+        // This block represents the actual retrieval logic
+        String cachedToken = retrieveTokenFromCache(jwtToken);
+        if (cachedToken != null) {
+            // Token found in the cache, return it
+            return cachedToken;
+        } else {
+            // Token not found in the cache, generate a new token
+            String newToken = generateNewToken();
+            cacheToken(jwtToken, newToken); // Store the new token in the cache
+            return newToken;
+        }
+    }
+
+    private String retrieveTokenFromCache(String jwtToken) {
+        // Retrieve the token from the cache based on the provided jwtToken
+        // Implement your cache retrieval logic here
+        // If token is found, return it; otherwise, return null
+        return null; // Placeholder for cache retrieval logic
+    }
+
+    private String generateNewToken() {
+        // Generate a new token
+        // Implement your token generation logic here
+        return "Generated Token"; // Placeholder for token generation logic
+    }
+
+    private void cacheToken(String jwtToken, String token) {
+        // Cache the token using the provided jwtToken as the cache key
+        // Implement your cache storage logic here
+    }
+}
+...............
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Component;
+
+@Component
+public class TokenCache {
+    @Cacheable(value = "tokens", key = "#jwtToken")
+    public String getToken(String jwtToken) {
+        // This log statement is just for demonstration purposes
+        System.out.println("Retrieving token from the cache or generating a new token...");
+
+        // Retrieve the token from the cache if it exists
+        String cachedToken = getCachedToken(jwtToken);
+        if (cachedToken != null) {
+            System.out.println("Retrieved token from cache: " + cachedToken);
+            return cachedToken;
+        }
+
+        // If the token is not present in the cache, generate a new token
+        String newToken = generateToken();
+        System.out.println("Generated new token: " + newToken);
+
+        // Store the new token in the cache
+        cacheToken(jwtToken, newToken);
+
+        return newToken;
+    }
+
+    private String getCachedToken(String jwtToken) {
+        // Retrieve the token from the cache based on the given jwtToken
+        // Return null if the token is not present in the cache
+        // Implement the cache retrieval logic here
+        return null;
+    }
+
+    private String generateToken() {
+        // Perform the actual token generation
+        // Implement the token generation logic here
+        return "Generated Token";
+    }
+
+    private void cacheToken(String jwtToken, String token) {
+        // Store the token in the cache based on the given jwtToken
+        // Implement the cache storage logic here
+    }
+}
