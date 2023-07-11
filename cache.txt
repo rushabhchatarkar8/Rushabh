@@ -1,3 +1,116 @@
+
+
+@Configuration
+@EnableCaching
+public class CacheConfig {
+    @Bean
+    public CacheManager cacheManager() {
+        CaffeineCacheManager cacheManager = new CaffeineCacheManager();
+        cacheManager.setCaffeine(caffeineCacheBuilder());
+        return cacheManager;
+    }
+
+    @Bean
+    public Caffeine<Object, Object> caffeineCacheBuilder() {
+        return Caffeine.newBuilder()
+                .expireAfterWrite(1, TimeUnit.MINUTES) // Set the expiration time for the tokens
+                .maximumSize(100); // Set the maximum number of tokens to store in the cache
+    }
+}
+
+
+
+
+
+
+
+@Component
+public class TokenCache {
+	private static final String TOKEN_CACHE_NAME = "tokens";
+
+	@Autowired
+	private CacheManager cacheManager;
+
+	@Cacheable(value = TOKEN_CACHE_NAME)
+	public String getToken() {
+		// Retrieve the token from the cache or data source
+		Cache cache = cacheManager.getCache(TOKEN_CACHE_NAME);
+		if (cache != null) {
+			Cache.ValueWrapper valueWrapper = cache.get(TOKEN_CACHE_NAME);
+			if (valueWrapper != null) {
+				return (String) valueWrapper.get();
+			}
+		}
+
+		String tokenFromDataSource = retrieveTokenFromDataSource();
+		cacheToken(tokenFromDataSource); // Cache the token for future use
+		return tokenFromDataSource;
+	}
+
+	private String retrieveTokenFromDataSource() {
+		// Perform the actual retrieval of the token from the data source
+		// This can involve querying a database, making an API call, or any other
+		// necessary logic
+		// Return the retrieved token
+		return "token-from-data-source";
+	}
+
+	private void cacheToken(String token) {
+		Cache cache = cacheManager.getCache(TOKEN_CACHE_NAME);
+		if (cache != null) {
+			cache.put(TOKEN_CACHE_NAME, token);
+		}
+	}
+}
+
+
+
+
+
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.EnableCaching;
+
+@SpringBootApplication
+@EnableCaching
+
+public class Demo1Application {
+
+	public static void main(String[] args) {
+		SpringApplication.run(Demo1Application.class, args);
+
+	}
+
+}
+
+
+
+
+
+
+
+
+
+@Autowired
+private TokenCache tokenCache;
+
+public void retrieveTokenFromCache() {
+    String token = tokenCache.getToken();
+    System.out.println("Token from cache: " + token);
+}
+
+
+
+
+////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
 		<dependency>
 			<groupId>com.google.guava</groupId>
 			<artifactId>guava</artifactId>
