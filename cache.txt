@@ -1,0 +1,289 @@
+		<dependency>
+			<groupId>com.google.guava</groupId>
+			<artifactId>guava</artifactId>
+			<version>30.1-jre</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-cache</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>com.github.ben-manes.caffeine</groupId>
+			<artifactId>caffeine</artifactId>
+			<version>3.0.4</version>
+		</dependency>
+
+
+
+
+package com.example.demo;
+import com.github.benmanes.caffeine.cache.Caffeine;
+
+import java.util.concurrent.TimeUnit;
+
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.cache.caffeine.CaffeineCacheManager;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+@EnableCaching
+public class CacheConfig {
+    @Bean
+    public CacheManager cacheManager() {
+        CaffeineCacheManager cacheManager = new CaffeineCacheManager();
+        cacheManager.setCaffeine(caffeineCacheBuilder());
+        return cacheManager;
+    }
+
+    @Bean
+    public Caffeine<Object, Object> caffeineCacheBuilder() {
+        return Caffeine.newBuilder()
+                .expireAfterWrite(30, TimeUnit.MINUTES) // Set the expiration time for the tokens
+                .maximumSize(100); // Set the maximum number of tokens to store in the cache
+    }
+}
+
+
+
+
+
+package com.example.demo;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.cache.annotation.EnableCaching;
+
+@SpringBootApplication
+@EnableCaching
+
+public class Demo1Application {
+
+	public static void main(String[] args) {
+		SpringApplication.run(Demo1Application.class, args);
+	}
+
+}
+
+
+
+
+
+
+
+package com.example.demo;
+
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Component;
+
+@Component
+public class TokenCache {
+    @Cacheable(value = "tokens", key = "#jwtToken")
+    public String getToken(String jwtToken) {
+        // Retrieve the token from the data source or perform any necessary processing
+        // This method will only be executed if the token is not already present in the cache
+        return retrieveTokenFromDataSource(jwtToken);
+    }
+
+    private String retrieveTokenFromDataSource(String jwtToken) {
+		return jwtToken;
+        // Perform the actual token retrieval from the data source
+        // Return the token
+    }
+}
+
+
+.......................................................................................................................................................
+
+package com.example.demo;
+
+import com.github.benmanes.caffeine.cache.Caffeine;
+
+import java.util.concurrent.TimeUnit;
+
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.caffeine.CaffeineCacheManager;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+
+@Configuration
+public class CacheConfig {
+	@Bean
+	public CacheManager cacheManager() {
+		CaffeineCacheManager cacheManager = new CaffeineCacheManager();
+		cacheManager.setCaffeine(caffeineCacheBuilder());
+		return cacheManager;
+	}
+
+	@Bean
+	public Caffeine<Object, Object> caffeineCacheBuilder() {
+		return Caffeine.newBuilder().expireAfterWrite(30, TimeUnit.MINUTES) // Set the expiration time for the tokens
+				.maximumSize(100); // Set the maximum number of tokens to store in the cache
+	}
+}
+
+//
+//import com.google.common.cache.CacheBuilder;
+//import org.springframework.cache.CacheManager;
+//import org.springframework.cache.annotation.EnableCaching;
+////import org.springframework.cache.guava.GuavaCacheManager;
+//import org.springframework.cache.caffeine.CaffeineCacheManager;
+//import org.springframework.cache.guava.GuavaCacheManager;
+//
+//import org.springframework.context.annotation.Bean;
+//import org.springframework.context.annotation.Configuration;
+//
+//import java.util.concurrent.TimeUnit;
+//
+//@Configuration
+//@EnableCaching
+//public class CacheConfig {
+//    @Bean
+//    public CacheManager cacheManager() {
+//        GuavaCacheManager cacheManager = new GuavaCacheManager();
+//        cacheManager.setCacheBuilder(guavaCacheBuilder());
+//        return cacheManager;
+//    }
+//
+//    @Bean
+//    public CacheBuilder<Object, Object> guavaCacheBuilder() {
+//        return CacheBuilder.newBuilder()
+//                .expireAfterWrite(30, TimeUnit.MINUTES) // Set the expiration time for the tokens
+//                .maximumSize(100); // Set the maximum number of tokens to store in the cache
+//    }
+//}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+......
+
+
+package com.example.demo;
+
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Component;
+
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
+
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+
+@Component
+public class TokenCache {
+  @Cacheable(value = "tokens", key = "#jwtToken")
+    public String getToken(String jwtToken) {
+        // Retrieve the token from the cache or data source
+        String cachedToken = retrieveTokenFromCache(jwtToken);
+        if (cachedToken != null) {
+            return cachedToken; // Return the token from the cache
+        }
+
+        String tokenFromDataSource = retrieveTokenFromDataSource(jwtToken);
+        cacheToken(jwtToken, tokenFromDataSource); // Cache the token for future use
+        return tokenFromDataSource;
+    }
+
+    private String retrieveTokenFromCache(String jwtToken) {
+		return jwtToken;
+        // Retrieve the token from the cache if it exists
+        // Return null if the token is not found in the cache
+    }
+
+    private String retrieveTokenFromDataSource(String jwtToken) {
+		return jwtToken;
+        // Perform the actual retrieval of the JWT token from the data source
+        // This can involve querying a database, making an API call, or any other necessary logic
+        // Return the retrieved token
+    }
+
+    private void cacheToken(String jwtToken, String token) {
+        // Cache the token using the cache manager
+    }
+}
+
+//@Component
+//public class TokenCache {
+//    @Cacheable(value = "tokens", key = "#jwtToken")
+//    public String getToken(String jwtToken) {
+//        // Retrieve the token from the data source or perform any necessary processing
+//        // This method will only be executed if the token is not already present in the cache
+//        return retrieveTokenFromDataSource(jwtToken);
+//    }
+//
+//    private String retrieveTokenFromDataSource(String jwtToken) {
+//		return jwtToken;
+//        // Perform the actual token retrieval from the data source
+//        // Return the token
+//    }
+//}
+//
+
+/*
+ * In this example, the getToken method first checks if the token exists in the
+ * cache. If it does, the cached token is returned. If the token is not found in
+ * the cache, it calls the retrieveTokenFromDataSource method to retrieve the
+ * token from the data source. Once the token is obtained, it is cached using
+ * the cache manager before being returned.
+ * 
+ * The retrieveTokenFromDataSource method should contain the logic to retrieve
+ * the token from your specific data source. This can include querying a
+ * database, making an API call, or any other relevant operations. You will need
+ * to implement this method according to your specific requirements and the
+ * mechanism you use to store and retrieve the tokens.
+ */
+
+//private String retrieveTokenFromDataSource(String jwtToken) {
+//    // Retrieve the token from the data source based on the jwtToken parameter
+//    // You might query a database, make an API call, or perform any necessary operations to obtain the token
+//    
+//    String token = ... // Retrieve the token from the data source
+//    
+//    return token;
+//}
+
+//import org.springframework.beans.factory.annotation.Autowired;
+//import org.springframework.stereotype.Component;
+//
+//@Component
+//public class TokenCache {
+//    private final TokenRepository tokenRepository;
+//
+//    @Autowired
+//    public TokenCache(TokenRepository tokenRepository) {
+//        this.tokenRepository = tokenRepository;
+//    }
+//
+//    @Cacheable(value = "tokens", key = "#jwtToken")
+//    public String getToken(String jwtToken) {
+//        return retrieveTokenFromDataSource(jwtToken);
+//    }
+//
+//    private String retrieveTokenFromDataSource(String jwtToken) {
+//        // Retrieve the token from the data source, such as a database
+//        // You can use your own implementation or an ORM like Spring Data JPA
+//
+//        // Example: Assuming you have a TokenRepository to fetch the token from a database
+//        Token token = tokenRepository.findByJwtToken(jwtToken);
+//        return token != null ? token.getTokenValue() : null;
+//    }
+//}
