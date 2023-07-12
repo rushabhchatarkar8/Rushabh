@@ -1,3 +1,35 @@
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
+import javax.servlet.http.HttpServletRequest;
+
+public class CorrelationIdExtractor {
+    public static String extractCorrelationId() {
+        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+        String correlationId = request.getHeader("X-Correlation-ID");
+        return correlationId != null ? correlationId : "";
+    }
+}
+
+
+
+
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class MyController {
+    @GetMapping("/my-endpoint")
+    public String myEndpoint() {
+        String correlationId = CorrelationIdExtractor.extractCorrelationId();
+
+        // Use the extracted correlationId as needed
+        // ...
+        
+        return "Response";
+    }
+}
+
+.................................................................
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
@@ -12,7 +44,7 @@ public class YourController {
         return "Correlation ID: " + correlationId;
     }
 }
-
+,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,,
 
 
 
