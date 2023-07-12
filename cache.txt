@@ -1,3 +1,19 @@
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RestController;
+
+@RestController
+public class YourController {
+
+    @GetMapping("/your-endpoint")
+    public String yourEndpointMethod(@RequestHeader("Correlation-ID") String correlationId) {
+        // Use the correlationId value for further processing
+        // ...
+        return "Correlation ID: " + correlationId;
+    }
+}
+
+
 
 
 @Configuration
