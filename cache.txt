@@ -1,4 +1,134 @@
- import org.springframework.web.context.request.RequestAttributes;
+import com.github.benmanes.caffeine.cache.Caffeine;
+
+import java.util.concurrent.TimeUnit;
+
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.EnableCaching;
+import org.springframework.cache.caffeine.CaffeineCacheManager;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+@EnableCaching
+public class CacheConfig {
+    @Bean
+    public CacheManager cacheManager() {
+        CaffeineCacheManager cacheManager = new CaffeineCacheManager();
+        cacheManager.setCaffeine(caffeineCacheBuilder());
+        return cacheManager;
+    }
+
+    @Bean
+    public Caffeine<Object, Object> caffeineCacheBuilder() {
+        return Caffeine.newBuilder()
+                .expireAfterWrite(50, TimeUnit.SECONDS) // Set the expiration time for the tokens
+                .maximumSize(100); // Set the maximum number of tokens to store in the cache
+    }
+}
+
+
+
+
+
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Component;
+import uk.co.allianz.rap.lc.util.JwtUtil;
+
+
+//1. Implement a  token caching logic within loss-control-service
+@Component
+public class TokenCache {
+
+    private static final Logger logger = LoggerFactory.getLogger(TokenCache.class);
+    private static final String TOKEN_CACHE_NAME = "tokens";
+    @Autowired
+    JwtUtil jwtUtil;
+    @Autowired
+    private CacheManager cacheManager;
+
+    @Cacheable(value = TOKEN_CACHE_NAME)
+    public String getToken() {
+
+        // Retrieve the token from the cache or data source
+        Cache cache = cacheManager.getCache(TOKEN_CACHE_NAME);
+
+        if (cache != null) {
+            Cache.ValueWrapper valueWrapper = cache.get(TOKEN_CACHE_NAME);
+            if (valueWrapper != null) {
+                return (String) valueWrapper.get();
+            }
+        }
+        String tokenFromDataSource = retrieveTokenFromDataSource();
+        logger.info("Generated Token :" + tokenFromDataSource);
+
+        // Cache the token for future use
+        cacheToken(tokenFromDataSource);
+        return tokenFromDataSource;
+    }
+
+    private String retrieveTokenFromDataSource() {
+        // Perform the actual retrieval of the token from the jwtUtil class
+        String jwtToken = jwtUtil.getAuthToken();
+        return jwtToken;
+    }
+
+    //token store in cache
+    private void cacheToken(String token) {
+        Cache cache = cacheManager.getCache(TOKEN_CACHE_NAME);
+
+        if (cache != null) {
+            cache.put(TOKEN_CACHE_NAME, token);
+        }
+    }
+
+    //retrieve Token From Cache & request contains the correlation id
+    public void retrieveTokenFromCache(String correlationId) {
+        logger.info("Start invoking lc360 for token : Correlation ID: " + correlationId);
+
+        String token = getToken();
+
+        logger.info("Cache: Loading token from service");
+        logger.info("Token from cache: " + token);
+
+        logger.info("Successfully retrieved the token from LC360 : Correlation ID: " + correlationId);
+    }
+
+}
+
+
+
+ @GetMapping("/survey-submission")
+    public void retrieveTokenFromCache(@RequestHeader("Correlation-ID") String correlationId) {
+        tokenCache.retrieveTokenFromCache(correlationId);
+    }
+
+
+
+
+
+
+
+
+
+
+................................................................
+
+
+
+
+
+
+
+
+
+
+import org.springframework.web.context.request.RequestAttributes;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import javax.servlet.http.HttpServletRequest;
