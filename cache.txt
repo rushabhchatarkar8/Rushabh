@@ -1,5 +1,159 @@
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.caffeine.CaffeineCacheManager;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+public class TokenCacheTest {
+
+    private TokenCache tokenCache;
+    private CacheManager cacheManager;
+    private Cache cache;
+
+    @BeforeEach
+    public void setup() {
+        cacheManager = new CaffeineCacheManager("tokens");
+        cache = cacheManager.getCache("tokens");
+        tokenCache = new TokenCache();
+        tokenCache.cacheManager = cacheManager;
+    }
+
+    @Test
+    public void testCacheToken() {
+        String token = "test-token";
+        tokenCache.cacheToken(token);
+
+        assertEquals(token, cache.get("tokens").get());
+    }
+}
+
+
+.......
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.caffeine.CaffeineCache;
+import org.springframework.cache.caffeine.CaffeineCacheManager;
+import uk.co.allianz.rap.lc.util.JwtUtil;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+public class TokenCacheTest {
+
+    private TokenCache tokenCache;
+    private CacheManager cacheManager;
+    private Cache cache;
+    private JwtUtil jwtUtil;
+    private Logger logger;
+
+    @BeforeEach
+    public void setup() {
+        cacheManager = new CaffeineCacheManager("tokens");
+        cache = cacheManager.getCache("tokens");
+        jwtUtil = new JwtUtil(); // Instantiate the JwtUtil class or use a real implementation
+        logger = LoggerFactory.getLogger(TokenCache.class); // Use the appropriate logger instance
+        tokenCache = new TokenCache();
+        tokenCache.jwtUtil = jwtUtil;
+        tokenCache.cacheManager = cacheManager;
+        tokenCache.logger = logger;
+    }
+
+    @Test
+    public void testGetToken_WhenTokenNotInCache() {
+        String jwtToken = "test-jwt-token";
+        jwtUtil.setAuthToken(jwtToken); // Set the expected JWT token
+
+        String expectedToken = jwtToken;
+        String actualToken = tokenCache.getToken();
+
+        assertEquals(expectedToken, actualToken);
+        assertEquals(expectedToken, cache.get("tokens").get());
+    }
+
+    @Test
+    public void testGetToken_WhenTokenInCache() {
+        String cachedToken = "test-cached-token";
+        cache.put("tokens", cachedToken);
+
+        String expectedToken = cachedToken;
+        String actualToken = tokenCache.getToken();
+
+        assertEquals(expectedToken, actualToken);
+    }
+}
+
+
+
+............
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.caffeine.CaffeineCache;
+import org.springframework.cache.caffeine.CaffeineCacheManager;
+import uk.co.allianz.rap.lc.util.JwtUtil;
+
+import java.util.concurrent.TimeUnit;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+public class TokenCacheTest {
+
+    private TokenCache tokenCache;
+    private CacheManager cacheManager;
+    private Cache cache;
+    private JwtUtil jwtUtil;
+
+    @BeforeEach
+    public void setup() {
+        cacheManager = new CaffeineCacheManager("tokens");
+        ((CaffeineCacheManager) cacheManager).setCaffeine(Caffeine.newBuilder()
+                .expireAfterWrite(50, TimeUnit.SECONDS)
+                .maximumSize(100)
+                .build());
+        cache = cacheManager.getCache("tokens");
+        jwtUtil = new JwtUtil(); // Instantiate the JwtUtil class or use a real implementation
+        tokenCache = new TokenCache();
+        tokenCache.jwtUtil = jwtUtil;
+        tokenCache.cacheManager = cacheManager;
+    }
+
+    @Test
+    public void testGetToken_WhenTokenNotInCache() {
+        String jwtToken = "test-jwt-token";
+        jwtUtil.setAuthToken(jwtToken); // Set the expected JWT token
+
+        String expectedToken = jwtToken;
+        String actualToken = tokenCache.getToken();
+
+        assertEquals(expectedToken, actualToken);
+        assertEquals(expectedToken, cache.get("tokens").get());
+    }
+
+    @Test
+    public void testGetToken_WhenTokenInCache() {
+        String cachedToken = "test-cached-token";
+        cache.put("tokens", cachedToken);
+
+        String expectedToken = cachedToken;
+        String actualToken = tokenCache.getToken();
+
+        assertEquals(expectedToken, actualToken);
+        assertEquals(expectedToken, cache.get("tokens").get());
+    }
+}
+
+
+.////////////////////////////////////
+
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.cache.Cache;
