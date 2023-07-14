@@ -1,5 +1,97 @@
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import uk.co.allianz.rap.lc.util.JwtUtil;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+public class TokenCacheTest {
+
+    private TokenCache tokenCache;
+    private JwtUtil jwtUtil;
+
+    @BeforeEach
+    public void setup() {
+        jwtUtil = new JwtUtil(); // Instantiate the JwtUtil class or use a real implementation
+        tokenCache = new TokenCache();
+        tokenCache.jwtUtil = jwtUtil;
+    }
+
+    @Test
+    public void testRetrieveTokenFromDataSource() {
+        String expectedToken = "test-jwt-token";
+        jwtUtil.setAuthToken(expectedToken); // Set the expected JWT token
+
+        String actualToken = tokenCache.retrieveTokenFromDataSource();
+
+        assertEquals(expectedToken, actualToken);
+    }
+}
+
+....
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import uk.co.allianz.rap.lc.util.JwtUtil;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+public class TokenCacheTest {
+
+    private TokenCache tokenCache;
+    private JwtUtil jwtUtil;
+
+    @BeforeEach
+    public void setup() {
+        jwtUtil = new JwtUtil(); // Instantiate the JwtUtil class or use a real implementation
+        tokenCache = new TokenCache();
+        tokenCache.jwtUtil = jwtUtil;
+    }
+
+    @Test
+    public void testRetrieveTokenFromDataSource() {
+        String expectedToken = "test-jwt-token";
+        jwtUtil.setAuthToken(expectedToken); // Set the expected JWT token
+
+        String actualToken = tokenCache.retrieveTokenFromDataSource();
+
+        assertEquals(expectedToken, actualToken);
+    }
+}
+
+....
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import uk.co.allianz.rap.lc.util.JwtUtil;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+public class TokenCacheTest {
+
+    private TokenCache tokenCache;
+    private JwtUtil jwtUtil;
+
+    @BeforeEach
+    public void setup() {
+        jwtUtil = new JwtUtil(); // Instantiate the JwtUtil class or use a real implementation
+        tokenCache = new TokenCache();
+        tokenCache.jwtUtil = jwtUtil;
+    }
+
+    @Test
+    public void testRetrieveTokenFromDataSource() {
+        String jwtToken = "test-jwt-token";
+        jwtUtil.setAuthToken(jwtToken); // Set the expected JWT token
+
+        String expectedToken = jwtToken;
+        String actualToken = tokenCache.retrieveTokenFromDataSource();
+
+        assertEquals(expectedToken, actualToken);
+    }
+}
+
+
+////
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
