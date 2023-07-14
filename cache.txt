@@ -9,6 +9,52 @@ public class TokenCacheTest {
     private TokenCache tokenCache;
     private JwtUtil jwtUtil;
 
+    private static class TestJwtUtil extends JwtUtil {
+        private String testAuthToken;
+
+        public void setTestAuthToken(String testAuthToken) {
+            this.testAuthToken = testAuthToken;
+        }
+
+        @Override
+        public String getAuthToken() {
+            return testAuthToken;
+        }
+    }
+
+    @BeforeEach
+    public void setup() {
+        jwtUtil = new TestJwtUtil();
+        tokenCache = new TokenCache();
+        tokenCache.jwtUtil = jwtUtil;
+    }
+
+    @Test
+    public void testRetrieveTokenFromDataSource() {
+        String jwtToken = "test-jwt-token";
+        ((TestJwtUtil) jwtUtil).setTestAuthToken(jwtToken); // Set the expected JWT token for testing
+
+        String expectedToken = jwtToken;
+        String actualToken = tokenCache.retrieveTokenFromDataSource();
+
+        assertEquals(expectedToken, actualToken);
+    }
+}
+
+
+/////////
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import uk.co.allianz.rap.lc.util.JwtUtil;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+public class TokenCacheTest {
+
+    private TokenCache tokenCache;
+    private JwtUtil jwtUtil;
+
     @BeforeEach
     public void setup() {
         jwtUtil = new JwtUtil(); // Instantiate the JwtUtil class or use a real implementation
