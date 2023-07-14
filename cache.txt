@@ -8,6 +8,137 @@ import org.springframework.cache.caffeine.CaffeineCacheManager;
 import java.util.concurrent.TimeUnit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+
+public class TokenCacheTest {
+
+    private TokenCache tokenCache;
+    private CacheManager cacheManager;
+    private Cache cache;
+
+    @BeforeEach
+    public void setup() {
+        cacheManager = new CaffeineCacheManager();
+        cacheManager.setCacheNames(List.of("tokens"));
+        ((CaffeineCacheManager) cacheManager).setCaffeineSpec(Caffeine.newBuilder()
+                .expireAfterWrite(50, TimeUnit.SECONDS)
+                .maximumSize(100)
+                .buildSpec());
+        cache = cacheManager.getCache("tokens");
+        tokenCache = new TokenCache();
+        tokenCache.jwtUtil = new JwtUtil(); // Instantiate the JwtUtil class or use a real implementation
+        tokenCache.cacheManager = cacheManager;
+    }
+
+    @Test
+    public void testCacheToken() {
+        String token = "test-token";
+        tokenCache.cacheToken(token);
+
+        assertEquals(token, cache.get("tokens").get());
+    }
+}
+
+...
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.caffeine.CaffeineCache;
+import org.springframework.cache.caffeine.CaffeineCacheManager;
+
+import java.util.concurrent.TimeUnit;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+public class TokenCacheTest {
+
+    private TokenCache tokenCache;
+    private CacheManager cacheManager;
+    private Cache cache;
+
+    @BeforeEach
+    public void setup() {
+        cacheManager = new CaffeineCacheManager();
+        cacheManager.setCacheNames(List.of("tokens"));
+        ((CaffeineCacheManager) cacheManager).setCaffeineSpec(Caffeine.newBuilder()
+                .expireAfterWrite(50, TimeUnit.SECONDS)
+                .maximumSize(100)
+                .buildSpec());
+        cache = cacheManager.getCache("tokens");
+        tokenCache = new TokenCache();
+        tokenCache.jwtUtil = new JwtUtil(); // Instantiate the JwtUtil class or use a real implementation
+        tokenCache.cacheManager = cacheManager;
+    }
+
+    @Test
+    public void testCacheToken() {
+        String token = "test-token";
+        tokenCache.cacheToken(token);
+
+        CaffeineCache caffeineCache = (CaffeineCache) cache;
+        Object cachedToken = caffeineCache.getNativeCache().getIfPresent("tokens");
+
+        assertEquals(token, cachedToken);
+    }
+}
+
+...
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.caffeine.CaffeineCache;
+import org.springframework.cache.caffeine.CaffeineCacheManager;
+
+import java.util.concurrent.TimeUnit;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.*;
+
+public class TokenCacheTest {
+
+    private TokenCache tokenCache;
+    private CacheManager cacheManager;
+    private Cache cache;
+
+    @BeforeEach
+    public void setup() {
+        cacheManager = new CaffeineCacheManager();
+        cacheManager.setCacheNames(List.of("tokens"));
+        ((CaffeineCacheManager) cacheManager).setCaffeineSpec(Caffeine.newBuilder()
+                .expireAfterWrite(50, TimeUnit.SECONDS)
+                .maximumSize(100)
+                .buildSpec());
+        cache = cacheManager.getCache("tokens");
+        tokenCache = new TokenCache();
+        tokenCache.jwtUtil = new JwtUtil(); // Instantiate the JwtUtil class or use a real implementation
+        tokenCache.cacheManager = cacheManager;
+    }
+
+    @Test
+    public void testCacheToken() {
+        String token = "test-token";
+
+        tokenCache.cacheToken(token);
+
+        String result = cache.get("tokens", String.class);
+        assertEquals(token, result);
+    }
+}
+
+
+
+...........................................................
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.caffeine.CaffeineCache;
+import org.springframework.cache.caffeine.CaffeineCacheManager;
+
+import java.util.concurrent.TimeUnit;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
 public class TokenCacheTest {
