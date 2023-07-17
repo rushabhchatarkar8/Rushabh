@@ -1,5 +1,258 @@
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.caffeine.CaffeineCacheManager;
+import uk.co.allianz.rap.lc.util.JwtUtil;
+
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.*;
+
+public class TokenCacheTest {
+
+    private TokenCache tokenCache;
+    private CacheManager cacheManager;
+    private Cache cache;
+    private JwtUtil jwtUtil;
+    private Logger logger;
+
+    @BeforeEach
+    public void setup() {
+        cacheManager = new CaffeineCacheManager("tokens");
+        cache = cacheManager.getCache("tokens");
+        jwtUtil = mock(JwtUtil.class);
+        logger = mock(Logger.class);
+        tokenCache = new TokenCache();
+        tokenCache.jwtUtil = jwtUtil;
+        tokenCache.cacheManager = cacheManager;
+        tokenCache.logger = logger;
+    }
+
+    @Test
+    public void testUnhappyPath_TokenRetrievalError() {
+        String errorMessage = "Error retrieving token from JwtUtil";
+        when(jwtUtil.getAuthToken()).thenThrow(new RuntimeException(errorMessage));
+
+        assertThrows(RuntimeException.class, () -> tokenCache.getToken());
+        verify(jwtUtil).getAuthToken();
+        verify(logger).error("Error retrieving token from JwtUtil", errorMessage);
+    }
+}
+
+
+....
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.caffeine.CaffeineCacheManager;
+import uk.co.allianz.rap.lc.util.JwtUtil;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.Mockito.*;
+
+public class TokenCacheTest {
+
+    private TokenCache tokenCache;
+    private CacheManager cacheManager;
+    private Cache cache;
+    private JwtUtil jwtUtil;
+    private Logger logger;
+
+    @BeforeEach
+    public void setup() {
+        cacheManager = new CaffeineCacheManager("tokens");
+        ((CaffeineCacheManager) cacheManager).setCaffeine(Caffeine.newBuilder()
+                .build());
+        cache = cacheManager.getCache("tokens");
+        jwtUtil = mock(JwtUtil.class);
+        logger = mock(Logger.class);
+        tokenCache = new TokenCache();
+        tokenCache.jwtUtil = jwtUtil;
+        tokenCache.cacheManager = cacheManager;
+        tokenCache.logger = logger;
+    }
+
+    @Test
+    public void testGetToken_UnhappyPath_JwtUtilReturnsNull() {
+        when(jwtUtil.getAuthToken()).thenReturn(null);
+
+        String result = tokenCache.getToken();
+
+        verify(jwtUtil).getAuthToken();
+        verifyZeroInteractions(cache);
+        assertNull(result);
+    }
+}
+
+
+......
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.caffeine.CaffeineCacheManager;
+import uk.co.allianz.rap.lc.util.JwtUtil;
+
+import java.util.concurrent.TimeUnit;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+public class TokenCacheTest {
+
+    private TokenCache tokenCache;
+    private CacheManager cacheManager;
+    private JwtUtil jwtUtil;
+
+    @BeforeEach
+    public void setup() {
+        cacheManager = new CaffeineCacheManager("tokens");
+        ((CaffeineCacheManager) cacheManager).setCaffeine(cacheBuilder -> cacheBuilder
+                .expireAfterWrite(50, TimeUnit.SECONDS)
+                .maximumSize(100));
+        jwtUtil = new JwtUtil(); // Instantiate the JwtUtil class or use a real implementation
+        tokenCache = new TokenCache();
+        tokenCache.jwtUtil = jwtUtil;
+        tokenCache.cacheManager = cacheManager;
+    }
+
+    @Test
+    public void testGetToken_WhenCacheManagerIsNull() {
+        tokenCache.cacheManager = null; // Simulate a null CacheManager
+
+        assertThrows(NullPointerException.class, () -> tokenCache.getToken());
+    }
+
+    @Test
+    public void testRetrieveTokenFromDataSource_WhenDataSourceFails() {
+        jwtUtil.setAuthToken(null); // Simulate a failed data source
+
+        assertThrows(NullPointerException.class, () -> tokenCache.getToken());
+    }
+}
+
+
+
+
+........
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.caffeine.CaffeineCacheManager;
+import uk.co.allianz.rap.lc.util.JwtUtil;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class TokenCacheTest {
+
+    private TokenCache tokenCache;
+    private CacheManager cacheManager;
+    private JwtUtil jwtUtil;
+    private Logger logger;
+
+    @BeforeEach
+    public void setup() {
+        cacheManager = new CaffeineCacheManager("tokens");
+        cacheManager.getCache("tokens").clear(); // Clear the cache before each test
+        jwtUtil = mock(JwtUtil.class); // Use a mock for JwtUtil
+        logger = mock(Logger.class); // Use a mock for Logger
+        tokenCache = new TokenCache();
+        tokenCache.jwtUtil = jwtUtil;
+        tokenCache.cacheManager = cacheManager;
+        tokenCache.logger = logger;
+    }
+
+    @Test
+    public void testGetToken_WhenTokenRetrievalFails() {
+        String correlationId = "test-correlation-id";
+        String errorMessage = "Failed to retrieve token";
+
+        when(jwtUtil.getAuthToken()).thenReturn(null); // Simulate a failure in token retrieval
+
+        assertThrows(NullPointerException.class, () -> {
+            tokenCache.retrieveTokenFromCache(correlationId);
+        });
+
+        verify(logger).error("Error retrieving token for Correlation ID: " + correlationId);
+        verifyZeroInteractions(cacheManager); // Ensure cacheManager is not used when token retrieval fails
+    }
+}
+
+
+............
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.caffeine.CaffeineCache;
+import org.springframework.cache.caffeine.CaffeineCacheManager;
+import uk.co.allianz.rap.lc.util.JwtUtil;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.*;
+
+public class TokenCacheTest {
+
+    private TokenCache tokenCache;
+    private CacheManager cacheManager;
+    private Cache cache;
+    private JwtUtil jwtUtil;
+    private Logger logger;
+
+    @BeforeEach
+    public void setup() {
+        cacheManager = new CaffeineCacheManager("tokens");
+        ((CaffeineCacheManager) cacheManager).setCaffeine(cacheBuilder -> cacheBuilder
+                .expireAfterWrite(50, TimeUnit.SECONDS)
+                .maximumSize(100));
+        cache = cacheManager.getCache("tokens");
+        jwtUtil = mock(JwtUtil.class);
+        logger = mock(Logger.class);
+        tokenCache = new TokenCache();
+        tokenCache.jwtUtil = jwtUtil;
+        tokenCache.cacheManager = cacheManager;
+        tokenCache.logger = logger;
+    }
+
+    @Test
+    public void testRetrieveTokenFromDataSource_WhenJwtUtilThrowsException() {
+        String correlationId = "test-correlation-id";
+        String errorMessage = "Error while retrieving token";
+        when(jwtUtil.getAuthToken()).thenThrow(new RuntimeException(errorMessage));
+
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> tokenCache.retrieveTokenFromCache(correlationId));
+
+        assertEquals(errorMessage, exception.getMessage());
+        verify(logger).info("Start invoking lc360 for token : Correlation ID: " + correlationId);
+        verify(logger).info("Cache: Loading token from service");
+        verify(logger).error("Error while retrieving token", exception);
+        verify(logger).info("Successfully retrieved the token from LC360 : Correlation ID: " + correlationId);
+    }
+}
+
+
+
+
+
+
+
+
+
+////////////////////////
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import uk.co.allianz.rap.lc.util.JwtUtil;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
