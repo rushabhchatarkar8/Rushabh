@@ -1,3 +1,71 @@
+
+import com.github.benmanes.caffeine.cache.Caffeine;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.caffeine.CaffeineCache;
+import org.springframework.cache.caffeine.CaffeineCacheManager;
+import uk.co.allianz.rap.lc.util.JwtUtil;
+
+import java.util.concurrent.TimeUnit;
+
+import static org.junit.Assert.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.Mockito.*;
+
+public class TokenCacheTest {
+
+    private TokenCache tokenCache;
+    private CacheManager cacheManager;
+    private Cache cache;
+    private JwtUtil jwtUtil;
+
+    @BeforeEach
+    public void setup() {
+        cacheManager = new CaffeineCacheManager("tokens");
+        ((CaffeineCacheManager) cacheManager).setCaffeine(Caffeine.newBuilder()
+                .expireAfterWrite(50, TimeUnit.SECONDS).maximumSize(100));
+        cache = cacheManager.getCache("tokens");
+        jwtUtil = mock(JwtUtil.class);
+        tokenCache = new TokenCache();
+        tokenCache.jwtUtil = jwtUtil;
+        tokenCache.cacheManager = cacheManager;
+    }
+
+    @Test
+    public void testGetToken_JwtUtilReturnsNull() {
+        when(jwtUtil.getAuthToken()).thenReturn(null);
+
+        String result = tokenCache.getToken();
+
+        verify(jwtUtil).getAuthToken();
+        assertNull(result);
+    }
+
+    @Test
+    public void testGetToken_WhenCacheManagerIsNull() {
+        tokenCache.cacheManager = null; // Simulate a null CacheManager
+
+        assertThrows(NullPointerException.class, () -> tokenCache.getToken());
+    }
+
+    @Test
+    public void testCacheToken() {
+        String token = "test-token";
+        tokenCache.cacheToken(token);
+
+        CaffeineCache caffeineCache = (CaffeineCache) cache;
+        Object cachedToken = caffeineCache.getNativeCache().getIfPresent("tokens");
+
+        assertEquals(token, cachedToken);
+    }
+}
+
+
+
+.///...
 package uk.co.allianz.rap.lc.cache;
 
 import com.github.benmanes.caffeine.cache.Caffeine;
