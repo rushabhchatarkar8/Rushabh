@@ -1,4 +1,225 @@
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+
+import java.util.concurrent.TimeUnit;
+
+@ExtendWith(SpringExtension.class)
+@SpringBootTest(classes = CacheConfig.class)
+public class CacheConfigTest {
+
+    @Autowired
+    private CacheManager cacheManager;
+
+    @Test
+    public void testCachePutAndGet() {
+        // Get the cache by name
+        Cache cache = cacheManager.getCache("your-cache-name");
+
+        // Put a value into the cache
+        cache.put("key", "value");
+
+        // Retrieve the value from the cache
+        String cachedValue = cache.get("key", String.class);
+
+        // Assert that the retrieved value matches the one we put in
+        assertEquals("value", cachedValue);
+    }
+
+    @Test
+    public void testCacheEviction() throws InterruptedException {
+        // Get the cache by name
+        Cache cache = cacheManager.getCache("your-cache-name");
+
+        // Put a value into the cache with a short expiration time (1 second)
+        cache.put("key", "value");
+
+        // Sleep for a little over 1 second to let the cache entry expire
+        Thread.sleep(1050);
+
+        // Retrieve the value from the cache
+        String cachedValue = cache.get("key", String.class);
+
+        // Assert that the retrieved value is null, as the cache entry should have been evicted
+        assertNull(cachedValue);
+    }
+
+    @Test
+    public void testCacheMaximumSizeEviction() {
+        // Get the cache by name
+        Cache cache = cacheManager.getCache("your-cache-name");
+
+        // Put more values into the cache than the maximum size allows (100)
+        for (int i = 0; i < 150; i++) {
+            cache.put("key" + i, "value" + i);
+        }
+
+        // Retrieve a value from the cache that should have been evicted due to reaching the maximum size
+        String evictedValue = cache.get("key50", String.class);
+
+        // Assert that the evicted value is null, as it should have been evicted to make room for newer entries
+        assertNull(evictedValue);
+    }
+}
+
+........
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.caffeine.CaffeineCache;
+import org.springframework.cache.support.SimpleValueWrapper;
+
+import java.util.concurrent.TimeUnit;
+
+public class CacheConfigTest {
+    private CacheManager cacheManager;
+    private Cache cache;
+
+    @BeforeEach
+    public void setup() {
+        CacheConfig cacheConfig = new CacheConfig();
+        cacheManager = cacheConfig.cacheManager();
+        cache = cacheManager.getCache("myCache"); // Assuming "myCache" is the cache name configured in CaffeineCacheManager
+    }
+
+    @Test
+    public void testCachePutAndGet() {
+        // Put a value in the cache
+        cache.put("key1", "value1");
+
+        // Retrieve the value from the cache
+        Cache.ValueWrapper valueWrapper = cache.get("key1");
+        Assertions.assertNotNull(valueWrapper);
+
+        // Check the retrieved value
+        String retrievedValue = (String) valueWrapper.get();
+        Assertions.assertEquals("value1", retrievedValue);
+    }
+
+    @Test
+    public void testCacheExpiration() throws InterruptedException {
+        // Put a value in the cache with a short expiration time
+        cache.put("key2", "value2");
+
+        // Wait for the cache to expire
+        TimeUnit.SECONDS.sleep(60); // Wait for more than the expiration time of 50 seconds
+
+        // Retrieve the expired value from the cache
+        Cache.ValueWrapper valueWrapper = cache.get("key2");
+        Assertions.assertNull(valueWrapper); // The value should be null after expiration
+    }
+
+    @Test
+    public void testCacheEviction() {
+        // Fill up the cache to its maximum size
+        for (int i = 0; i < 100; i++) {
+            cache.put("key" + i, "value" + i);
+        }
+
+        // Add one more entry, exceeding the maximum size
+        cache.put("key101", "value101");
+
+        // Retrieve the exceeded value from the cache
+        Cache.ValueWrapper valueWrapper = cache.get("key101");
+        Assertions.assertNull(valueWrapper); // The value should be null due to cache eviction
+    }
+}
+
+
+..............//
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+@SpringBootTest
+public class CacheConfigTest {
+
+    @Autowired
+    private CacheManager cacheManager;
+
+    @Test
+    public void testCacheEviction() {
+        // Get the cache by its name, assuming you are using Spring's default cache name
+        Cache cache = cacheManager.getCache("default");
+
+        // Put some values in the cache
+        cache.put("key1", "value1");
+        cache.put("key2", "value2");
+
+        // Check if the values are present in the cache
+        assertTrue(cache.get("key1").isPresent());
+        assertTrue(cache.get("key2").isPresent());
+
+        // Put a new value to trigger the eviction
+        cache.put("key3", "value3");
+
+        // Check if the evicted value is no longer present in the cache
+        assertFalse(cache.get("key1").isPresent());
+        assertFalse(cache.get("key2").isPresent());
+
+        // Check if the new value is present in the cache
+        assertTrue(cache.get("key3").isPresent());
+        assertEquals("value3", cache.get("key3").get());
+    }
+}
+
+....
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+@SpringBootTest
+public class CacheConfigTest {
+
+    @Autowired
+    private CacheManager cacheManager;
+
+    @Test
+    public void testCache() {
+        // Get the cache by its name, assuming you are using Spring's default cache name
+        Cache cache = cacheManager.getCache("default");
+
+        // Check if the cache is not null
+        assertNotNull(cache);
+
+        // Put a value in the cache
+        cache.put("key1", "value1");
+
+        // Check if the value is present in the cache
+        assertTrue(cache.get("key1").isPresent());
+        assertEquals("value1", cache.get("key1").get());
+
+        // Wait for a while to let the cache expire (50 seconds)
+        try {
+            Thread.sleep(50000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // Check if the value is expired after 50 seconds
+        assertFalse(cache.get("key1").isPresent());
+    }
+}
+
+
+////..............
 import com.github.benmanes.caffeine.cache.Caffeine;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
