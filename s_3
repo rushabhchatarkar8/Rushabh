@@ -1,3 +1,239 @@
+package uk.co.allianz.rap.lc.model.request.importclient;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+@SuppressWarnings("unused")
+public class Underwriter {
+    @JsonProperty("Company")
+    private String company;
+    @JsonProperty("Email")
+    private String email;
+    @JsonProperty("FirstName")
+    private String firstName;
+    @JsonProperty("LastName")
+    private String lastName;
+    @JsonProperty("PhoneNumber")
+    private String phoneNumber;
+    @JsonProperty("UnderwriterCode")
+    private String underwriterCode;
+}
+
+..
+package uk.co.allianz.rap.lc.model.request.importclient;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+..
+import java.util.ArrayList;
+import java.util.Date;
+
+@SuppressWarnings("unused")
+public class Location {
+    @JsonProperty("LookupID")
+    private String lookupID;
+    @JsonProperty("Name")
+    private String name;
+    @JsonProperty("PolicyNumber")
+    private String policyNumber;
+    @JsonProperty("PolicyEffectiveDate")
+    private Date policyEffectiveDate;
+    @JsonProperty("PolicyExpirationDate")
+    private Date policyExpirationDate;
+    @JsonProperty("PolicyRenewalDate")
+    private Date policyRenewalDate;
+    @JsonProperty("Address")
+    private Address address;
+    @JsonProperty("OriginalEffectiveDate")
+    private Date originalEffectiveDate;
+    @JsonProperty("EffectiveDate")
+    private Date effectiveDate;
+    @JsonProperty("ExpirationDate")
+    private Date expirationDate;
+    @JsonProperty("RenewalDate")
+    private Date renewalDate;
+    @JsonProperty("LastInspectedDate")
+    private Date lastInspectedDate;
+    @JsonProperty("genericFields")
+    private ArrayList<GenericField> genericFields;
+    @JsonProperty("Coverages")
+    private ArrayList<Coverage> coverages;
+    @JsonProperty("Contact")
+    private Contact contact;
+}
+
+..
+package uk.co.allianz.rap.lc.model.request.importclient;
+
+import lombok.Data;
+
+@SuppressWarnings("unused")
+@Data
+public class ImportClientRequest {
+    private String divisionLookupID;
+    private Client client;
+}
+
+..
+package uk.co.allianz.rap.lc.model.request.importclient;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+@SuppressWarnings("unused")
+public class GenericField2 {
+    @JsonProperty("Number")
+    private String number;
+    @JsonProperty("Key")
+    private String key;
+    @JsonProperty("GenericFieldValueType")
+    private int genericFieldValueType;
+    @JsonProperty("Text")
+    private String text;
+}
+
+..
+package uk.co.allianz.rap.lc.model.request.importclient;
+
+import lombok.Data;
+
+
+@Data
+public class GenericField {
+    private String key;
+    private String text;
+    private int genericFieldValueType;
+}
+
+..
+package uk.co.allianz.rap.lc.model.request.importclient;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.util.ArrayList;
+@SuppressWarnings("unused")
+public class Coverage {
+    @JsonProperty("CoverageTypeLookup")
+    private String coverageTypeLookup;
+    @JsonProperty("GenericFields")
+    private ArrayList<GenericField2> genericFields;
+}
+
+
+..
+package uk.co.allianz.rap.lc.model.request.importclient;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+@SuppressWarnings("unused")
+public class Contact {
+    @JsonProperty("CellPhone")
+    private String cellPhone;
+    @JsonProperty("CompanyName")
+    private String companyName;
+    @JsonProperty("Email")
+    private String email;
+    @JsonProperty("FirstName")
+    private String firstName;
+    @JsonProperty("HomePhone")
+    private String homePhone;
+    @JsonProperty("LastName")
+    private String lastName;
+    @JsonProperty("Occupation")
+    private String occupation;
+    @JsonProperty("UseCompanyName")
+    private boolean useCompanyName;
+    @JsonProperty("WorkPhone")
+    private String workPhone;
+    @JsonProperty("Location")
+    private String location;
+}
+
+..
+package uk.co.allianz.rap.lc.model.request.importclient;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.util.ArrayList;
+@SuppressWarnings("unused")
+public class Client {
+    @JsonProperty("LookupID")
+    private String lookupID;
+    @JsonProperty("ContactFirstName")
+    private String contactFirstName;
+    @JsonProperty("ContactLastName")
+    private String contactLastName;
+    @JsonProperty("PolicyNumber")
+    private String policyNumber;
+    @JsonProperty("Name")
+    private String name;
+    @JsonProperty("Phone")
+    private String phone;
+    @JsonProperty("Email")
+    private String email;
+    @JsonProperty("Address")
+    private Address address;
+    @JsonProperty("Agent")
+    private Agent agent;
+    @JsonProperty("Underwriter")
+    private Underwriter underwriter;
+    @JsonProperty("Locations")
+    private ArrayList<Location> locations;
+}
+
+...
+package uk.co.allianz.rap.lc.model.request.importclient;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+@SuppressWarnings("unused")
+public class Agent {
+    @JsonProperty("AgencyCode")
+    private String agencyCode;
+    @JsonProperty("AgencyName")
+    private String agencyName;
+    @JsonProperty("AgentCode")
+    private String agentCode;
+    @JsonProperty("AgentName")
+    private String agentName;
+    @JsonProperty("Email")
+    private String email;
+    @JsonProperty("FaxNumber")
+    private String faxNumber;
+    @JsonProperty("PhoneNumber")
+    private String phoneNumber;
+    @JsonProperty("Address")
+    private Address address;
+    @JsonProperty("AgentType")
+    private String agentType;
+}
+
+...
+package uk.co.allianz.rap.lc.model.request.importclient;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+@SuppressWarnings("unused")
+public class Address {
+    @JsonProperty("Country")
+    private String country;
+    @JsonProperty("Street1")
+    private String street1;
+    @JsonProperty("Street2")
+    private String street2;
+    @JsonProperty("City")
+    private String city;
+    @JsonProperty("Region1")
+    private String region1;
+    @JsonProperty("Region2")
+    private String region2;
+    @JsonProperty("Region3")
+    private String region3;
+    @JsonProperty("Region4")
+    private String region4;
+    @JsonProperty("ZipCode")
+    private String zipCode;
+}
+
+
+
+
+
 [ {
   "inspections.0.PolicyNumber" : "I94788",
   "inspections.0.DivisionLookupID" : "75",
