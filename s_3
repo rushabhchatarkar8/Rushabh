@@ -1,3 +1,102 @@
+import java.util.List;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+
+@RestController
+public class DataController {
+
+	private final DataService dataService;
+	private final Gson gson;
+	private final ObjectMapper objectMapper;
+
+	@Autowired
+	public DataController(DataService dataService, Gson gson, ObjectMapper objectMapper) {
+		this.dataService = dataService;
+		this.gson = gson;
+		this.objectMapper = objectMapper;
+
+	}
+	@PostMapping("/client")
+    public ResponseEntity<String> processData1(@RequestBody String jsonData) {
+        try {
+            if (jsonData == null) {
+                throw new IllegalArgumentException("JSON Data Can't be null");
+            }
+            List<JsonObject> processedData = dataService.processJsonData(jsonData);
+            String processedJson = gson.toJson(processedData);
+
+            // Deserialize JSON into ImportClientRequest objects
+            ImportClientRequest[] importClientRequests = objectMapper.readValue(processedJson,
+                    ImportClientRequest[].class);
+
+            // Now you have the data in Java objects, and you can work with it as needed
+            for (ImportClientRequest importClientRequest : importClientRequests) {
+                // Access data from each ImportClientRequest object
+                String divisionLookupID = importClientRequest.getDivisionLookupID();
+                Client client = importClientRequest.getClient();
+                // ... and so on
+
+                System.out.println("DivisionLookupID: " + divisionLookupID);
+                if (client != null) {
+                    System.out.println("Client LookupID: " + client.getLookupID());
+                    System.out.println("Client PolicyNumber: " + client.getPolicyNumber());
+                    System.out.println("Client PolicyName: " + client.getName());
+
+                    Address address = client.getAddress();
+                    if (address != null) {
+                        System.out.println("Address country: " + address.getCountry());
+                        // Access other address fields as needed
+                    }
+
+                    Agent agent = client.getAgent();
+                    if (agent != null) {
+                        System.out.println("AgencyCode: " + agent.getAgencyCode());
+                        System.out.println("AgencyName: " + agent.getAgencyName());
+                        System.out.println("AgentCode: " + agent.getAgentCode());
+                        // Access other agent fields as needed
+                    }
+
+                    List<Location> locationsList = client.getLocations();
+                    for (Location location : locationsList) {
+                        System.out.println("RenewalDate: " + location.getRenewalDate());
+                        // Access other location fields as needed
+                    }
+                }
+            }
+
+            return ResponseEntity.ok("JSON data processed successfully.");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+	@PostMapping("/data")
+	public ResponseEntity<String> processData(@RequestBody String jsonData) {
+		try {
+
+			if (jsonData == null) {
+				throw new IllegalArgumentException("JSON Data Can't be null");
+			}
+			List<JsonObject> processedData = dataService.processJsonData(jsonData);
+			String processedJson = gson.toJson(processedData);
+			return ResponseEntity.ok(processedJson);
+		} catch (IllegalArgumentException e) {
+			return ResponseEntity.badRequest().body(e.getMessage());
+		}
+	}
+}
+
+
+
+
 [ {
   "inspections.0.PolicyNumber" : "I94788",
   "inspections.0.DivisionLookupID" : "75",
