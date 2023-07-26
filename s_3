@@ -1,3 +1,46 @@
+public class GenericField{
+    public String key;
+    public String text;
+    public int genericFieldValueType;
+}
+
+
+
+public class Location{
+    @JsonProperty("LookupID") 
+    public String lookupID;
+    @JsonProperty("Name") 
+    public String name;
+    @JsonProperty("PolicyNumber") 
+    public String policyNumber;
+    @JsonProperty("PolicyEffectiveDate") 
+    public Date policyEffectiveDate;
+    @JsonProperty("PolicyExpirationDate") 
+    public Date policyExpirationDate;
+    @JsonProperty("PolicyRenewalDate") 
+    public Date policyRenewalDate;
+    @JsonProperty("Address") 
+    public Address address;
+    @JsonProperty("OriginalEffectiveDate") 
+    public Date originalEffectiveDate;
+    @JsonProperty("EffectiveDate") 
+    public Date effectiveDate;
+    @JsonProperty("ExpirationDate") 
+    public Date expirationDate;
+    @JsonProperty("RenewalDate") 
+    public Date renewalDate;
+    @JsonProperty("LastInspectedDate") 
+    public Date lastInspectedDate;
+    public ArrayList<GenericField> genericFields;
+    @JsonProperty("Coverages") 
+    public ArrayList<Coverage> coverages;
+    @JsonProperty("Contact") 
+    public Contact contact;
+}
+
+
+
+................
 {
     "divisionLookupID": "AZ_UK",
     "client": {
