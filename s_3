@@ -1,3 +1,231 @@
+//Added 2 Location and inspection
+
+{
+    "inspection":{
+        "PolicyNumber":"1"
+    },
+    "divisionLookupID": "AZ_UK",
+    "client": {
+        "LookupID": "27105",
+        "ContactFirstName": "Client Contact First Name",
+        "ContactLastName": "Client Contact Last Name",
+        "PolicyNumber": "AS-86587667",
+        "Name": "MW Ultan Client Name",
+        "Phone": "client Phone",
+        "Email": "email@client.com",
+        "Address": {
+            "Country": "GB",
+            "OverseasTerritories": "England",
+            "Street1": "C.A. street 1",
+            "Street2": "C.A street 2",
+            "City": "C.A. City",
+            "Region1": "C.A. region1",
+            "Region2": "C.A. region2",
+            "Region3": "C.A. region3",
+            "Region4": "C.A. region4",
+            "ZipCode": "C.A. Post Code"
+        },
+        "Agent": {
+            "AgencyCode": "12345678",
+            "AgencyName": "MW Ultan Agent 2",
+            "AgentCode": "1234",
+            "AgentName": "MW Ultan The Only Agent",
+            "Email": "ultan@agency.com",
+            "FaxNumber": "004416107890",
+            "PhoneNumber": "0044316107892",
+            "Address": {
+                "Country": "GB",
+                "Street1": "Agent Street1",
+                "Street2": "Agent Street2",
+                "City": "Norwich",
+                "Region1": "Region1",
+                "Region2": "Region2",
+                "Region3": "Region3",
+                "Region4": "Region4",
+                "ZipCode": "PostCode"
+            },
+            "AgentType": "Broker"
+        },
+        "Underwriter": {
+            "Company": "MW Underwriter company",
+            "Email": "ultan@underwriter.com",
+            "FirstName": "Underwriter-Ultan",
+            "LastName": "Underwriter-McPadden",
+            "PhoneNumber": "00441234567",
+            "UnderwriterCode": "12345"
+        },
+        "Locations": [
+            {
+                "LookupID": "29647",
+                "Name": "MW LocationTestUltan API New",
+                "PolicyNumber": "API9876567",
+                "PolicyEffectiveDate": "2023-03-28T15:08:58.889075+01:00",
+                "PolicyExpirationDate": "2023-03-28T15:08:58.889075+01:00",
+                "PolicyRenewalDate": "2023-03-28T15:08:58.889075+01:00",
+                "Address": {
+                    "Country": "GB",
+                    "Street1": "L.A. street 1",
+                    "Street2": "L.A. street 2",
+                    "City": "London",
+                    "Region1": "L.A Region1",
+                    "Region2": "L.A Region2",
+                    "Region3": "L.A Region3",
+                    "Region4": "L.A Region4",
+                    "ZipCode": "L.A PostCode"
+                },
+                "OriginalEffectiveDate": "2023-03-28T15:08:58.8820749+01:00",
+                "EffectiveDate": "2023-03-28T15:08:58.8820749+01:00",
+                "ExpirationDate": "2023-03-28T15:08:58.8820749+01:00",
+                "RenewalDate": "2023-03-28T15:08:58.8820749+01:00",
+                "LastInspectedDate": "2023-03-28T15:08:58.8820749+01:00",
+                "genericFields": [
+                    {
+                        "key": "0.ISIC+Code",
+                        "text": "",
+                        "genericFieldValueType": 0
+                    }
+                ],
+                "Coverages": [
+                    {
+                        "CoverageTypeLookup": "PD_TIV",
+                        "GenericFields": [
+                            {
+                                "Number": "50000",
+                                "Key": "01. PD Building",
+                                "GenericFieldValueType": 1
+                            },
+                            {
+                                "Number": "40000",
+                                "Key": "02. PD Content",
+                                "GenericFieldValueType": 1
+                            },
+                            {
+                                "Number": "30000",
+                                "Key": "03. Stock & Supply",
+                                "GenericFieldValueType": 1
+                            },
+                            {
+                                "Number": "20000",
+                                "Key": "04. PD Other",
+                                "GenericFieldValueType": 1
+                            },
+                            {
+                                "Text": "Machinary",
+                                "Key": "05. PD Other Description",
+                                "GenericFieldValueType": 0
+                            },
+                            {
+                                "Number": "140000",
+                                "Key": "06. TIV PD",
+                                "GenericFieldValueType": 1
+                            },
+                            {
+                                "Number": "10000",
+                                "Key": "07. TIV BI",
+                                "GenericFieldValueType": 1
+                            },
+                            {
+                                "Number": "12",
+                                "Key": "08. BI Base Period (Months)",
+                                "GenericFieldValueType": 1
+                            },
+                            {
+                                "Number": "150000",
+                                "Key": "09. TIV (PD + BI )",
+                                "GenericFieldValueType": 1
+                            }
+                        ]
+                    },
+                    {
+                        "CoverageTypeLookup": "CC_LIAB",
+                        "GenericFields": [
+                            {
+                                "Number": "5000",
+                                "Key": "Limit of Liability",
+                                "GenericFieldValueType": 1
+                            },
+                            {
+                                "Number": "10",
+                                "Key": "Number of Employees",
+                                "GenericFieldValueType": 1
+                            },
+                            {
+                                "Number": "5000",
+                                "Key": "Total Turnover",
+                                "GenericFieldValueType": 1
+                            }
+                        ]
+                    }
+                ],
+                "Contact": {
+                    "CellPhone": "L. Contact Cellphone",
+                    "CompanyName": "L. Contact CompanyName",
+                    "Email": "L. Contact Email",
+                    "FirstName": "L. Contact First Name",
+                    "HomePhone": "L. Contact HomePhone",
+                    "LastName": "L. Contact LastName",
+                    "Occupation": "L. Contact Occupation",
+                    "UseCompanyName": true,
+                    "WorkPhone": "L. Contact WorkPhone",
+                    "Location": "L. Contact Location"
+                }
+            },
+            // Add one more location here
+            {
+                "LookupID": "12345",
+                "Name": "MW Second Location",
+                "PolicyNumber": "API9876568",
+                "PolicyEffectiveDate": "2023-03-29T15:08:58.889075+01:00",
+                "PolicyExpirationDate": "2023-03-29T15:08:58.889075+01:00",
+                "PolicyRenewalDate": "2023-03-29T15:08:58.889075+01:00",
+                "Address": {
+                    "Country": "GB",
+                    "Street1": "Second street 1",
+                    "Street2": "Second street 2",
+                    "City": "London",
+                    "Region1": "Second Region1",
+                    "Region2": "Second Region2",
+                    "Region3": "Second Region3",
+                    "Region4": "Second Region4",
+                    "ZipCode": "Second PostCode"
+                },
+                "OriginalEffectiveDate": "2023-03-29T15:08:58.8820749+01:00",
+                "EffectiveDate": "2023-03-29T15:08:58.8820749+01:00",
+                "ExpirationDate": "2023-03-29T15:08:58.8820749+01:00",
+                "RenewalDate": "2023-03-29T15:08:58.8820749+01:00",
+                "LastInspectedDate": "2023-03-29T15:08:58.8820749+01:00",
+                "genericFields": [
+                    {
+                        "key": "0.ISIC+Code",
+                        "text": "",
+                        "genericFieldValueType": 0
+                    }
+                ],
+                "Coverages": [
+                    {
+                        "CoverageTypeLookup": "PD_TIV",
+                        "GenericFields": [
+                            {
+                                "Number": "50000",
+                                "Key": "01. PD Building",
+                                "GenericFieldValueType": 1
+                            }
+                            // ... other fields
+                        ]
+                    }
+                    // Add other coverages if needed
+                ],
+                "Contact": {
+                    "CellPhone": "Second Contact Cellphone"
+                    // ... other fields
+                }
+            }
+        ]
+    }
+}
+
+
+//////////////////////////////////
 {
   "divisionLookupID" : "AZ_UK",
   "client" : {
