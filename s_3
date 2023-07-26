@@ -1,3 +1,121 @@
+{
+  "divisionLookupID" : "AZ_UK",
+  "client" : {
+    "LookupID" : "C008032993",
+    "ContactFirstName" : null,
+    "ContactLastName" : null,
+    "PolicyNumber" : "SP26853148",
+    "Name" : "CLIENT NEW BR",
+    "Phone" : null,
+    "Email" : null,
+    "Address" : {
+      "Country" : "United Kingdom",
+      "OverseasTerritories" : null,
+      "Street1" : null,
+      "Street2" : null,
+      "City" : null,
+      "Region1" : null,
+      "Region2" : null,
+      "Region3" : null,
+      "Region4" : null,
+      "ZipCode" : null
+    },
+    "Agent" : {
+      "AgencyCode" : "22576",
+      "AgencyName" : "Arthur J. Gallagher",
+      "AgentCode" : "13332",
+      "AgentName" : null,
+      "Email" : null,
+      "FaxNumber" : null,
+      "PhoneNumber" : null,
+      "Address" : {
+        "Country" : "United Kingdom",
+        "OverseasTerritories" : null,
+        "Street1" : null,
+        "Street2" : null,
+        "City" : null,
+        "Region1" : null,
+        "Region2" : null,
+        "Region3" : null,
+        "Region4" : null,
+        "ZipCode" : null
+      },
+      "AgentType" : "Broker"
+    },
+    "Underwriter" : null,
+    "Locations" : [ {
+      "genericFields" : null,
+      "LookupID" : "",
+      "Name" : null,
+      "PolicyNumber" : "SP26853148",
+      "PolicyEffectiveDate" : null,
+      "PolicyExpirationDate" : null,
+      "PolicyRenewalDate" : null,
+      "Address" : {
+        "Country" : "United Kingdom",
+        "OverseasTerritories" : null,
+        "Street1" : "NEW CROSS DEWEL",
+        "Street2" : "SD 11 JEW TOWN",
+        "City" : "MM KEMSTONE",
+        "Region1" : "UK",
+        "Region2" : null,
+        "Region3" : null,
+        "Region4" : null,
+        "ZipCode" : "GU1 1DB"
+      },
+      "OriginalEffectiveDate" : null,
+      "EffectiveDate" : null,
+      "ExpirationDate" : null,
+      "RenewalDate" : "2024-07-17",
+      "LastInspectedDate" : null,
+      "Coverages" : [ {
+        "CoverageTypeLookup" : "PD_TIV",
+        "CoverageReference" : "Coverage 1",
+        "GenericFields" : [ {
+          "Number" : "1123",
+          "Key" : "01. PD Building",
+          "GenericFieldValueType" : 1,
+          "Text" : null
+        }, {
+          "Number" : "0",
+          "Key" : "04. PD Other",
+          "GenericFieldValueType" : 1,
+          "Text" : null
+        }, {
+          "Number" : null,
+          "Key" : "05. PD Other Description",
+          "GenericFieldValueType" : 0,
+          "Text" : ""
+        }, {
+          "Number" : "1123",
+          "Key" : "06. TIV PD",
+          "GenericFieldValueType" : 1,
+          "Text" : null
+        }, {
+          "Number" : "332198",
+          "Key" : "07. TIV BI",
+          "GenericFieldValueType" : 1,
+          "Text" : null
+        }, {
+          "Number" : "",
+          "Key" : "08. BI Base Period (Months)",
+          "GenericFieldValueType" : 1,
+          "Text" : null
+        }, {
+          "Number" : "332198",
+          "Key" : "09. TIV (PD + BI )",
+          "GenericFieldValueType" : 1,
+          "Text" : null
+        } ]
+      } ],
+      "Contact" : null
+    } ]
+  }
+}
+
+
+
+
 public class GenericField{
     public String key;
     public String text;
