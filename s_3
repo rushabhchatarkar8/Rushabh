@@ -1,3 +1,354 @@
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+
+@WebMvcTest(ImportClientController.class)
+public class ImportClientControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Test
+    public void testImportClient1_NullData() throws Exception {
+        // Given
+        String jsonData = null;
+
+        // When-Then
+        mockMvc.perform(post("/import-client")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonData))
+                .andExpect(status().isBadRequest());
+    }
+}
+
+//
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import uk.co.allianz.rap.lc.model.request.importclient.Client;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+
+@WebMvcTest(ImportClientController.class)
+public class ImportClientControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockBean
+    private Gson gson;
+
+    @MockBean
+    private ObjectMapper objectMapper;
+
+    @Test
+    public void testImportClient1_Success() throws Exception {
+        // Given
+        String jsonData = "{\"client\": {\"name\": \"John Doe\"}, \"inspection\": \"data\"}";
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        Client client = new Client();
+        client.setName("John Doe");
+        importClientRequest.setClient(client);
+
+        // Mock the behavior of ObjectMapper and Gson
+        when(objectMapper.readTree(anyString())).thenReturn(new ObjectMapper().readTree(jsonData));
+        when(gson.toJson(any(ImportClientRequest.class))).thenReturn("{\"client\":{\"name\":\"John Doe\"}}");
+
+        // When-Then
+        mockMvc.perform(post("/import-client")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(jsonData))
+                .andExpect(status().isOk());
+    }
+}
+
+
+//
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.web.servlet.MockMvc;
+import uk.co.allianz.rap.lc.model.request.importclient.Client;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+
+// Add the necessary annotations
+@SpringBootTest
+@ContextConfiguration(classes = {ImportClientController.class})
+@WebMvcTest
+public class ImportClientControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    // Sample JSON data for testing
+    private static final String SAMPLE_JSON_DATA = "{\"client\": {\"name\": \"John Doe\"}, \"inspection\": {\"field\": \"value\"}}";
+
+    @Test
+    public void testImportClient1_ValidData_Success() throws Exception {
+        // Perform the POST request to "/import-client"
+        mockMvc.perform(post("/import-client")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(SAMPLE_JSON_DATA))
+                .andExpect(status().isOk());
+        // Add more assertions as needed based on the expected behavior
+    }
+
+    @Test
+    public void testImportClient1_NullData_BadRequest() throws Exception {
+        // Perform the POST request with null data
+        mockMvc.perform(post("/import-client")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content((String) null))
+                .andExpect(status().isBadRequest());
+        // Add more assertions as needed based on the expected behavior
+    }
+
+    @Test
+    public void testImportClient1_InvalidData_BadRequest() throws Exception {
+        // Sample JSON data with invalid format to trigger an exception
+        String invalidData = "invalid_json_data";
+
+        // Perform the POST request with invalid data
+        mockMvc.perform(post("/import-client")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(invalidData))
+                .andExpect(status().isBadRequest());
+        // Add more assertions as needed based on the expected behavior
+    }
+
+    // Add more test cases as needed to cover different scenarios and edge cases
+}
+
+
+//
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.gson.Gson;
+import com.google.json.JsonSanitizer;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@WebMvcTest(ImportClientController.class)
+@ContextConfiguration(classes = {ImportClientController.class})
+public class ImportClientControllerTest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @Autowired
+    private Gson gson;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    private String sampleJsonData;
+
+    @BeforeEach
+    public void setUp() {
+        // Initialize sample JSON data for testing
+        sampleJsonData = "{\"client\": {\"name\": \"John Doe\"}, \"inspection\": \"some data\"}";
+    }
+
+    @Test
+    public void testImportClient1_Success() throws Exception {
+        // Remove the "inspection" field from the JSON string
+        JsonNode rootNode = objectMapper.readTree(sampleJsonData);
+        ((ObjectNode) rootNode).remove("inspection");
+        String jsonDataWithoutInspection = rootNode.toString();
+
+        String sanitizedData = JsonSanitizer.sanitize(jsonDataWithoutInspection);
+
+        ImportClientRequest expectedRequest = objectMapper.readValue(sanitizedData, ImportClientRequest.class);
+
+        // Perform the actual API call
+        mockMvc.perform(MockMvcRequestBuilders.post("/import-client")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(sampleJsonData))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.client.name").value(expectedRequest.getClient().getName()));
+    }
+
+    @Test
+    public void testImportClient1_NullData() throws Exception {
+        // Perform the API call with null JSON data
+        mockMvc.perform(MockMvcRequestBuilders.post("/import-client")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content((String) null))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+    }
+
+    @Test
+    public void testImportClient1_InvalidData() throws Exception {
+        // Perform the API call with invalid JSON data
+        String invalidData = "Invalid JSON Data";
+        mockMvc.perform(MockMvcRequestBuilders.post("/import-client")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(invalidData))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+    }
+}
+
+
+
+
+//
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
+public class ImportClientControllerTest {
+
+    // Instantiate the actual controller to be tested
+    private ImportClientController importClientController = new ImportClientController();
+
+    @Test
+    public void testImportClient1() {
+        // Sample JSON data for testing
+        String jsonData = "{\"client\":{\"name\":\"John Doe\"},\"inspection\":{\"type\":\"some_type\"}}";
+
+        // Perform the test
+        ResponseEntity<String> responseEntity = importClientController.importClient1(jsonData);
+
+        // Assertions
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertNotNull(responseEntity.getBody());
+
+        // Since the JSON sanitization is not being tested here, you can perform some basic checks
+        assertFalse(responseEntity.getBody().contains("inspection"));
+        assertTrue(responseEntity.getBody().contains("John Doe"));
+    }
+
+    @Test
+    public void testImportClient1WithNullData() {
+        // Test with null JSON data
+        ResponseEntity<String> responseEntity = importClientController.importClient1(null);
+
+        // Assertions
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+        assertTrue(responseEntity.getBody().contains("JSON Data is null"));
+    }
+
+    @Test
+    public void testImportClient1WithInvalidData() {
+        // Test with invalid JSON data
+        String invalidData = "Invalid JSON data";
+        ResponseEntity<String> responseEntity = importClientController.importClient1(invalidData);
+
+        // Assertions
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+        assertTrue(responseEntity.getBody().contains("Failed to parse JSON"));
+    }
+}
+
+
+
+<!-- JUnit 5 dependencies -->
+<dependency>
+    <groupId>org.junit.jupiter</groupId>
+    <artifactId>junit-jupiter-api</artifactId>
+    <version>5.8.0</version>
+    <scope>test</scope>
+</dependency>
+
+//
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.json.JsonSanitizer;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+public class ImportClientControllerTest {
+
+    private ImportClientController importClientController;
+    private Gson gson;
+    private ObjectMapper objectMapper;
+
+    @BeforeEach
+    public void setUp() {
+        gson = new Gson();
+        objectMapper = new ObjectMapper();
+        importClientController = new ImportClientController(gson, objectMapper);
+    }
+
+    @Test
+    public void testImportClient1_Success() throws Exception {
+        // Given
+        ImportClientRequest request = new ImportClientRequest();
+        // Set up your request data here
+
+        String jsonData = gson.toJson(request);
+
+        // When
+        ResponseEntity<String> response = importClientController.importClient1(jsonData);
+
+        // Then
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        // Add more assertions to verify the response content
+    }
+
+    @Test
+    public void testImportClient1_NullData() {
+        // Given
+        String jsonData = null;
+
+        // When
+        ResponseEntity<String> response = importClientController.importClient1(jsonData);
+
+        // Then
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        // Add more assertions to verify the response content
+    }
+
+    @Test
+    public void testImportClient1_Exception() {
+        // Given
+        String jsonData = "invalid_json"; // Invalid JSON data
+
+        // When
+        ResponseEntity<String> response = importClientController.importClient1(jsonData);
+
+        // Then
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        // Add more assertions to verify the response content
+    }
+}
+
+//////////////////////
 package uk.co.allianz.rap.lc.rest;
 
 import com.fasterxml.jackson.databind.JsonNode;
