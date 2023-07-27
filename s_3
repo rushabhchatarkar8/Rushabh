@@ -1,3 +1,60 @@
+package uk.co.allianz.rap.lc.rest;
+
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.gson.Gson;
+import com.google.json.JsonSanitizer;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+
+@Slf4j
+@RestController
+public class ImportClientController {
+
+    @Autowired
+    private Gson gson;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    //Extracting fields and data from the "data model" sent from loss-control-adapter
+    //and building the API request: ImportClient
+    @PostMapping("/import-client")
+    public ResponseEntity<String> importClient1(@RequestBody String jsonData) {
+        try {
+            if (jsonData == null) {
+                throw new IllegalArgumentException("JSON Data is null");
+            }
+
+            // Remove the "inspection" field from the JSON string
+            JsonNode rootNode = new ObjectMapper().readTree(jsonData);
+            ((ObjectNode) rootNode).remove("inspection");
+            String jsonDataWithoutInspection = rootNode.toString();
+
+            String sanitizedData = JsonSanitizer.sanitize(jsonDataWithoutInspection);
+
+            ImportClientRequest importClientRequest = objectMapper.readValue(sanitizedData, ImportClientRequest.class);
+
+            // access the data using the POJO classes
+            log.info("Client Name:" + importClientRequest.getClient().getName());
+
+
+            String processedJson = gson.toJson(importClientRequest);
+            return ResponseEntity.ok(processedJson);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+}
+
+......................
+
 //Added 2 Location and inspection
 
 {
