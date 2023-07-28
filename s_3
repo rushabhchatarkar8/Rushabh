@@ -1,3 +1,196 @@
+package uk.co.allianz.rap.lc.rest;
+
+import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.service.ImportClientServiceImp;
+import uk.co.allianz.rap.lc.service.ValidationServiceImpl;
+
+
+@Slf4j
+@RestController
+public class ValidationRest {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(ValidationRest.class);
+
+    @Autowired
+    private ValidationServiceImpl validationServiceImpl;
+    @Autowired
+    private ImportClientServiceImp importClientServiceImp;
+
+    public ValidationRest(final ValidationServiceImpl validationServiceImpl) {
+        this.validationServiceImpl = validationServiceImpl;
+    }
+
+    //2. Build the end point/Resource path: POST: surveySubmission
+    //3. Build standard JSON validation on incoming data
+    @PostMapping(path = "/survey-submission", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> processJson(@RequestBody(required = false) final String json) {
+
+        if (json == null || json.isEmpty()) {
+            // JSON is empty or not present
+            LOGGER.info("JSON is empty");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("JSON is empty");
+
+        }
+        try {
+            //for validate JSON
+           String validateinput=validationServiceImpl.processJson(json);
+            // Return a response indicating success
+            //For import only client and remove inspection
+            String processedJson=importClientServiceImp.importClient(validateinput);
+            LOGGER.info("JSON received successfully");
+            return ResponseEntity.ok(processedJson);
+
+        } catch (CustomException e) {
+            // Invalid JSON format or single value detected CustomException.
+            LOGGER.error("Invalid JSON: " + e.getMessage());
+            return ResponseEntity.badRequest().body("Invalid JSON: " + e.getMessage());
+
+        } catch (Exception e) {
+            // Other exceptions
+            LOGGER.error("Invalid JSON format");
+            return ResponseEntity.badRequest().body("Invalid JSON format");
+
+        }
+    }
+}
+
+
+
+//
+package uk.co.allianz.rap.lc.service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.google.json.JsonSanitizer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import uk.co.allianz.rap.lc.exception.CustomException;
+
+//3. Build standard JSON validation on incoming data
+@Service
+public class ValidationServiceImpl implements ValidationService {
+
+    @Autowired
+    private ImportClientServiceImp importClientServiceImp;
+    private static final Logger LOGGER = LoggerFactory.getLogger(ValidationServiceImpl.class);
+
+    public String processJson(final String json) throws CustomException, JsonProcessingException {
+        // Parse the JSON string into a JsonElement
+
+        JsonElement jsonElement;
+        jsonElement = JsonParser.parseString(json);
+
+        // Check if the JSON is a single value (string or number) or empty object/array
+        if (isSingleValue(jsonElement)) {
+            throw new CustomException("JSON is a single value. ");
+        } else if (isEmptyObject(jsonElement) || isEmptyArray(jsonElement)) {
+            throw new CustomException("JSON is empty object/array. ");
+        }
+
+        // Print the received JSON
+        String sanitizedJson = JsonSanitizer.sanitize(json);
+
+
+        return sanitizedJson;
+    }
+
+    // Helper method to check if the JSON element is a single value
+    private boolean isSingleValue(final JsonElement jsonElement) {
+        return !jsonElement.isJsonObject() && !jsonElement.isJsonArray();
+    }
+
+    // Helper method to check if the JSON element is an empty object ({})
+    private boolean isEmptyObject(final JsonElement jsonElement) {
+        return jsonElement.isJsonObject() && jsonElement.getAsJsonObject().entrySet().isEmpty();
+    }
+
+    // Helper method to check if the JSON element is an empty array ([])
+    private boolean isEmptyArray(final JsonElement jsonElement) {
+        return jsonElement.isJsonArray() && jsonElement.getAsJsonArray().size() == 0;
+    }
+}
+//
+package uk.co.allianz.rap.lc.service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.gson.Gson;
+import com.google.json.JsonSanitizer;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+
+//Extracting fields and data from the "data model"
+//sent from loss-control-adapter and building the API request: ImportClient
+@Slf4j
+@Service
+public class ImportClientServiceImp implements ImportClientService {
+
+    @Autowired
+    private TokenCache tokenCache;
+    @Autowired
+    private LossControlServiceImpl lossControlServiceImpl;
+
+    @Autowired
+    private Gson gson;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Override
+    public String importClient(String json) throws CustomException, JsonProcessingException {
+
+        // Remove the "inspection" field from the JSON string
+        JsonNode rootNode = new ObjectMapper().readTree(json);
+
+        ((ObjectNode) rootNode).remove("inspection");
+        String jsonDataWithoutInspection = rootNode.toString();
+
+
+        //Data Mapping into Model(POJO) class
+        ImportClientRequest importClientRequest = objectMapper.enable(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT).readValue(jsonDataWithoutInspection, ImportClientRequest.class);
+
+        log.info("importClientRequest:"+importClientRequest);
+        // access the data using the POJO classes(checking)
+        log.info("Client Name:" + importClientRequest.getClient().getName());
+
+        log.info("importClientRequest: " + importClientRequest);
+
+        String processedJson = gson.toJson(importClientRequest);
+        ImportClientResponse importClientResponse = lossControlServiceImpl.clientPost(importClientRequest, tokenCache.retrieveTokenFromCache1());
+
+
+        log.info("importClientResponse:" + importClientResponse);
+
+        log.info("Received JSON: " + processedJson);
+        return processedJson;
+
+    }
+}
+
+
+
+///////////
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
