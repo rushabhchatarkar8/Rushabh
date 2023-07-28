@@ -1,3 +1,242 @@
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import org.junit.Before;
+import org.junit.Test;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+
+import static org.junit.Assert.assertEquals;
+
+public class ImportClientServiceImpTest {
+
+    private TokenCache tokenCache;
+    private LossControlServiceImpl lossControlServiceImpl;
+    private Gson gson;
+    private ObjectMapper objectMapper;
+    private ImportClientServiceImp importClientService;
+
+    @Before
+    public void setUp() {
+        tokenCache = new TokenCache(); // Instantiate the real TokenCache if needed
+        lossControlServiceImpl = new LossControlServiceImpl(); // Instantiate the real LossControlServiceImpl if needed
+        gson = new Gson(); // Instantiate the real Gson if needed
+        objectMapper = new ObjectMapper(); // Instantiate the real ObjectMapper if needed
+
+        importClientService = new ImportClientServiceImp();
+        importClientService.setTokenCache(tokenCache);
+        importClientService.setLossControlService(lossControlServiceImpl);
+        importClientService.setGson(gson);
+        importClientService.setObjectMapper(objectMapper);
+    }
+
+    @Test
+    public void testImportClient_Success() throws CustomException, JsonProcessingException {
+        // Prepare the JSON input
+        String jsonInput = "{\"divisionLookupID\": \"123\", \"client\": {\"Name\": \"John Doe\"}}";
+
+        // Call the method under test
+        ImportClientResponse result = importClientService.importClient(jsonInput);
+
+        // Assert the result based on your expectations
+        assertEquals("SUCCESS", result.getStatus());
+        // ... Assert other properties of the result if needed
+    }
+}
+
+//
+import static org.junit.Assert.assertEquals;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import org.junit.Before;
+import org.junit.Test;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+
+public class ImportClientServiceImpTest {
+
+    private ImportClientServiceImp importClientService;
+
+    @Before
+    public void setUp() {
+        importClientService = new ImportClientServiceImp();
+        importClientService.tokenCache = new TokenCache(); // You may need to initialize tokenCache with appropriate data
+        importClientService.lossControlServiceImpl = new LossControlServiceImpl(); // You may need to initialize lossControlServiceImpl with appropriate data
+        importClientService.gson = new Gson();
+        importClientService.objectMapper = new ObjectMapper();
+    }
+
+    @Test
+    public void testImportClient_Success() throws CustomException, JsonProcessingException {
+        // Test data
+        String jsonInput = "{\"divisionLookupID\": \"123\", \"client\": {\"Name\": \"John Doe\"}}";
+
+        // Call the method under test
+        ImportClientResponse result = importClientService.importClient(jsonInput);
+
+        // Assert the result (Replace the expected values with the actual expected output)
+        assertEquals("EXPECTED_STATUS", result.getStatus());
+        // ... Assert other properties of the response
+    }
+}
+
+//
+import static org.junit.Assert.assertEquals;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import org.junit.Before;
+import org.junit.Test;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+
+public class ImportClientServiceImpTest {
+
+    private TokenCache tokenCache;
+    private LossControlServiceImpl lossControlServiceImpl;
+    private Gson gson;
+    private ObjectMapper objectMapper;
+    private ImportClientServiceImp importClientService;
+
+    @Before
+    public void setUp() {
+        // Initialize test instances
+        tokenCache = new TokenCache();
+        lossControlServiceImpl = new LossControlServiceImpl();
+        gson = new Gson();
+        objectMapper = new ObjectMapper();
+        importClientService = new ImportClientServiceImp(tokenCache, lossControlServiceImpl, gson, objectMapper);
+    }
+
+    @Test
+    public void testImportClient_Success() throws CustomException, JsonProcessingException {
+        // Prepare test data
+        String jsonInput = "{\"divisionLookupID\": \"123\", \"client\": {\"Name\": \"John Doe\"}}";
+        ImportClientRequest request = new ImportClientRequest();
+        request.setDivisionLookupID("123");
+        // ... Set other properties
+
+        ImportClientResponse expectedResponse = new ImportClientResponse();
+        expectedResponse.setStatus("SUCCESS");
+        // ... Set other properties
+
+        // Call the method under test
+        ImportClientResponse result = importClientService.importClient(jsonInput);
+
+        // Assert the result
+        assertEquals(expectedResponse, result);
+    }
+
+    // Add more test cases as needed for other scenarios and error cases
+}
+
+
+
+//
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import org.junit.Before;
+import org.junit.Test;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+
+import static org.junit.Assert.assertEquals;
+
+public class ImportClientServiceImpTest {
+
+    private ImportClientServiceImp importClientService;
+
+    @Before
+    public void setUp() {
+        TokenCache tokenCache = new TokenCache();
+        LossControlServiceImpl lossControlServiceImpl = new LossControlServiceImpl();
+        Gson gson = new Gson();
+        ObjectMapper objectMapper = new ObjectMapper();
+        importClientService = new ImportClientServiceImp(tokenCache, lossControlServiceImpl, gson, objectMapper);
+    }
+
+    @Test
+    public void testImportClient_Success() throws CustomException, JsonProcessingException {
+        // Prepare the JSON input
+        String jsonInput = "{\"divisionLookupID\": \"123\", \"client\": {\"Name\": \"John Doe\"}}";
+
+        // Call the method under test
+        ImportClientResponse result = importClientService.importClient(jsonInput);
+
+        // Verify the behavior and the result
+        assertEquals("SUCCESS", result.getStatus());
+        // ... Add other assertions based on the expected response properties
+    }
+}
+
+
+//
+import static org.junit.Assert.assertEquals;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import org.junit.Before;
+import org.junit.Test;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+
+public class ImportClientServiceImpTest {
+
+    private TokenCache tokenCache;
+    private LossControlServiceImpl lossControlService;
+    private Gson gson;
+    private ObjectMapper objectMapper;
+    private ImportClientServiceImp importClientService;
+
+    @Before
+    public void setUp() {
+        tokenCache = new TokenCache(); // Initialize tokenCache as needed
+        lossControlService = new LossControlServiceImpl(); // Initialize lossControlService as needed
+        gson = new Gson();
+        objectMapper = new ObjectMapper();
+        importClientService = new ImportClientServiceImp(tokenCache, lossControlService, gson, objectMapper);
+    }
+
+    @Test
+    public void testImportClient_Success() throws CustomException, JsonProcessingException {
+        // Prepare the JSON input
+        String jsonInput = "{\"divisionLookupID\": \"123\", \"client\": {\"Name\": \"John Doe\"}}";
+
+        // Call the method under test
+        ImportClientResponse result = importClientService.importClient(jsonInput);
+
+        // Prepare the expected ImportClientRequest
+        ImportClientRequest expectedRequest = new ImportClientRequest();
+        expectedRequest.setDivisionLookupID("123");
+        // ... Set other properties
+
+        // Prepare the expected ImportClientResponse
+        ImportClientResponse expectedResponse = new ImportClientResponse();
+        expectedResponse.setStatus("SUCCESS");
+        // ... Set other properties
+
+        // Convert the result and expectedResponse to JSON strings for comparison
+        String resultJson = gson.toJson(result);
+        String expectedResponseJson = gson.toJson(expectedResponse);
+
+        // Compare the JSON strings
+        assertEquals(expectedResponseJson, resultJson);
+    }
+}
+
+
+
+///
 package uk.co.allianz.rap.lc.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
