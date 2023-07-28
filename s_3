@@ -1,4 +1,197 @@
-package uk.co.allianz.rap.lc.rest;
+{
+    "client": {
+        "lookupID": "C008032993",
+        "policyNumber": "SP26853148",
+        "address": {
+            "country": "United Kingdom"
+        },
+        "agent": {
+            "agencyCode": "22576",
+            "agencyName": "Arthur J. Gallagher",
+            "agentCode": "13332",
+            "address": {
+                "country": "United Kingdom"
+            },
+            "agentType": "Broker"
+        },
+        "locations": [
+            {
+                "lookupID": "",
+                "policyNumber": "SP26853148",
+                "renewalDate": "Jul 17, 2024, 5:30:00 AM",
+                "address": {
+                    "country": "United Kingdom",
+                    "street1": "NEW CROSS DEWEL",
+                    "street2": "SD 11 JEW TOWN",
+                    "city": "MM KEMSTONE",
+                    "region1": "UK",
+                    "zipCode": "GU1 1DB"
+                },
+                "coverages": [
+                    {
+                        "coverageReference": "Coverage 1",
+                        "coverageTypeLookup": "PD_TIV",
+                        "genericFields": [
+                            {
+                                "number": "1123",
+                                "key": "01. PD Building",
+                                "genericFieldValueType": 1
+                            },
+                            {
+                                "number": "0",
+                                "key": "04. PD Other",
+                                "genericFieldValueType": 1
+                            },
+                            {
+                                "key": "05. PD Other Description",
+                                "genericFieldValueType": 0,
+                                "text": ""
+                            },
+                            {
+                                "number": "1123",
+                                "key": "06. TIV PD",
+                                "genericFieldValueType": 1
+                            },
+                            {
+                                "number": "332198",
+                                "key": "07. TIV BI",
+                                "genericFieldValueType": 1
+                            },
+                            {
+                                "number": "",
+                                "key": "08. BI Base Period (Months)",
+                                "genericFieldValueType": 1
+                            },
+                            {
+                                "number": "332198",
+                                "key": "09. TIV (PD + BI )",
+                                "genericFieldValueType": 1
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+}
+//
+{
+  "divisionLookupID" : "AZ_UK",
+  "client" : {
+    "LookupID" : "C008032993",
+    "ContactFirstName" : null,
+    "ContactLastName" : null,
+    "PolicyNumber" : "SP26853148",
+    "Name" : null,
+    "Phone" : null,
+    "Email" : null,
+    "Address" : {
+      "Country" : "United Kingdom",
+      "OverseasTerritories" : null,
+      "Street1" : null,
+      "Street2" : null,
+      "City" : null,
+      "Region1" : null,
+      "Region2" : null,
+      "Region3" : null,
+      "Region4" : null,
+      "ZipCode" : null
+    },
+    "Agent" : {
+      "AgencyCode" : "22576",
+      "AgencyName" : "Arthur J. Gallagher",
+      "AgentCode" : "13332",
+      "AgentName" : null,
+      "Email" : null,
+      "FaxNumber" : null,
+      "PhoneNumber" : null,
+      "Address" : {
+        "Country" : "United Kingdom",
+        "OverseasTerritories" : null,
+        "Street1" : null,
+        "Street2" : null,
+        "City" : null,
+        "Region1" : null,
+        "Region2" : null,
+        "Region3" : null,
+        "Region4" : null,
+        "ZipCode" : null
+      },
+      "AgentType" : "Broker"
+    },
+    "Underwriter" : null,
+    "Locations" : [ {
+      "genericFields" : null,
+      "LookupID" : "",
+      "Name" : null,
+      "PolicyNumber" : "SP26853148",
+      "PolicyEffectiveDate" : null,
+      "PolicyExpirationDate" : null,
+      "PolicyRenewalDate" : null,
+      "Address" : {
+        "Country" : "United Kingdom",
+        "OverseasTerritories" : null,
+        "Street1" : "NEW CROSS DEWEL",
+        "Street2" : "SD 11 JEW TOWN",
+        "City" : "MM KEMSTONE",
+        "Region1" : "UK",
+        "Region2" : null,
+        "Region3" : null,
+        "Region4" : null,
+        "ZipCode" : "GU1 1DB"
+      },
+      "OriginalEffectiveDate" : null,
+      "EffectiveDate" : null,
+      "ExpirationDate" : null,
+      "RenewalDate" : "2024-07-17",
+      "LastInspectedDate" : null,
+      "Coverages" : [ {
+        "CoverageTypeLookup" : "PD_TIV",
+        "CoverageReference" : "Coverage 1",
+        "GenericFields" : [ {
+          "Number" : "1123",
+          "Key" : "01. PD Building",
+          "GenericFieldValueType" : 1,
+          "Text" : null
+        }, {
+          "Number" : "0",
+          "Key" : "04. PD Other",
+          "GenericFieldValueType" : 1,
+          "Text" : null
+        }, {
+          "Number" : null,
+          "Key" : "05. PD Other Description",
+          "GenericFieldValueType" : 0,
+          "Text" : ""
+        }, {
+          "Number" : "1123",
+          "Key" : "06. TIV PD",
+          "GenericFieldValueType" : 1,
+          "Text" : null
+        }, {
+          "Number" : "332198",
+          "Key" : "07. TIV BI",
+          "GenericFieldValueType" : 1,
+          "Text" : null
+        }, {
+          "Number" : "",
+          "Key" : "08. BI Base Period (Months)",
+          "GenericFieldValueType" : 1,
+          "Text" : null
+        }, {
+          "Number" : "332198",
+          "Key" : "09. TIV (PD + BI )",
+          "GenericFieldValueType" : 1,
+          "Text" : null
+        } ]
+      } ],
+      "Contact" : null
+    } ]
+  }
+}
+
+
+//package uk.co.allianz.rap.lc.rest;
 
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
