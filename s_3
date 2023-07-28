@@ -1,3 +1,51 @@
+package uk.co.allianz.rap.lc.service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+
+//Extracting fields and data from the "data model"
+//sent from loss-control-adapter and building the API request: ImportClient
+@Slf4j
+@Service
+public class ImportClientServiceImp implements ImportClientService {
+
+    @Autowired
+    private TokenCache tokenCache;
+    @Autowired
+    private LossControlServiceImpl lossControlServiceImpl;
+
+    @Autowired
+    private Gson gson;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Override
+    public ImportClientResponse importClient(String json) throws CustomException, JsonProcessingException {
+
+        ImportClientRequest importClientRequest = objectMapper.readValue(json, ImportClientRequest.class);
+        String processedJson = objectMapper.writeValueAsString(importClientRequest);
+        ImportClientResponse importClientResponse = lossControlServiceImpl.clientPost(importClientRequest, tokenCache.retrieveTokenFromCache1());
+        log.info("Received JSON: " + processedJson);
+
+        log.info("importClientResponse:" + importClientResponse);
+        return importClientResponse;
+
+    }
+}
+
+
+
+//
+
 package uk.co.allianz.rap.lc.rest;
 
 import lombok.extern.slf4j.Slf4j;
