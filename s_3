@@ -1,4 +1,73 @@
-    // Configure the date format for deserialization
+package uk.co.allianz.rap.lc.rest;
+
+import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RestController;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.ImportClientServiceImp;
+import uk.co.allianz.rap.lc.service.ValidationServiceImpl;
+
+
+@Slf4j
+@RestController
+public class ValidationRest {
+
+
+    @Autowired
+    private ValidationServiceImpl validationServiceImpl;
+    @Autowired
+    private ImportClientServiceImp importClientServiceImp;
+
+    public ValidationRest(final ValidationServiceImpl validationServiceImpl) {
+        this.validationServiceImpl = validationServiceImpl;
+    }
+
+    //2. Build the end point/Resource path: POST: surveySubmission
+    //3. Build standard JSON validation on incoming data
+    @PostMapping(path = "/survey-submission", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<String> processJson(@RequestBody(required = false) final String json) {
+
+        if (json == null || json.isEmpty()) {
+            // JSON is empty or not present
+            log.info("JSON is empty");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("JSON is empty");
+
+        }
+        try {
+            //for validate JSON
+           String validateinput=validationServiceImpl.processJson(json);
+            //For import only client
+            ImportClientResponse processedJson=importClientServiceImp.importClient(validateinput);
+            log.info("JSON received successfully");
+            return ResponseEntity.ok(processedJson);
+
+        } catch (CustomException e) {
+            // Invalid JSON format or single value detected CustomException.
+            log.error("Invalid JSON: " + e.getMessage());
+            return ResponseEntity.badRequest().body("Invalid JSON: " + e.getMessage());
+
+        } catch (Exception e) {
+            // Other exceptions
+            log.error("Invalid JSON format");
+            return ResponseEntity.badRequest().body("Invalid JSON format");
+
+        }
+    }
+}
+
+
+
+
+
+
+// Configure the date format for deserialization
         objectMapper.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
 
      // Configure the ObjectMapper to include non-null properties during serialization
