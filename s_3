@@ -1,3 +1,35 @@
+    // Configure the date format for deserialization
+        objectMapper.configure(DeserializationFeature.ACCEPT_EMPTY_STRING_AS_NULL_OBJECT, true);
+
+     // Configure the ObjectMapper to include non-null properties during serialization
+        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
+
+
+
+        ImportClientRequest importClientRequest = objectMapper.readValue(jsonDataWithoutInspection, ImportClientRequest.class);
+
+        log.info("importClientRequest:"+importClientRequest);
+        // access the data using the POJO classes(checking)
+        log.info("Client Name:" + importClientRequest.getClient().getName());
+
+        log.info("importClientRequest: " + importClientRequest);
+        // Serialize the Java object back to JSON with non-null properties included
+        String processedJson = objectMapper.writeValueAsString(importClientRequest);
+
+
+//        String processedJson = gson.toJson(importClientRequest);
+       // ImportClientResponse importClientResponse = lossControlServiceImpl.clientPost(importClientRequest, tokenCache.retrieveTokenFromCache1());
+
+
+    //    log.info("importClientResponse:" + importClientResponse);
+
+        log.info("Received JSON: " + processedJson);
+        return processedJson;
+
+
+
+//
+
 {
     "client": {
         "lookupID": "C008032993",
