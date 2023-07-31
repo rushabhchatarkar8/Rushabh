@@ -1,3 +1,70 @@
+@Service
+public class SomeOtherService {
+    private final LocationService locationService;
+
+    @Autowired
+    public SomeOtherService(LocationService locationService) {
+        this.locationService = locationService;
+    }
+
+    public void someMethod() {
+        String locationIDToCheck = "your_location_id_here";
+        boolean isLocationIDPresent = locationService.isLocationIDPresentInDB(locationIDToCheck);
+
+        if (isLocationIDPresent) {
+            System.out.println("Location ID exists in the database.");
+        } else {
+            System.out.println("Location ID does not exist in the database.");
+        }
+    }
+}
+
+
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+@Service
+public class LocationService {
+    private final LocationRepository locationRepository;
+
+    @Autowired
+    public LocationService(LocationRepository locationRepository) {
+        this.locationRepository = locationRepository;
+    }
+
+    public boolean isLocationIDPresentInDB(String locationID) {
+        return locationRepository.existsByLocationID(locationID);
+    }
+}
+
+
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public interface LocationRepository extends JpaRepository<LocationEntity, String> {
+    // Custom query to check if a locationID exists in the database
+    boolean existsByLocationID(String locationID);
+}
+
+
+
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+@Entity
+@Table(name = "location_table") // Replace "location_table" with the actual table name in your database
+@Data
+public class LocationEntity {
+    @Id
+    private String locationID;
+    // Add other attributes as needed
+}
+
+////////////////////
 package uk.co.allianz.rap.lc.model.response.importclient;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
