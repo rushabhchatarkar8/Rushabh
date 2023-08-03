@@ -1,3 +1,77 @@
+package uk.co.allianz.rap.lc.rest;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RestController;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.ImportClientServiceImp;
+import uk.co.allianz.rap.lc.service.ValidationServiceImpl;
+
+
+@Slf4j
+@RestController
+public class ValidationRest {
+    @Autowired
+    private TokenCache tokenCache;
+
+    @Autowired
+    private ValidationServiceImpl validationServiceImpl;
+    @Autowired
+    private ImportClientServiceImp importClientServiceImp;
+
+    public ValidationRest(final ValidationServiceImpl validationServiceImpl) {
+        this.validationServiceImpl = validationServiceImpl;
+    }
+
+    //Build the end point/Resource path: POST: surveySubmission
+    //Build standard JSON validation on incoming data
+
+    //Implement a  token caching logic within loss-control-service.
+    //Consume the correlation id we receive is available for further business logic to log it.
+    @PostMapping(path = "/survey-submission", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> processJson(@RequestBody(required = false) final String json, @RequestHeader("Correlation-ID") final String correlationId) {
+
+        if (json == null || json.isEmpty()) {
+            // JSON is empty or not present
+            log.info("JSON is empty");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("JSON is empty");
+
+        }
+        try {
+            //for validate JSON
+            String validateinput = validationServiceImpl.processJson(json);
+            //For import only client
+            ImportClientResponse processedJson = importClientServiceImp.importClient(validateinput, correlationId);
+            log.info("JSON received successfully");
+            return ResponseEntity.ok(processedJson);
+
+        } catch (CustomException e) {
+            // Invalid JSON format or single value detected CustomException.
+            log.error("Invalid JSON: " + e.getMessage());
+            return ResponseEntity.badRequest().body("Invalid JSON: " + e.getMessage());
+
+        } catch (Exception e) {
+            // Other exceptions
+            log.error("Invalid JSON format");
+            return ResponseEntity.badRequest().body("Invalid JSON format");
+
+        }
+    }
+}
+
+
+
+
+/////////////////
+
 @Service
 public class SomeOtherService {
     private final LocationService locationService;
