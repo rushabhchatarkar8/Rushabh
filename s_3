@@ -1,3 +1,125 @@
+package uk.co.allianz.rap.lc.model.response.importclient;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
+
+import java.util.ArrayList;
+@SuppressWarnings("unused")
+@Data
+public class Result {
+    @JsonProperty("ClientID")
+    private String clientID;
+    @JsonProperty("ClientLookupID")
+    private String clientLookupID;
+    @JsonProperty("IsDeleted")
+    private boolean isDeleted;
+    @JsonProperty("Errors")
+    private ArrayList<Object> errors;
+    @JsonProperty("Warnings")
+    private Object warnings;
+    @JsonProperty("Success")
+    private boolean success;
+    @JsonProperty("Locations")
+    private ArrayList<Location> locations;
+    @JsonProperty("CommercialCoverages")
+    private ArrayList<Object> commercialCoverages;
+    @JsonProperty("Messages")
+    private ArrayList<Object> messages;
+}
+
+
+..
+
+package uk.co.allianz.rap.lc.model.response.importclient;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
+
+@SuppressWarnings("unused")
+@Data
+public class ImportClientResponse {
+    @JsonProperty("Result")
+    private Result result;
+    @JsonProperty("ImportRequestID")
+    private String importRequestID;
+}
+
+
+
+.............
+package uk.co.allianz.rap.lc.model.request.importclient;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
+
+import java.util.ArrayList;
+@SuppressWarnings("unused")
+@Data
+public class Client {
+    @JsonProperty("LookupID")
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    private String lookupID;
+    @JsonProperty("ContactFirstName")
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    private String contactFirstName;
+    @JsonProperty("ContactLastName")
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    private String contactLastName;
+    @JsonProperty("PolicyNumber")
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    private String policyNumber;
+    @JsonProperty("Name")
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    private String name;
+    @JsonProperty("Phone")
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    private String phone;
+    @JsonProperty("Email")
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    private String email;
+    @JsonProperty("Address")
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    private Address address;
+    @JsonProperty("Agent")
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    private Agent agent;
+    @JsonProperty("Underwriter")
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    private Underwriter underwriter;
+
+    @JsonProperty("Locations")
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    private ArrayList<Location> locations;
+
+}
+
+
+................
+
+
+package uk.co.allianz.rap.lc.model.request.importclient;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.Data;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
+@SuppressWarnings("unused")
+@Data
+public class ImportClientRequest {
+    @JsonProperty("divisionLookupID")
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    private String divisionLookupID;
+    @JsonProperty("client")
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    private Client client;
+
+}
+
+
+
+///////////
+
 package uk.co.allianz.rap.lc.util;
 
 
