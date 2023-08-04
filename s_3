@@ -12,8 +12,10 @@ import uk.co.allianz.rap.lc.dao.LossControlDao;
 import uk.co.allianz.rap.lc.exception.CustomException;
 import uk.co.allianz.rap.lc.model.request.importclient.Client;
 import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importclient.Location;
 import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
 
+import java.util.ArrayList;
 import java.util.Map;
 
 //Extracting fields and data from the "data model"
@@ -37,122 +39,120 @@ public class ImportClientServiceImp implements ImportClientService {
     public ImportClientResponse importClient(final String json, final String correlationId) throws CustomException, JsonProcessingException {
         ImportClientResponse importClientResponse = null;
         ImportClientRequest importClientRequest = objectMapper.readValue(json, ImportClientRequest.class);
-        Map<String, Object> result = lossControlDao.findByClientId(importClientRequest.getClient().getLookupID());
-        if(result != null){
-            Map<String,Object> lcClientId = lossControlDao.findLc360ClientID(importClientRequest.getClient().getLookupID());
-            if(lcClientId != null){
-                String lc360ClientId = (String) lcClientId.get(lcClientId.keySet().iterator().next());
-                System.out.println(lc360ClientId);
 
-
-//                importClientRequest.setClient();
-//                Client c =new Client();
-//                c.setLookupID(lc360ClientId);
-//                importClientRequest.setClient(c);
-                objectMapper.writeValueAsString(importClientRequest);
-                System.out.println(importClientRequest);
-                log.info("Received JSON");
-                importClientResponse = lossControlServiceImpl.clientPost(importClientRequest, tokenCache.retrieveTokenFromCache(correlationId));
-            }
-            else {
-                log.info("lc360 client id not present");
-            }
-        }
-        else {
-            log.info("Client is not present");
-            lossControlDao.insertClientId(importClientRequest.getClient().getLookupID());
-            importClientResponse = lossControlServiceImpl.clientPost(importClientRequest,tokenCache.retrieveTokenFromCache(correlationId));
-            lossControlDao.updateLcClientId(importClientRequest.getClient().getLookupID(),importClientResponse.getResult().getClientLookupID());
-        }
-        log.info("importClientResponse Successfully Received");
-        return importClientResponse;
-
-    }
-}
-
-
-//package uk.co.allianz.rap.lc.service;
+        ArrayList<Location> locations = importClientRequest.getClient().getLocations();
+        String locationID = locations.get(0).getLookupID();
+        //
 //
-//import com.fasterxml.jackson.core.JsonProcessingException;
-//import com.fasterxml.jackson.databind.ObjectMapper;
-//import com.google.gson.Gson;
-//import lombok.extern.slf4j.Slf4j;
-//import org.springframework.beans.factory.annotation.Autowired;
-//import org.springframework.stereotype.Service;
-//import uk.co.allianz.rap.lc.cache.TokenCache;
-//import uk.co.allianz.rap.lc.dao.LossControlDao;
-//import uk.co.allianz.rap.lc.exception.CustomException;
-//import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
-//import uk.co.allianz.rap.lc.model.request.importclient.Location;
-//import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
-//
-//import java.util.ArrayList;
-//import java.util.Map;
-//
-////Extracting fields and data from the "data model"
-////sent from loss-control-adapter and building the API request: ImportClient
-//@Slf4j
-//@Service
-//public class ImportClientServiceImp implements ImportClientService {
-//    @Autowired
-//    private LossControlDao lossControlDao;
-//    @Autowired
-//    private TokenCache tokenCache;
-//    @Autowired
-//    private LossControlServiceImpl lossControlServiceImpl;
-//
-//    @Autowired
-//    private Gson gson;
-//
-//    @Autowired
-//    private ObjectMapper objectMapper;
-//
-//    @Override
-//    public ImportClientResponse importClient(final String json, final String correlationId) throws CustomException, JsonProcessingException {
-//
-//        ImportClientRequest importClientRequest = objectMapper.readValue(json, ImportClientRequest.class);
-//        String processedJson = objectMapper.writeValueAsString(importClientRequest);
-//        ImportClientResponse importClientResponse = lossControlServiceImpl.clientPost(importClientRequest, tokenCache.retrieveTokenFromCache(correlationId));
-//
-//        ArrayList<Location> locations = importClientRequest.getClient().getLocations();
-//
-//        //Location ID
-//        String locationID = locations.get(0).getLookupID();
-////        System.out.println("LocationID:" + locationID);
+//        //Location ID:LookupID
+        System.out.println("LocationID:" + locationID);
 //        //Policy number
-//        String policyNumber = locations.get(0).getPolicyNumber();
-////        System.out.println("policyNumber:" + policyNumber);
+        String policyNumber = locations.get(0).getPolicyNumber();
+        System.out.println("policyNumber:" + policyNumber);
 //
 //        //combination of Location ID + Policy number
-//        String combineLocationID = locationID + "+" + policyNumber;
-////        System.out.println("combination of Location ID + Policy number:" + combineLocationID);
+        String combineLocationID = locationID + "+" + policyNumber;
+        System.out.println("combination of Location ID + Policy number:" + combineLocationID);
 //
-//
-//        ArrayList<uk.co.allianz.rap.lc.model.response.importclient.Location> locationsResponse = importClientResponse.getResult().getLocations();
-//
-//        //location ID Response
-//        String lc360_Location_ID = locationsResponse.get(0).getLocationID();
-//
-//
-//        log.info("Received JSON: " + processedJson);
-//        log.info("importClientResponse Successfully Received:" + importClientResponse);
-//        //checking in DB ...combineLocationID present or not
-//        Map<String, Object> result = lossControlDao.findByLocationId(combineLocationID);
-//
-//        if (result == null) {
-//            lossControlDao.insertLocationId(combineLocationID);
-//            lossControlDao.updateLcLocationId(combineLocationID, lc360_Location_ID);
-//
-//        } else {
-//            log.info("LocationID is present");
-//
-////            lossControlDao.updateLcLocationId(combineLocationID, lc360_Location_ID);
-//        }
-//        return importClientResponse;
-//
-//    }
-//}
+        //
+        Map<String, Object> result = lossControlDao.findByLocationId(combineLocationID);
+        if(result != null){
 
+            Map<String,Object> lcLocationId = lossControlDao.findLc360LocationID(combineLocationID);
+            if(lcLocationId != null){
+                String lc360LocationId = (String) lcLocationId.get(lcLocationId.keySet().iterator().next());
+                System.out.println(lc360LocationId);
+//
+package uk.co.allianz.rap.lc.model.response.importclient;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
+
+import java.util.ArrayList;
+
+@SuppressWarnings("unused")
+@Data
+public class Location {
+    @JsonProperty("LocationID")
+    private String locationID;
+    @JsonProperty("ClientID")
+    private String clientID;
+    @JsonProperty("LocationLookupID")
+    private String locationLookupID;
+    @JsonProperty("IsDeleted")
+    private boolean isDeleted;
+    @JsonProperty("Success")
+    private boolean success;
+    @JsonProperty("CommercialCoverages")
+    private ArrayList<CommercialCoverage> commercialCoverages;
+}
+
+//
+package uk.co.allianz.rap.lc.model.request.importclient;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
+
+import java.util.ArrayList;
+import java.util.Date;
+
+@SuppressWarnings("unused")
+@Data
+public class Location {
+    @JsonProperty("LookupID")
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    private String lookupID;
+    @JsonProperty("PolicyNumber")
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    private String policyNumber;
+    @JsonProperty("RenewalDate")
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    @JsonFormat(pattern = "yyyy-MM-dd")
+    private Date renewalDate;
+    @JsonProperty("Address")
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    private Address address;
+    @JsonProperty("Coverages")
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    private ArrayList<Coverage> coverages;
+    @JsonProperty("Contact")
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    private Contact contact;
+    @JsonProperty("Name")
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    private String name;
+
+    @JsonProperty("PolicyEffectiveDate")
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    private Date policyEffectiveDate;
+
+    @JsonProperty("PolicyExpirationDate")
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    private Date policyExpirationDate;
+
+    @JsonProperty("PolicyRenewalDate")
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    private Date policyRenewalDate;
+
+    @JsonProperty("OriginalEffectiveDate")
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    private Date originalEffectiveDate;
+
+    @JsonProperty("EffectiveDate")
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    private Date effectiveDate;
+    @JsonProperty("ExpirationDate")
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    private Date expirationDate;
+
+    @JsonProperty("LastInspectedDate")
+    @JsonInclude(JsonInclude.Include.ALWAYS)
+    private Date lastInspectedDate;
+    private ArrayList<GenericField> genericFields;
+
+}
 
 
 
