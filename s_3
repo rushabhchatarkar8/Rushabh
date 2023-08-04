@@ -1,3 +1,44 @@
+package uk.co.allianz.rap.lc.util;
+
+
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.reactive.function.client.WebClient;
+import uk.co.allianz.rap.lc.model.JwtTokenModel;
+import uk.co.allianz.rap.lc.model.response.AuthTokenResponse;
+
+@Component
+public class JwtUtil {
+
+    @Autowired
+    private JwtTokenModel jwtTokenModel;
+
+    //method used for invoke first LC360 api
+    //post http request
+    //input clientid,granttype,clientsecret,authtokenurl
+    //generate jwt bearer token
+    public String getAuthToken() {
+         WebClient webClient = WebClient.create();
+        MultiValueMap<String, String> requestBody = new LinkedMultiValueMap<>(); //added in try catch using custome exception
+        requestBody.add("grant_type", jwtTokenModel.getGrantType());
+        requestBody.add("client_id", jwtTokenModel.getClientId());
+        requestBody.add("client_secret", jwtTokenModel.getClientSecret());
+        AuthTokenResponse authTokenResponse = webClient.post()
+                .uri(jwtTokenModel.getAuthTokenUrl())
+                .contentType(MediaType.APPLICATION_FORM_URLENCODED)
+                .bodyValue(requestBody)
+                .retrieve()
+                .bodyToMono(AuthTokenResponse.class)
+                .block();
+
+        return authTokenResponse.getAccessToken();
+    }
+}
+
 //provide log 
 
 if (log.isErrorEnabled()) {
