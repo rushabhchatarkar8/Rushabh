@@ -1,3 +1,94 @@
+package uk.co.allianz.rap.lc.service; //onlyClientLC:+!
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importclient.Location;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+
+import java.util.ArrayList;
+import java.util.Map;
+
+//Extracting fields and data from the "data model"
+//sent from loss-control-adapter and building the API request: ImportClient
+@Slf4j
+@Service
+public class ImportClientServiceImp implements ImportClientService {
+
+    @Autowired
+    private TokenCache tokenCache;
+    @Autowired
+    private LossControlDao lossControlDao;
+    @Autowired
+    private LossControlServiceImpl lossControlServiceImpl;
+
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Override
+    public ImportClientResponse importClient(final String json, final String correlationId) throws CustomException, JsonProcessingException {
+        ImportClientResponse importClientResponse = null;
+        ImportClientRequest importClientRequest = objectMapper.readValue(json, ImportClientRequest.class);
+        Map<String, Object> result = lossControlDao.findByClientId(importClientRequest.getClient().getLookupID());
+
+        ArrayList<Location> locations = importClientRequest.getClient().getLocations();
+        String location_LookupID = locations.get(0).getLookupID();
+        String policyNumber = locations.get(0).getPolicyNumber();
+        String combineLocationID = location_LookupID + "+" + policyNumber;
+
+        if (result != null) {
+            Map<String, Object> lcClientId = lossControlDao.findLc360ClientID(importClientRequest.getClient().getLookupID());
+            if (lcClientId != null) {
+                String lc360ClientId = (String) lcClientId.get(lcClientId.keySet().iterator().next());
+                importClientRequest.getClient().setLookupID(lc360ClientId);
+                objectMapper.writeValueAsString(importClientRequest);
+                System.out.println(importClientRequest);
+                log.info("Received JSON");
+                importClientResponse = lossControlServiceImpl.clientPost(importClientRequest, tokenCache.retrieveTokenFromCache(correlationId));
+            } else {
+                log.info("lc360 client id not present");
+            }
+        } else {
+            log.info("Client is not present");
+            lossControlDao.insertClientId(importClientRequest.getClient().getLookupID());
+            importClientResponse = lossControlServiceImpl.clientPost(importClientRequest, tokenCache.retrieveTokenFromCache(correlationId));
+            lossControlDao.updateLcClientId(importClientRequest.getClient().getLookupID(),importClientResponse.getResult().getClientLookupID());
+        }
+
+        if (result == null) {
+            log.info("Location is not present");
+            lossControlDao.insertLocationId(combineLocationID);
+            importClientResponse = lossControlServiceImpl.clientPost(importClientRequest, tokenCache.retrieveTokenFromCache(correlationId));
+            ArrayList<uk.co.allianz.rap.lc.model.response.importclient.Location> locationsResponse = importClientResponse.getResult().getLocations();
+            String lc360_Lookup_ID = locationsResponse.get(0).getLocationLookupID();
+            lossControlDao.updateLcLocationId(combineLocationID, lc360_Lookup_ID);
+        } else {
+            Map<String, Object> lcLocationId = lossControlDao.findLc360LocationID(combineLocationID);
+            if (lcLocationId != null) {
+                String lc360LocationId = (String) lcLocationId.get(lcLocationId.keySet().iterator().next());
+                locations.get(0).setLookupID(lc360LocationId);
+                String updatedJson = objectMapper.writeValueAsString(importClientRequest);
+                System.out.println(updatedJson);
+                log.info("Received JSON");
+                importClientResponse = lossControlServiceImpl.clientPost(importClientRequest, tokenCache.retrieveTokenFromCache(correlationId));
+            } else {
+                log.info("lc360 location id not present");
+            }
+        }
+
+        log.info("importClientResponse Successfully Received");
+        return importClientResponse;
+    }
+}
+
+
 /////
 @Override
 public ImportClientResponse importClient(final String json, final String correlationId) throws CustomException, JsonProcessingException {
