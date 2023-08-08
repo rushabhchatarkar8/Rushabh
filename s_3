@@ -1,3 +1,29 @@
+import static org.mockito.Mockito.*;
+
+@RunWith(MockitoJUnitRunner.class)
+public class TokenCacheTest {
+
+    @InjectMocks
+    private TokenCache tokenCache;
+
+    @Mock
+    private JwtUtil jwtUtil;
+
+    @Mock
+    private CacheManager cacheManager;
+
+    @Mock
+    private Cache cache;
+
+    private static final String TOKEN_CACHE_NAME = "tokens";  // Define the private constant here
+
+    @Before
+    public void setup() {
+        when(cacheManager.getCache(TOKEN_CACHE_NAME)).thenReturn(cache); // Use the constant here
+    }
+
+    // ... Rest of the test methods remain the same
+}
 
 ////////////////1////////////////
 import org.springframework.cache.Cache;
