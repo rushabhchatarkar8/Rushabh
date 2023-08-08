@@ -1,3 +1,32 @@
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
+
+@RunWith(MockitoJUnitRunner.class)
+public class CacheConfigTest {
+
+    @InjectMocks
+    private CacheConfig cacheConfig;
+
+    @Test
+    public void testCacheManagerConfiguration() {
+        CacheManager cacheManager = cacheConfig.cacheManager();
+
+        assertNotNull(cacheManager);
+
+        Caffeine<Object, Object> caffeineCache = cacheConfig.caffeineCacheBuilder();
+        assertNotNull(caffeineCache);
+
+        caffeineCache.expireAfterWrite(123, TimeUnit.SECONDS);
+        caffeineCache.maximumSize(456);
+
+        assertEquals(123, caffeineCache.getExpiresAfterWrite());
+        assertEquals(456, caffeineCache.getMaximumSize());
+    }
+}
+
+
+//
+
 import static org.mockito.Mockito.*;
 
 @RunWith(MockitoJUnitRunner.class)
