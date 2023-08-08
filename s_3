@@ -1,3 +1,279 @@
+
+////////////////1////////////////
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.caffeine.CaffeineCacheManager;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.test.context.junit4.SpringRunner;
+
+import static org.junit.Assert.assertNotNull;
+
+@RunWith(SpringRunner.class)
+public class CacheConfigTest {
+
+    @Configuration
+    static class TestConfiguration {
+        @Bean
+        public CacheManager cacheManager() {
+            return new CaffeineCacheManager();
+        }
+    }
+
+    @Autowired
+    private CacheManager cacheManager;
+
+    @Test
+    public void testCacheManagerBean() {
+        Cache cache = cacheManager.getCache("tokens");
+        assertNotNull(cache);
+    }
+}
+
+
+//
+import static org.mockito.Mockito.*;
+
+@RunWith(MockitoJUnitRunner.class)
+public class TokenCacheTest {
+
+    @InjectMocks
+    private TokenCache tokenCache;
+
+    @Mock
+    private JwtUtil jwtUtil;
+
+    @Mock
+    private CacheManager cacheManager;
+
+    @Mock
+    private Cache cache;
+
+    @Before
+    public void setup() {
+        when(cacheManager.getCache(TokenCache.TOKEN_CACHE_NAME)).thenReturn(cache);
+    }
+
+    @Test
+    public void testRetrieveTokenFromDataSource() throws CustomException {
+        when(jwtUtil.getAuthToken()).thenReturn("testToken");
+        String token = tokenCache.retrieveTokenFromDataSource();
+        assertEquals("testToken", token);
+    }
+
+    @Test
+    public void testCacheToken() {
+        tokenCache.cacheToken("cachedToken");
+        verify(cache, times(1)).put(eq(TokenCache.TOKEN_CACHE_NAME), eq("cachedToken"));
+    }
+
+    @Test
+    public void testRetrieveTokenFromCache() throws CustomException {
+        when(cache.get(TokenCache.TOKEN_CACHE_NAME)).thenReturn(new SimpleValueWrapper("cachedToken"));
+        String token = tokenCache.retrieveTokenFromCache("correlationId");
+        assertEquals("cachedToken", token);
+    }
+
+    @Test
+    public void testGetTokenFromCache() throws CustomException {
+        when(cache.get(TokenCache.TOKEN_CACHE_NAME)).thenReturn(null);
+        when(jwtUtil.getAuthToken()).thenReturn("newToken");
+        String token = tokenCache.getToken();
+        assertEquals("newToken", token);
+        verify(cache, times(1)).put(eq(TokenCache.TOKEN_CACHE_NAME), eq("newToken"));
+    }
+}
+
+
+////2/////
+package uk.co.allianz.rap.lc.cache;
+
+import com.github.benmanes.caffeine.cache.Caffeine;
+import org.junit.jupiter.api.Test;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.caffeine.CaffeineCacheManager;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class CacheConfigTest {
+
+    @Test
+    void testCacheManagerBean() {
+        CacheManager cacheManager = new CacheConfig().cacheManager();
+
+        assertNotNull(cacheManager);
+        assertTrue(cacheManager instanceof CaffeineCacheManager);
+
+        CaffeineCacheManager caffeineCacheManager = (CaffeineCacheManager) cacheManager;
+        Caffeine<Object, Object> caffeine = caffeineCacheManager.getCaffeine();
+
+        assertNotNull(caffeine);
+        assertEquals(CacheConfig.CACHE_DURATION, caffeine.getExpiresAfterWrite());
+        assertEquals(CacheConfig.CACHE_SIZE, caffeine.getMaximumSize());
+    }
+}
+
+
+//
+package uk.co.allianz.rap.lc.cache;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.util.JwtUtil;
+
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+class TokenCacheTest {
+
+    @Mock
+    private JwtUtil jwtUtil;
+
+    @Mock
+    private CacheManager cacheManager;
+
+    @Mock
+    private Cache cache;
+
+    @InjectMocks
+    private TokenCache tokenCache;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+        when(cacheManager.getCache(TokenCache.TOKEN_CACHE_NAME)).thenReturn(cache);
+    }
+
+    @Test
+    void testGetTokenFromCache() throws CustomException {
+        String token = "testToken";
+        when(cache.get(TokenCache.TOKEN_CACHE_NAME)).thenReturn(mock(Cache.ValueWrapper.class));
+        when(cache.get(TokenCache.TOKEN_CACHE_NAME).get()).thenReturn(token);
+
+        String result = tokenCache.getToken();
+
+        assertEquals(token, result);
+        verify(cache, times(1)).get(TokenCache.TOKEN_CACHE_NAME);
+    }
+
+    @Test
+    void testGetTokenFromDataSource() throws CustomException {
+        String jwtToken = "testJwtToken";
+        when(jwtUtil.getAuthToken()).thenReturn(jwtToken);
+
+        String result = tokenCache.retrieveTokenFromDataSource();
+
+        assertEquals(jwtToken, result);
+        verify(jwtUtil, times(1)).getAuthToken();
+    }
+
+    @Test
+    void testCacheToken() {
+        String token = "testToken";
+        tokenCache.cacheToken(token);
+
+        verify(cache, times(1)).put(TokenCache.TOKEN_CACHE_NAME, token);
+    }
+
+    @Test
+    void testRetrieveTokenFromCache() throws CustomException {
+        String correlationId = "testCorrelationId";
+        String token = "testToken";
+        when(cache.get(TokenCache.TOKEN_CACHE_NAME)).thenReturn(mock(Cache.ValueWrapper.class));
+        when(cache.get(TokenCache.TOKEN_CACHE_NAME).get()).thenReturn(token);
+
+        String result = tokenCache.retrieveTokenFromCache(correlationId);
+
+        assertEquals(token, result);
+        verify(cache, times(1)).get(TokenCache.TOKEN_CACHE_NAME);
+    }
+}
+
+
+/////1//////
+import static org.junit.Assert.*;
+import static org.mockito.Mockito.*;
+
+@RunWith(MockitoJUnitRunner.class)
+public class CacheConfigTest {
+
+    @InjectMocks
+    private CacheConfig cacheConfig;
+
+    @Test
+    public void testCacheManagerConfiguration() {
+        CacheManager cacheManager = cacheConfig.cacheManager();
+
+        assertNotNull(cacheManager);
+
+        Caffeine<Object, Object> caffeineCache = cacheConfig.caffeineCacheBuilder();
+        assertNotNull(caffeineCache);
+
+        assertEquals(123, caffeineCache.expireAfterWrite(123, TimeUnit.SECONDS).getExpiresAfterWrite());
+        assertEquals(456, caffeineCache.maximumSize(456).maximumSize());
+    }
+}
+
+//
+import static org.mockito.Mockito.*;
+
+@RunWith(MockitoJUnitRunner.class)
+public class TokenCacheTest {
+
+    @InjectMocks
+    private TokenCache tokenCache;
+
+    @Mock
+    private JwtUtil jwtUtil;
+
+    @Mock
+    private CacheManager cacheManager;
+
+    @Mock
+    private Cache cache;
+
+    @Test
+    public void testGetTokenFromCache() throws CustomException {
+        when(cacheManager.getCache(eq(TokenCache.TOKEN_CACHE_NAME))).thenReturn(cache);
+        when(cache.get(eq(TokenCache.TOKEN_CACHE_NAME))).thenReturn(new SimpleValueWrapper("cachedToken"));
+
+        String token = tokenCache.getToken();
+
+        assertEquals("cachedToken", token);
+        verify(jwtUtil, never()).getAuthToken(); // Make sure the jwtUtil is not called
+    }
+
+    @Test
+    public void testGetTokenFromDataSource() throws CustomException {
+        when(cacheManager.getCache(eq(TokenCache.TOKEN_CACHE_NAME))).thenReturn(cache);
+        when(cache.get(eq(TokenCache.TOKEN_CACHE_NAME))).thenReturn(null);
+        when(jwtUtil.getAuthToken()).thenReturn("newToken");
+
+        String token = tokenCache.getToken();
+
+        assertEquals("newToken", token);
+        verify(cache).put(eq(TokenCache.TOKEN_CACHE_NAME), eq("newToken"));
+    }
+
+    @Test
+    public void testRetrieveTokenFromCache() throws CustomException {
+        when(cacheManager.getCache(eq(TokenCache.TOKEN_CACHE_NAME))).thenReturn(cache);
+        when(cache.get(eq(TokenCache.TOKEN_CACHE_NAME))).thenReturn(new SimpleValueWrapper("cachedToken"));
+
+        String token = tokenCache.retrieveTokenFromCache("correlationId");
+
+        assertEquals("cachedToken", token);
+    }
+}
+
+///////////////
 package uk.co.allianz.rap.lc.cache;
 
 import lombok.extern.slf4j.Slf4j;
