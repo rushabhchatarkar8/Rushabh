@@ -1,3 +1,23 @@
+@Repository
+@Qualifier("datasource")
+public class MainDatabaseRepository implements MyRepository {
+    // Implementation for the main data source
+}
+
+@Repository
+@Qualifier("test-datasource")
+public class TestDatabaseRepository implements MyRepository {
+    // Implementation for the test data source
+}
+
+
+
+
+test-datasource: # This is a custom name for your test data source
+    url: jdbc:postgresql://localhost:5432/testdb
+    username: testuser
+    password: testpassword
+// above //
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/testdb  # Replace with your PostgreSQL URL
