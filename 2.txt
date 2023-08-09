@@ -9,6 +9,62 @@ import uk.co.allianz.rap.lc.dao.LossControlDao;
 import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
 import uk.co.allianz.rap.lc.service.LossControlServiceImpl;
 
+import java.lang.reflect.Field;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.*;
+
+class ImportClientServiceImpTest {
+
+    @Mock
+    private TokenCache tokenCache;
+    @Mock
+    private LossControlDao lossControlDao;
+    @Mock
+    private LossControlServiceImpl lossControlServiceImpl;
+    @Mock
+    private ObjectMapper objectMapper;
+
+    private ImportClientServiceImp importClientService;
+
+    @BeforeEach
+    void setUp() throws NoSuchFieldException, IllegalAccessException {
+        MockitoAnnotations.openMocks(this);
+        importClientService = new ImportClientServiceImp();
+
+        // Use reflection to inject the mocked dependencies
+        Field tokenCacheField = ImportClientServiceImp.class.getDeclaredField("tokenCache");
+        tokenCacheField.setAccessible(true);
+        tokenCacheField.set(importClientService, tokenCache);
+
+        Field lossControlDaoField = ImportClientServiceImp.class.getDeclaredField("lossControlDao");
+        lossControlDaoField.setAccessible(true);
+        lossControlDaoField.set(importClientService, lossControlDao);
+
+        Field lossControlServiceImplField = ImportClientServiceImp.class.getDeclaredField("lossControlServiceImpl");
+        lossControlServiceImplField.setAccessible(true);
+        lossControlServiceImplField.set(importClientService, lossControlServiceImpl);
+
+        Field objectMapperField = ImportClientServiceImp.class.getDeclaredField("objectMapper");
+        objectMapperField.setAccessible(true);
+        objectMapperField.set(importClientService, objectMapper);
+    }
+
+    // Rest of your test methods...
+}
+
+//////
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.LossControlServiceImpl;
+
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
