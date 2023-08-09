@@ -1,4 +1,107 @@
-   @Override
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.jdbc.Sql;
+
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+@SpringBootTest
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
+public class LossControlDaoImplLocationTest {
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private LossControlDao lossControlDao;
+
+    @Test
+    @Sql("/location_lookup_cleanup.sql") // SQL script to clean up test data before running the test
+    public void testInsertLocationId() {
+        String locationId = "test_location_id";
+        
+        lossControlDao.insertLocationId(locationId);
+
+        Map<String, Object> result = jdbcTemplate.queryForMap("SELECT * FROM location_lookup WHERE location_id = ?", locationId);
+
+        assertNotNull(result);
+        assertEquals(locationId, result.get("location_id"));
+    }
+
+    @Test
+    @Sql("/location_lookup_cleanup.sql") // SQL script to clean up test data before running the test
+    public void testUpdateLcLocationId() {
+        String locationId = "test_location_id";
+        String lc360LocationId = "test_lc360_location_id";
+
+        // Insert a test location before updating
+        jdbcTemplate.update("INSERT INTO location_lookup(location_id) VALUES (?)", locationId);
+
+        lossControlDao.updateLcLocationId(locationId, lc360LocationId);
+
+        Map<String, Object> result = jdbcTemplate.queryForMap("SELECT * FROM location_lookup WHERE location_id = ?", locationId);
+
+        assertNotNull(result);
+        assertEquals(lc360LocationId, result.get("lc360_location_id"));
+    }
+}
+
+
+//
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.jdbc.JdbcTestUtils;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+@SpringBootTest
+@Sql(scripts = { "classpath:schema.sql" }) // Use your schema creation script here
+class LossControlDaoImplLocationTests {
+
+    @Autowired
+    private LossControlDao lossControlDao;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    @Test
+    void testInsertLocationId() {
+        String locationId = "location123";
+        lossControlDao.insertLocationId(locationId);
+
+        int rowCount = JdbcTestUtils.countRowsInTableWhere(jdbcTemplate, "location_lookup", "location_id = '" + locationId + "'");
+        assertEquals(1, rowCount);
+    }
+
+    @Test
+    void testUpdateLcLocationId() {
+        String locationId = "location123";
+        String lc360LocationId = "lc360location123";
+
+        // Insert a location row first
+        jdbcTemplate.update("INSERT INTO location_lookup (location_id) VALUES (?)", locationId);
+
+        lossControlDao.updateLcLocationId(locationId, lc360LocationId);
+
+        String fetchedLc360LocationId = jdbcTemplate.queryForObject(
+            "SELECT lc360_location_id FROM location_lookup WHERE location_id = ?", String.class, locationId
+        );
+
+        assertEquals(lc360LocationId, fetchedLc360LocationId);
+    }
+}
+
+////
+@Override
     public void insertLocationId(String location_id) {
         String insert = "insert into location_lookup(location_id) values(?)";
         int update = this.jdbcTemplate.update(insert, location_id);
