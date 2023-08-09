@@ -1,4 +1,124 @@
-        Mockito.when(jdbcTemplate.queryForMap(anyString(), any())).thenThrow(EmptyResultDataAccessException.class);
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.model.request.importclient.Client;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importclient.Location;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.LossControlServiceImpl;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+class ImportClientServiceImpTest {
+
+    @Mock
+    private TokenCache tokenCache;
+    @Mock
+    private LossControlDao lossControlDao;
+    @Mock
+    private LossControlServiceImpl lossControlServiceImpl;
+    @Mock
+    private ObjectMapper objectMapper;
+
+    private ImportClientServiceImp importClientService;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+        importClientService = new ImportClientServiceImp(tokenCache, lossControlDao, lossControlServiceImpl, objectMapper);
+    }
+
+    @Test
+    void testImportClientClientExists() throws CustomException, JsonProcessingException {
+        // Mocking
+String json = "{\"client\": {" +
+              "\"lookupID\": \"client123\"," +
+              "\"locations\": [{" +
+                  "\"lookupID\": \"location123\"," +
+                  "\"policyNumber\": \"policy123\"" +
+              "}]" +
+          "}}";
+
+
+
+ //       String json = "{\"client\": { ... }}";
+        String correlationId = "123456";
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        Client client = new Client();
+        client.setLookupID("client123");
+        importClientRequest.setClient(client);
+        Location location = new Location();
+        location.setLookupID("location123");
+        location.setPolicyNumber("policy123");
+        ArrayList<Location> locations = new ArrayList<>(Collections.singletonList(location));
+        importClientRequest.getClient().setLocations(locations);
+
+        when(objectMapper.readValue(json, ImportClientRequest.class)).thenReturn(importClientRequest);
+        when(lossControlDao.findByClientId("client123")).thenReturn(new HashMap<>());
+        when(lossControlDao.findLc360ClientID("client123")).thenReturn(new HashMap<>());
+        when(lossControlDao.findLc360LocationID("location123+policy123")).thenReturn(new HashMap<>());
+
+        // Test
+        ImportClientResponse result = importClientService.importClient(json, correlationId);
+
+        // Assertions and verifications
+        assertNotNull(result);
+        verify(lossControlDao, never()).insertClientId(any());
+        verify(lossControlDao, never()).insertLocationId(any());
+        verify(lossControlServiceImpl).clientPost(importClientRequest, null);
+        verify(lossControlDao, never()).updateLcClientId(any(), any());
+        verify(lossControlDao, never()).updateLcLocationId(any(), any());
+    }
+
+    @Test
+    void testImportClientClientDoesNotExist() throws CustomException, JsonProcessingException {
+        // Mocking
+        String json = "{\"client\": { ... }}";
+        String correlationId = "123456";
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        Client client = new Client();
+        client.setLookupID("client123");
+        importClientRequest.setClient(client);
+        Location location = new Location();
+        location.setLookupID("location123");
+        location.setPolicyNumber("policy123");
+        ArrayList<Location> locations = new ArrayList<>(Collections.singletonList(location));
+        importClientRequest.getClient().setLocations(locations);
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+
+        when(objectMapper.readValue(json, ImportClientRequest.class)).thenReturn(importClientRequest);
+        when(lossControlDao.findByClientId("client123")).thenReturn(null);
+        when(lossControlServiceImpl.clientPost(importClientRequest, null)).thenReturn(importClientResponse);
+
+        // Test
+        ImportClientResponse result = importClientService.importClient(json, correlationId);
+
+        // Assertions and verifications
+        assertNotNull(result);
+        verify(lossControlDao).insertClientId("client123");
+        verify(lossControlDao).insertLocationId("location123+policy123");
+        verify(lossControlServiceImpl).clientPost(importClientRequest, null);
+        verify(lossControlDao).updateLcClientId("client123", null);
+        verify(lossControlDao).updateLcLocationId("location123+policy123", null);
+    }
+}
+
+
+///////////
+
+Mockito.when(jdbcTemplate.queryForMap(anyString(), any())).thenThrow(EmptyResultDataAccessException.class);
         Map<String, Object> result = dao.findLc360LocationID("111");
         Assertions.assertNull(result);
         Mockito.verify(jdbcTemplate).queryForMap(eq("select lc360_location_id from location_lookup where location_id = ? "), eq("111"));
