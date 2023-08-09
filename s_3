@@ -1,4 +1,13 @@
 spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/testdb  # Replace with your PostgreSQL URL
+    username: testuser
+    password: testpassword
+
+# Other configuration properties...
+
+///
+spring:
   h2:
     console:
       enabled: true  # Enable H2 console for debugging (optional)
