@@ -1,3 +1,198 @@
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.util.JwtUtil;
+
+public class TokenCacheTest {
+
+    @Mock
+    private JwtUtil jwtUtil;
+
+    @Mock
+    private CacheManager cacheManager;
+
+    @Mock
+    private Cache cache;
+
+    @InjectMocks
+    private TokenCache tokenCache;
+
+    @BeforeEach
+    public void setup() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testRetrieveTokenFromCache() throws CustomException {
+        String correlationId = "12345";
+        String expectedToken = "sampleToken";
+
+        // Mock cache behavior
+        when(cacheManager.getCache(anyString())).thenReturn(cache);
+        when(cache.get(any())).thenReturn(expectedToken);
+
+        // Mock JwtUtil behavior
+        when(jwtUtil.getAuthToken()).thenReturn(expectedToken);
+
+        // Call the method under test
+        String actualToken = tokenCache.retrieveTokenFromCache(correlationId);
+
+        // Verify behavior
+        verify(cacheManager).getCache(TokenCache.TOKEN_CACHE_NAME);
+        verify(cache).get(TokenCache.TOKEN_CACHE_NAME);
+        verify(jwtUtil).getAuthToken();
+        verify(cache).put(eq(TokenCache.TOKEN_CACHE_NAME), eq(expectedToken));
+
+        // Verify the returned token
+        assertEquals(expectedToken, actualToken);
+    }
+
+    @Test
+    public void testRetrieveTokenFromCache_NoCacheEntry() throws CustomException {
+        String correlationId = "12345";
+        String expectedToken = "sampleToken";
+
+        // Mock cache behavior
+        when(cacheManager.getCache(anyString())).thenReturn(cache);
+        when(cache.get(any())).thenReturn(null);
+
+        // Mock JwtUtil behavior
+        when(jwtUtil.getAuthToken()).thenReturn(expectedToken);
+
+        // Call the method under test
+        String actualToken = tokenCache.retrieveTokenFromCache(correlationId);
+
+        // Verify behavior
+        verify(cacheManager).getCache(TokenCache.TOKEN_CACHE_NAME);
+        verify(cache).get(TokenCache.TOKEN_CACHE_NAME);
+        verify(jwtUtil).getAuthToken();
+        verify(cache).put(eq(TokenCache.TOKEN_CACHE_NAME), eq(expectedToken));
+
+        // Verify the returned token
+        assertEquals(expectedToken, actualToken);
+    }
+}
+
+
+//
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.util.JwtUtil;
+
+import static org.mockito.Mockito.*;
+
+@ExtendWith(MockitoExtension.class)
+class TokenCacheTest {
+
+    @Mock
+    private JwtUtil jwtUtil;
+
+    @Mock
+    private CacheManager cacheManager;
+
+    @InjectMocks
+    private TokenCache tokenCache;
+
+    @Mock
+    private Cache cache;
+
+    @Test
+    void testRetrieveTokenFromCache_WithCachedToken() throws CustomException {
+        String correlationId = "correlation-123";
+        String cachedToken = "cached-token";
+
+        when(cacheManager.getCache("tokens")).thenReturn(cache);
+        when(cache.get("tokens")).thenReturn(new Cache.ValueWrapper() {
+            @Override
+            public Object get() {
+                return cachedToken;
+            }
+        });
+
+        String result = tokenCache.retrieveTokenFromCache(correlationId);
+
+        verify(cacheManager).getCache("tokens");
+        verify(cache).get("tokens");
+        verify(jwtUtil, never()).getAuthToken(); // Token should not be fetched from JwtUtil
+        // Ensure logs are generated and correlationId is mentioned
+        // Verify if the returned token matches the cached token
+        // Verify log statements
+
+        assertEquals(cachedToken, result);
+    }
+
+    @Test
+    void testRetrieveTokenFromCache_WithoutCachedToken() throws CustomException {
+        String correlationId = "correlation-456";
+        String fetchedToken = "fetched-token";
+
+        when(cacheManager.getCache("tokens")).thenReturn(cache);
+        when(cache.get("tokens")).thenReturn(null); // Simulating cache miss
+        when(jwtUtil.getAuthToken()).thenReturn(fetchedToken);
+
+        String result = tokenCache.retrieveTokenFromCache(correlationId);
+
+        verify(cacheManager).getCache("tokens");
+        verify(cache).get("tokens");
+        verify(jwtUtil).getAuthToken(); // Token should be fetched from JwtUtil
+        // Ensure logs are generated and correlationId is mentioned
+        // Verify if the returned token matches the fetched token
+        // Verify log statements
+
+        assertEquals(fetchedToken, result);
+    }
+}
+
+
+/////////
+@Test
+    public void testRetrieveTokenFromCache() throws CustomException {
+        String correlationId = "testCorrelationId";
+        String mockToken = "mockToken";
+
+        when(cacheManager.getCache(TokenCache.TOKEN_CACHE_NAME)).thenReturn(cache);
+        when(cache.get(TokenCache.TOKEN_CACHE_NAME)).thenReturn(Mockito.mock(Cache.ValueWrapper.class));
+        when(cache.get(TokenCache.TOKEN_CACHE_NAME).get()).thenReturn(mockToken);
+
+        when(tokenCache.getToken()).thenReturn(mockToken);
+
+        String resultToken = tokenCache.retrieveTokenFromCache(correlationId);
+
+        assertEquals(mockToken, resultToken);
+
+        verify(cacheManager, times(1)).getCache(TokenCache.TOKEN_CACHE_NAME);
+        verify(cache, times(1)).get(TokenCache.TOKEN_CACHE_NAME);
+        verify(tokenCache, times(1)).getToken();
+
+        verify(cache, never()).put(any(), any());
+    }
+}
+In this test class, we are using JUnit 5 along with Mockito to mock the necessary dependencies. The test case ensures that all lines in the retrieveTokenFromCache method are covered. The flow includes mocking the cache manager, cache, and token retrieval using the getToken method. The verify statements at the end ensure that the relevant methods were called the expected number of times.
+
+Please note that you might need to adjust the imports and adapt the test case to your project's specific configuration and version of Spring and Mockito.
+
+
+
+
+
+
+
+
+
+/////////
 package uk.co.allianz.rap.lc.cache;
 
 import lombok.extern.slf4j.Slf4j;
