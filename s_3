@@ -1,3 +1,39 @@
+   @Override
+    public void insertLocationId(String location_id) {
+        String insert = "insert into location_lookup(location_id) values(?)";
+        int update = this.jdbcTemplate.update(insert, location_id);
+    }
+
+    @Override
+    public void updateLcLocationId(String location_id, String lc360_location_id) {
+        String update = "update location_lookup set lc360_location_id = ? where location_id = ?";
+        this.jdbcTemplate.update(update, lc360_location_id, location_id);
+    }
+
+    @Override
+    public Map<String, Object> findByLocationId(String location_id) {
+        String checkLocationId = "select * from location_lookup where location_id =?";
+        Map<String, Object> result;
+        try {
+            result = this.jdbcTemplate.queryForMap(checkLocationId, location_id);
+        } catch (EmptyResultDataAccessException exception) {
+            return null;
+        }
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> findLc360LocationID(String location_id) {
+        String lc360LocationId = "select lc360_location_id from location_lookup where location_id = ? ";
+        Map<String, Object> result;
+        try {
+            result = this.jdbcTemplate.queryForMap(lc360LocationId, location_id);
+        } catch (EmptyResultDataAccessException exception) {
+            return null;
+        }
+        return result;
+    }
+//
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
