@@ -1,3 +1,208 @@
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
+
+import javax.sql.DataSource;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+@SpringBootTest
+@ActiveProfiles("test")
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
+public class ImportClientServiceTest {
+
+    @Autowired
+    private ImportClientService importClientService;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private DataSource dataSource;
+
+    @Test
+    public void testImportClient() throws Exception {
+        String json = "your_test_json_here";
+        String correlationId = "your_test_correlation_id_here";
+
+        ImportClientResponse response = importClientService.importClient(json, correlationId);
+
+        assertNotNull(response);
+        assertNotNull(response.getResult());
+        assertNotNull(response.getResult().getClientLookupID());
+        // Add more assertions as needed
+    }
+
+    // Add more test cases for edge cases and scenarios
+}
+
+@SpringBootTest
+@ActiveProfiles("test")
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@DirtiesContext(classMode = DirtiesContext.ClassMode.BEFORE_EACH_TEST_METHOD)
+public class LossControlDaoTest {
+
+    @Autowired
+    private LossControlDao lossControlDao;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private DataSource dataSource;
+
+    @Test
+    public void testInsertClientId() {
+        String clientId = "test_client_id";
+        lossControlDao.insertClientId(clientId);
+
+        Integer count = jdbcTemplate.queryForObject("SELECT COUNT(*) FROM client_lookup", Integer.class);
+        assertEquals(1, count);
+    }
+
+    // Add more test cases for other methods in LossControlDaoImpl
+}
+
+//
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.jdbc.JdbcTestUtils;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importclient.Location;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+@SpringBootTest
+public class ImportClientServiceTest {
+
+    @Autowired
+    private ImportClientService importClientService;
+
+    @Autowired
+    private LossControlDao lossControlDao;
+
+    @Test
+    public void testImportClient() {
+        String json = "{\"client\": {\"lookupID\": \"123\", ...}, ...}"; // Sample JSON
+        String correlationId = "correlation123";
+
+        // Clear the database before running the test
+        JdbcTestUtils.deleteFromTables(lossControlDao.getJdbcTemplate(), "client_lookup", "location_lookup");
+
+        try {
+            ImportClientResponse response = importClientService.importClient(json, correlationId);
+            assertNotNull(response);
+            assertNotNull(response.getResult());
+            assertNotNull(response.getResult().getClientLookupID());
+
+            // Check if the client was inserted into the database
+            assertTrue(JdbcTestUtils.countRowsInTableWhere(lossControlDao.getJdbcTemplate(), "client_lookup", "client_id = '123'") > 0);
+
+            // Check if the location was inserted into the database
+            ImportClientRequest importClientRequest = objectMapper.readValue(json, ImportClientRequest.class);
+            Location location = importClientRequest.getClient().getLocations().get(0);
+            assertTrue(JdbcTestUtils.countRowsInTableWhere(lossControlDao.getJdbcTemplate(), "location_lookup", "location_id = '" + location.getLookupID() + "+" + location.getPolicyNumber() + "'") > 0);
+
+            // Test existing client scenario
+            response = importClientService.importClient(json, correlationId);
+            assertNotNull(response);
+            assertNotNull(response.getResult());
+            assertNotNull(response.getResult().getClientLookupID());
+        } catch (Exception e) {
+            fail("Exception occurred: " + e.getMessage());
+        }
+    }
+}
+
+//
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.jdbc.JdbcTestUtils;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+@SpringBootTest
+class ImportClientServiceImpTest {
+
+    @Autowired
+    private ImportClientService importClientService;
+
+    @Test
+    void testImportClient() throws Exception {
+        String json = "{\"client\": { ... }}"; // Sample JSON data
+        String correlationId = "123456";
+
+        ImportClientResponse response = importClientService.importClient(json, correlationId);
+
+        assertNotNull(response);
+        assertNotNull(response.getResult());
+        assertNotNull(response.getResult().getClientLookupID());
+        // Add more assertions as needed
+    }
+}
+
+@SpringBootTest
+class LossControlDaoImplTest {
+
+    @Autowired
+    private LossControlDao lossControlDao;
+
+    @Test
+    void testInsertAndFindClient() {
+        String clientId = "client123";
+        lossControlDao.insertClientId(clientId);
+        Map<String, Object> result = lossControlDao.findByClientId(clientId);
+        
+        assertNotNull(result);
+        assertEquals(clientId, result.get("client_id"));
+    }
+
+    @Test
+    void testInsertAndUpdateClient() {
+        String clientId = "client123";
+        String lc360ClientId = "lc360client123";
+        lossControlDao.insertClientId(clientId);
+        lossControlDao.updateLcClientId(clientId, lc360ClientId);
+        Map<String, Object> result = lossControlDao.findLc360ClientID(clientId);
+        
+        assertNotNull(result);
+        assertEquals(lc360ClientId, result.get("lc360_client_id"));
+    }
+
+    @Test
+    void testInsertAndFindLocation() {
+        String locationId = "location123";
+        lossControlDao.insertLocationId(locationId);
+        Map<String, Object> result = lossControlDao.findByLocationId(locationId);
+        
+        assertNotNull(result);
+        assertEquals(locationId, result.get("location_id"));
+    }
+
+    @Test
+    void testInsertAndUpdateLocation() {
+        String locationId = "location123";
+        String lc360LocationId = "lc360location123";
+        lossControlDao.insertLocationId(locationId);
+        lossControlDao.updateLcLocationId(locationId, lc360LocationId);
+        Map<String, Object> result = lossControlDao.findLc360LocationID(locationId);
+        
+        assertNotNull(result);
+        assertEquals(lc360LocationId, result.get("lc360_location_id"));
+    }
+}
+
+////above without mock include dao and service////
 package uk.co.allianz.rap.lc.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
