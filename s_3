@@ -1,3 +1,72 @@
+package uk.co.allianz.rap.lc.cache;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Component;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.util.JwtUtil;
+
+//1. Implement a  token caching logic within loss-control-service
+@Slf4j
+@Component
+public class TokenCache {
+
+    private static final String TOKEN_CACHE_NAME = "tokens";
+    @Autowired
+    protected JwtUtil jwtUtil;
+    @Autowired
+    protected CacheManager cacheManager;
+
+    @Cacheable(value = TOKEN_CACHE_NAME)
+    public String getToken() throws CustomException {
+
+        // Retrieve the token from the cache or data source
+        Cache cache = cacheManager.getCache(TOKEN_CACHE_NAME);
+        if (cache != null) {
+            Cache.ValueWrapper valueWrapper = cache.get(TOKEN_CACHE_NAME);
+            if (valueWrapper != null) {
+                return (String) valueWrapper.get();
+            }
+        }
+        String tokenFromDataSource = retrieveTokenFromDataSource();
+        log.info("Generated Token");
+        // Cache the token for future use
+        cacheToken(tokenFromDataSource);
+        return tokenFromDataSource;
+    }
+
+    public String retrieveTokenFromDataSource() throws CustomException {
+        // Perform the actual retrieval of the token from the jwtUtil class
+        String jwtToken = jwtUtil.getAuthToken();
+        return jwtToken;
+    }
+
+    //token store in cache
+    public void cacheToken(final String token) {
+        Cache cache = cacheManager.getCache(TOKEN_CACHE_NAME);
+        if (cache != null) {
+            cache.put(TOKEN_CACHE_NAME, token);
+        }
+    }
+
+    //retrieve Token From Cache & request contains the correlation id
+    public String retrieveTokenFromCache(final String correlationId) throws CustomException {
+        if (log.isInfoEnabled()) {
+            log.info("Start invoking for token : Correlation ID: " + correlationId);
+        }
+        String token = getToken();
+        log.info("Token fetch from cache");
+        if (log.isInfoEnabled()) {
+            log.info("Successfully retrieved the token: Correlation ID: " + correlationId);
+        }
+        return token;
+    }
+}
+
+///////////////////////
 import static org.junit.Assert.*;
 import static org.mockito.Mockito.*;
 
