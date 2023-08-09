@@ -1,3 +1,44 @@
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.LossControlServiceImpl;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.*;
+
+class ImportClientServiceImpTest {
+
+    @Mock
+    private TokenCache tokenCache;
+    @Mock
+    private LossControlDao lossControlDao;
+    @Mock
+    private LossControlServiceImpl lossControlServiceImpl;
+    @Mock
+    private ObjectMapper objectMapper;
+
+    private ImportClientServiceImp importClientService;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+        importClientService = new ImportClientServiceImp();
+        importClientService.setTokenCache(tokenCache);
+        importClientService.setLossControlDao(lossControlDao);
+        importClientService.setLossControlServiceImpl(lossControlServiceImpl);
+        importClientService.setObjectMapper(objectMapper);
+    }
+
+    // Rest of your test methods...
+}
+
+/////
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
