@@ -1,4 +1,10 @@
-        client.setLocations(Collections.singletonList(location));
+        Mockito.when(jdbcTemplate.queryForMap(anyString(), any())).thenThrow(EmptyResultDataAccessException.class);
+        Map<String, Object> result = dao.findLc360LocationID("111");
+        Assertions.assertNull(result);
+        Mockito.verify(jdbcTemplate).queryForMap(eq("select lc360_location_id from location_lookup where location_id = ? "), eq("111"));
+
+
+client.setLocations(Collections.singletonList(location));
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
