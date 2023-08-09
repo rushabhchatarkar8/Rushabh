@@ -1,3 +1,187 @@
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+import org.springframework.transaction.annotation.Transactional;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+
+@SpringBootTest
+@SpringJUnitConfig
+@AutoConfigureTestDatabase
+@Transactional
+public class LossControlDaoImplTest {
+
+    @Autowired
+    private LossControlDao lossControlDao;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    @BeforeEach
+    public void setUp() {
+        // Create necessary tables or data for testing (if needed)
+        // For simplicity, this example assumes the tables already exist
+    }
+
+    @Test
+    public void testClientOperations() {
+        // Insert a client
+        lossControlDao.insertClientId("testClientId");
+        Map<String, Object> insertedClient = lossControlDao.findByClientId("testClientId");
+        assertEquals("testClientId", insertedClient.get("client_id"));
+
+        // Update client LC360 ID
+        lossControlDao.updateLcClientId("testClientId", "lc360TestClientId");
+        Map<String, Object> updatedClient = lossControlDao.findLc360ClientID("testClientId");
+        assertEquals("lc360TestClientId", updatedClient.get("lc360_client_id"));
+    }
+
+    @Test
+    public void testLocationOperations() {
+        // Insert a location
+        lossControlDao.insertLocationId("testLocationId");
+        Map<String, Object> insertedLocation = lossControlDao.findByLocationId("testLocationId");
+        assertEquals("testLocationId", insertedLocation.get("location_id"));
+
+        // Update location LC360 ID
+        lossControlDao.updateLcLocationId("testLocationId", "lc360TestLocationId");
+        Map<String, Object> updatedLocation = lossControlDao.findLc360LocationID("testLocationId");
+        assertEquals("lc360TestLocationId", updatedLocation.get("lc360_location_id"));
+    }
+
+    @Test
+    public void testNonExistentClientAndLocation() {
+        // Attempt to find non-existent client and location
+        Map<String, Object> nonExistentClient = lossControlDao.findByClientId("nonExistentClientId");
+        assertNull(nonExistentClient);
+
+        Map<String, Object> nonExistentLocation = lossControlDao.findByLocationId("nonExistentLocationId");
+        assertNull(nonExistentLocation);
+    }
+}
+
+
+
+//
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.jdbc.Sql;
+
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+@SpringBootTest
+@Sql(scripts = {"/schema.sql", "/data.sql"}) // Load initial data into the H2 database
+public class LossControlDaoImplTest {
+
+    @Autowired
+    private LossControlDao lossControlDao;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    @BeforeEach
+    public void setUp() {
+        // Clear data before each test
+        jdbcTemplate.update("DELETE FROM client_lookup");
+        jdbcTemplate.update("DELETE FROM location_lookup");
+    }
+
+    @Test
+    public void testInsertClientId() {
+        String clientId = "sampleClientId";
+        lossControlDao.insertClientId(clientId);
+
+        Map<String, Object> result = jdbcTemplate.queryForMap("SELECT * FROM client_lookup WHERE client_id = ?", clientId);
+        assertNotNull(result);
+    }
+
+    @Test
+    public void testUpdateLcClientId() {
+        String clientId = "sampleClientId";
+        String lc360ClientId = "sampleLc360ClientId";
+        jdbcTemplate.update("INSERT INTO client_lookup(client_id) VALUES (?)", clientId);
+
+        lossControlDao.updateLcClientId(clientId, lc360ClientId);
+
+        Map<String, Object> result = jdbcTemplate.queryForMap("SELECT * FROM client_lookup WHERE client_id = ?", clientId);
+        assertEquals(lc360ClientId, result.get("lc360_client_id"));
+    }
+
+    @Test
+    public void testFindByClientId() {
+        String clientId = "sampleClientId";
+        jdbcTemplate.update("INSERT INTO client_lookup(client_id) VALUES (?)", clientId);
+
+        Map<String, Object> result = lossControlDao.findByClientId(clientId);
+        assertNotNull(result);
+    }
+
+    @Test
+    public void testFindLc360ClientID() {
+        String clientId = "sampleClientId";
+        String lc360ClientId = "sampleLc360ClientId";
+        jdbcTemplate.update("INSERT INTO client_lookup(client_id, lc360_client_id) VALUES (?, ?)", clientId, lc360ClientId);
+
+        Map<String, Object> result = lossControlDao.findLc360ClientID(clientId);
+        assertEquals(lc360ClientId, result.get("lc360_client_id"));
+    }
+
+    @Test
+    public void testInsertLocationId() {
+        String locationId = "sampleLocationId";
+        lossControlDao.insertLocationId(locationId);
+
+        Map<String, Object> result = jdbcTemplate.queryForMap("SELECT * FROM location_lookup WHERE location_id = ?", locationId);
+        assertNotNull(result);
+    }
+
+    @Test
+    public void testUpdateLcLocationId() {
+        String locationId = "sampleLocationId";
+        String lc360LocationId = "sampleLc360LocationId";
+        jdbcTemplate.update("INSERT INTO location_lookup(location_id) VALUES (?)", locationId);
+
+        lossControlDao.updateLcLocationId(locationId, lc360LocationId);
+
+        Map<String, Object> result = jdbcTemplate.queryForMap("SELECT * FROM location_lookup WHERE location_id = ?", locationId);
+        assertEquals(lc360LocationId, result.get("lc360_location_id"));
+    }
+
+    @Test
+    public void testFindByLocationId() {
+        String locationId = "sampleLocationId";
+        jdbcTemplate.update("INSERT INTO location_lookup(location_id) VALUES (?)", locationId);
+
+        Map<String, Object> result = lossControlDao.findByLocationId(locationId);
+        assertNotNull(result);
+    }
+
+    @Test
+    public void testFindLc360LocationID() {
+        String locationId = "sampleLocationId";
+        String lc360LocationId = "sampleLc360LocationId";
+        jdbcTemplate.update("INSERT INTO location_lookup(location_id, lc360_location_id) VALUES (?, ?)", locationId, lc360LocationId);
+
+        Map<String, Object> result = lossControlDao.findLc360LocationID(locationId);
+        assertEquals(lc360LocationId, result.get("lc360_location_id"));
+    }
+}
+
+
+/////Junit test cases above
 package uk.co.allianz.rap.lc.dao;
 
 import java.util.Map;
