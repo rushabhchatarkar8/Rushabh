@@ -53,6 +53,153 @@ public class TokenCacheTest {
     }
 }
 
+
+///
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.util.JwtUtil;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+public class TokenCacheTest {
+
+    private TokenCache tokenCache;
+    private JwtUtil jwtUtil;
+
+    @BeforeEach
+    public void setUp() {
+        jwtUtil = new JwtUtil(); // You may need to initialize JwtUtil appropriately
+        tokenCache = new TokenCache();
+        tokenCache.jwtUtil = jwtUtil; // Inject the JwtUtil instance manually
+    }
+
+    @Test
+    public void testRetrieveTokenFromCache() throws CustomException {
+        // Arrange
+        String correlationId = "123456";
+        String expectedToken = "testToken";
+
+        // Act
+        String token = tokenCache.retrieveTokenFromCache(correlationId);
+
+        // Assert
+        assertEquals(expectedToken, token);
+    }
+
+    @Test
+    public void testRetrieveTokenFromCacheWithDifferentCorrelationId() throws CustomException {
+        // Arrange
+        String correlationId1 = "123456";
+        String correlationId2 = "789012";
+
+        // Act
+        String token1 = tokenCache.retrieveTokenFromCache(correlationId1);
+        String token2 = tokenCache.retrieveTokenFromCache(correlationId2);
+
+        // Assert
+        assertEquals(token1, token2);
+    }
+}
+
+
+///
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.exception.CustomException;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+public class TokenCacheTest {
+
+    private TokenCache tokenCache;
+
+    @BeforeEach
+    public void setUp() {
+        tokenCache = new TokenCache();
+    }
+
+    @Test
+    public void testRetrieveTokenFromCache() throws CustomException {
+        String correlationId = "testCorrelationId";
+
+        String token = tokenCache.retrieveTokenFromCache(correlationId);
+
+        assertTrue(token != null && !token.isEmpty(), "Token should not be null or empty");
+    }
+
+    @Test
+    public void testRetrieveTokenFromCacheLogs() throws CustomException {
+        String correlationId = "testCorrelationId";
+
+        String token = tokenCache.retrieveTokenFromCache(correlationId);
+
+        // Assuming log.info() statements output to console or log files, you can check these manually.
+        assertEquals(token, tokenCache.getToken(), "Token should be fetched from the cache");
+    }
+}
+
+
+
+/////////////////////////Not used MOCK/////////
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class TokenCacheTest {
+
+    private TokenCache tokenCache;
+    private JwtUtil jwtUtil;
+    private CacheManager cacheManager;
+
+    @BeforeEach
+    public void setUp() {
+        // Initialize the TokenCache instance
+        tokenCache = new TokenCache();
+
+        // Create a mock JwtUtil and CacheManager
+        jwtUtil = mock(JwtUtil.class);
+        cacheManager = mock(CacheManager.class);
+
+        // Set the dependencies using reflection (for simplicity, don't use this in production code)
+        try {
+            tokenCache.getClass().getDeclaredField("jwtUtil").set(tokenCache, jwtUtil);
+            tokenCache.getClass().getDeclaredField("cacheManager").set(tokenCache, cacheManager);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Test
+    public void testRetrieveTokenFromCache() throws CustomException {
+        // Arrange
+        String correlationId = "sampleCorrelationId";
+        String expectedToken = "sampleToken";
+
+        // Mock behavior of JwtUtil to return a token
+        when(jwtUtil.getAuthToken()).thenReturn(expectedToken);
+
+        // Mock behavior of CacheManager and Cache
+        Cache cache = mock(Cache.class);
+        when(cacheManager.getCache("tokens")).thenReturn(cache);
+        when(cache.get("tokens")).thenReturn(null); // Simulate cache miss
+
+        // Act
+        String retrievedToken = tokenCache.retrieveTokenFromCache(correlationId);
+
+        // Assert
+        assertEquals(expectedToken, retrievedToken);
+
+        // Verify log statements
+        // Ideally, you would use a logging framework that captures log output for testing
+    }
+}
+
 ///
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
