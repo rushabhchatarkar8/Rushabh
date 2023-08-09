@@ -1,3 +1,126 @@
+
+///
+package uk.co.allianz.rap.lc.dao;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Repository;
+
+import java.util.Map;
+
+@Repository
+public class LossControlDaoImpl implements LossControlDao {
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    //client methods
+    @Override
+    public void insertClientId(String client_id) {
+        String insert = "insert into client_lookup(client_id) values(?)";
+        int update = this.jdbcTemplate.update(insert, client_id);
+    }
+
+    @Override
+    public void updateLcClientId(String client_id, String lc360_client_id) {
+        String update = "update client_lookup set lc360_client_id = ? where client_id = ?";
+        this.jdbcTemplate.update(update, lc360_client_id, client_id);
+    }
+
+    @Override
+    public Map<String, Object> findByClientId(String client_id) {
+        String checkClientId = "select * from client_lookup where client_id =?";
+        Map<String, Object> result;
+        try {
+            result = this.jdbcTemplate.queryForMap(checkClientId, client_id);
+        } catch (EmptyResultDataAccessException exception) {
+            return null;
+        }
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> findLc360ClientID(String client_id) {
+        String lc360ClientId = "select lc360_client_id from client_lookup where client_id = ? ";
+        Map<String, Object> result;
+        try {
+            result = this.jdbcTemplate.queryForMap(lc360ClientId, client_id);
+        } catch (EmptyResultDataAccessException exception) {
+            return null;
+        }
+        return result;
+    }
+
+    // Locations methods
+    @Override
+    public void insertLocationId(String location_id) {
+        String insert = "insert into location_lookup(location_id) values(?)";
+        int update = this.jdbcTemplate.update(insert, location_id);
+    }
+
+    @Override
+    public void updateLcLocationId(String location_id, String lc360_location_id) {
+        String update = "update location_lookup set lc360_location_id = ? where location_id = ?";
+        this.jdbcTemplate.update(update, lc360_location_id, location_id);
+    }
+
+    @Override
+    public Map<String, Object> findByLocationId(String location_id) {
+        String checkLocationId = "select * from location_lookup where location_id =?";
+        Map<String, Object> result;
+        try {
+            result = this.jdbcTemplate.queryForMap(checkLocationId, location_id);
+        } catch (EmptyResultDataAccessException exception) {
+            return null;
+        }
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> findLc360LocationID(String location_id) {
+        String lc360LocationId = "select lc360_location_id from location_lookup where location_id = ? ";
+        Map<String, Object> result;
+        try {
+            result = this.jdbcTemplate.queryForMap(lc360LocationId, location_id);
+        } catch (EmptyResultDataAccessException exception) {
+            return null;
+        }
+        return result;
+    }
+}
+
+///
+package uk.co.allianz.rap.lc.dao;
+
+import java.util.Map;
+
+public interface LossControlDao {
+
+    //client
+    Map<String, Object> findByClientId(String client_id);
+
+    void updateLcClientId(String client_id, String lc360_client_id);
+
+    void insertClientId(String client_id);
+
+    Map<String, Object> findLc360ClientID(String client_id);
+
+
+    //location
+    Map<String, Object> findByLocationId(String location_id);
+
+    void updateLcLocationId(String location_id, String lc360_location_id);
+
+    void insertLocationId(String location_id);
+
+    Map<String, Object> findLc360LocationID(String location_id);
+
+}
+
+//
+
+DAO
+//
+
 import com.googlecode.jsonsanitizer.JsonSanitizer;
 import com.googlecode.jsonsanitizer.JsonSanitizerException;
 import com.google.gson.Gson;
