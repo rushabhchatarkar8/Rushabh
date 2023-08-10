@@ -1,3 +1,37 @@
+   @Test
+    void testUpdateLcLocationId() {
+        // Perform the updateLcLocationId operation
+        lossControlDao.updateLcLocationId("123", "111");
+
+        // Verify the update statement
+        verify(lossControlDao).updateLcLocationId("123", "111");
+    }
+
+    @Test
+    void testFindByLocationIdExists() {
+        // Prepare a mock map for query result
+        Map<String, Object> mockMap = Collections.singletonMap("1","1234");
+        when(lossControlDao.findByLocationId(anyString())).thenReturn(mockMap);
+
+        // Perform the findByLocationId operation
+        Map<String, Object> result = lossControlDao.findByLocationId("1234");
+
+        // Verify the query statement and assert the result
+        assertNotNull(result);
+        verify(lossControlDao).findByLocationId("1234");
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
 import org.junit.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
