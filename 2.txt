@@ -1,4 +1,15 @@
-   @Test
+            if (lcClientId != null) {
+                String lc360ClientId = (String) lcClientId.get(lcClientId.keySet().iterator().next());
+                String lc360LocationId = (String) lcLocationId.get(lcLocationId.keySet().iterator().next());
+                //set client id and location id in pojo
+                importClientRequest.getClient().setLookupID(lc360ClientId);
+                locations.get(0).setLookupID(lc360LocationId);
+                objectMapper.writeValueAsString(importClientRequest);
+                log.info("Received JSON");
+                importClientResponse = lossControlServiceImpl.clientPost(importClientRequest, tokenCache.retrieveTokenFromCache(correlationId));
+
+////////////////////////////////////////////
+@Test
     void testUpdateLcLocationId() {
         // Perform the updateLcLocationId operation
         lossControlDao.updateLcLocationId("123", "111");
