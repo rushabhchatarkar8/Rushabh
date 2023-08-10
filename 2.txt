@@ -1,3 +1,33 @@
+ArrayList<Location> locations = new ArrayList<>();
+Location location = new Location();
+location.setLookupID("locationId"); // Set the actual location ID
+locations.add(location);
+
+
+
+
+
+
+@Test
+void testImportClient() throws Exception {
+    String json = "{ ... }"; // Your JSON data here
+    String correlationId = "correlationId";
+
+    ImportClientRequest importClientRequest = objectMapper.readValue(json, ImportClientRequest.class);
+    
+    // Create a Location object and populate the locations list
+    ArrayList<Location> locations = new ArrayList<>();
+    Location location = new Location();
+    location.setLookupID("locationId"); // Set the actual location ID
+    locations.add(location);
+    
+    // ... continue with the rest of your test case code
+}
+
+
+
+
+
 java.lang.NullPointerException: Cannot invoke "com.fasterxml.jackson.databind.ObjectMapper.readValue(String, java.lang.Class)" because "this.objectMapper" is null
         ImportClientRequest importClientRequest = objectMapper.readValue(json, ImportClientRequest.class);
 
