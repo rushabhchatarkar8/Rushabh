@@ -1,3 +1,20 @@
+21:48:48.298  [INFO ] u.c.a.rap.lc.util.ClientLocation - Client and Location are not present
+
+java.lang.NullPointerException: Cannot invoke "uk.co.allianz.rap.lc.model.request.importclient.Client.getLookupID()" because the return value of "uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest.getClient()" is null
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import org.junit.Before;
 import org.junit.Test;
 import uk.co.allianz.rap.lc.cache.TokenCache;
