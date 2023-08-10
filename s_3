@@ -1,4 +1,125 @@
-          log.info("Client and Location are not present");
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import static org.mockito.Mockito.*;
+
+class LossControlServiceTest {
+
+    @Mock
+    private LossControlDao lossControlDao;
+
+    @Mock
+    private TokenCache tokenCache;
+
+    private LossControlService lossControlService;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+        lossControlService = new LossControlService(lossControlDao, tokenCache);
+    }
+
+    @Test
+    void testImportClient() {
+        // Create mock data for testing
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        importClientResponse.setResult(new ImportClientResult());
+
+        // Configure mock behavior
+        when(lossControlDao.insertClientId(any())).thenReturn(1L);
+        when(lossControlDao.insertLocationId(any())).thenReturn(1L);
+        when(lossControlDao.updateLcClientId(any(), any())).thenReturn(true);
+        when(lossControlDao.updateLcLocationId(any(), any())).thenReturn(true);
+        when(tokenCache.retrieveTokenFromCache(any())).thenReturn("dummyToken");
+
+        // Perform the method call
+        lossControlService.importClient(importClientRequest);
+
+        // Verify interactions with the mock objects
+        verify(lossControlDao, times(1)).insertClientId(any());
+        verify(lossControlDao, times(1)).insertLocationId(any());
+        verify(lossControlDao, times(1)).updateLcClientId(any(), any());
+        verify(lossControlDao, times(1)).updateLcLocationId(any(), any());
+        verify(tokenCache, times(1)).retrieveTokenFromCache(any());
+    }
+}
+
+
+
+
+
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import static org.mockito.Mockito.*;
+
+class YourTestClassTest {
+
+    @Mock
+    private LossControlDao lossControlDao;
+
+    @Mock
+    private LossControlServiceImpl lossControlService;
+
+    @InjectMocks
+    private YourTestClass yourTestClass;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.initMocks(this);
+    }
+
+    @Test
+    void testYourMethod() {
+        // Create mock objects
+        ImportClientRequest importClientRequest = mock(ImportClientRequest.class);
+        ImportClientResponse importClientResponse = mock(ImportClientResponse.class);
+        Location location = mock(Location.class);
+        // ... Initialize other necessary mock objects
+
+        // Set up mock behaviors
+        when(importClientRequest.getClient().getLookupID()).thenReturn("clientLookupID");
+        // ... Set up behaviors for other methods and objects
+
+        // Call your method that contains the code snippet
+        yourTestClass.yourMethod(importClientRequest, location);
+
+        // Verify interactions
+        verify(lossControlDao).insertClientId("clientLookupID");
+        // ... Verify other interactions with lossControlDao
+
+        verify(lossControlService).clientPost(eq(importClientRequest), any());
+        // ... Verify other interactions with lossControlService
+
+        verify(lossControlDao).updateLcClientId(eq("clientLookupID"), any());
+
+        // Verify more interactions
+        // ...
+
+        // Verify no more interactions
+        verifyNoMoreInteractions(lossControlDao, lossControlService);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+log.info("Client and Location are not present");
             lossControlDao.insertClientId(importClientRequest.getClient().getLookupID());
             lossControlDao.insertLocationId(locations.get(0).getLookupID() + "+" + locations.get(0).getPolicyNumber());
             importClientResponse = lossControlServiceImpl.clientPost(importClientRequest, tokenCache.retrieveTokenFromCache(correlationId));
