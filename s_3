@@ -1,3 +1,186 @@
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.LossControlServiceImpl;
+
+import static org.mockito.Mockito.*;
+
+public class ImportClientServiceImpTest {
+
+    private TokenCache tokenCache;
+    private LossControlServiceImpl lossControlServiceImpl;
+    private ObjectMapper objectMapper;
+    private ImportClientServiceImp importClientService;
+
+    @BeforeEach
+    public void setUp() {
+        tokenCache = mock(TokenCache.class);
+        lossControlServiceImpl = mock(LossControlServiceImpl.class);
+        objectMapper = mock(ObjectMapper.class);
+        importClientService = new ImportClientServiceImp(tokenCache, lossControlServiceImpl, objectMapper);
+    }
+
+    @Test
+    public void testImportClient_SuccessfulImport() throws CustomException, JsonProcessingException {
+        // Set up test data
+        String json = "{\"client\": { ... }}";
+        String correlationId = "12345";
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+
+        // Mock behavior
+        when(objectMapper.readValue(anyString(), eq(ImportClientRequest.class))).thenReturn(importClientRequest);
+        when(lossControlServiceImpl.clientPost(any(), any())).thenReturn(importClientResponse);
+        when(tokenCache.retrieveTokenFromCache(correlationId)).thenReturn("testToken");
+
+        // Call the actual method
+        ImportClientResponse response = importClientService.importClient(json, correlationId);
+
+        // Assertions or verifications based on expected behavior
+        // For example:
+        verify(objectMapper, times(1)).readValue(json, ImportClientRequest.class);
+        verify(lossControlServiceImpl, times(1)).clientPost(importClientRequest, "testToken");
+        // Add more assertions based on your expected behavior
+    }
+
+    @Test
+    public void testImportClient_JsonProcessingException() throws CustomException, JsonProcessingException {
+        // Set up test data
+        String json = "{\"client\": { ... }}";
+        String correlationId = "12345";
+
+        // Mocking behavior to simulate JsonProcessingException
+        when(objectMapper.readValue(anyString(), eq(ImportClientRequest.class)))
+                .thenThrow(new JsonProcessingException("Test JsonProcessingException") {});
+
+        // Call the actual method and handle the exception
+        try {
+            ImportClientResponse response = importClientService.importClient(json, correlationId);
+            // Add assertions or verifications if needed
+        } catch (JsonProcessingException e) {
+            // Handle the exception and perform necessary assertions
+        }
+    }
+
+    // Add more test cases to cover different scenarios
+
+    // ... more test methods ...
+
+    // End of the class
+}
+
+
+
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.LossControlServiceImpl;
+
+import static org.junit.Assert.assertNotNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+@Slf4j
+public class ImportClientServiceImpTest {
+
+    @Mock
+    private TokenCache tokenCache;
+
+    @Mock
+    private LossControlServiceImpl lossControlServiceImpl;
+
+    @Mock
+    private ObjectMapper objectMapper;
+
+    @InjectMocks
+    private ImportClientServiceImp importClientService;
+
+    @Before
+    public void setUp() {
+        MockitoAnnotations.initMocks(this);
+    }
+
+    @Test
+    public void testImportClient_SuccessfulImport() throws CustomException, JsonProcessingException {
+        // Set up test data
+        String json = "{\"client\": { \"name\": \"John Doe\" }}";
+        String correlationId = "12345";
+
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        // Set up your ImportClientRequest with appropriate data
+
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        // Set up your ImportClientResponse with appropriate data
+
+        // Mock behavior
+        when(objectMapper.readValue(anyString(), eq(ImportClientRequest.class))).thenReturn(importClientRequest);
+        when(lossControlServiceImpl.clientPost(any(), any())).thenReturn(importClientResponse);
+
+        // Call the actual method
+        ImportClientResponse response = importClientService.importClient(json, correlationId);
+
+        // Assertions
+        assertNotNull(response);
+        // Additional assertions based on your expected behavior
+    }
+
+    @Test(expected = CustomException.class)
+    public void testImportClient_JsonProcessingException() throws CustomException, JsonProcessingException {
+        // Set up test data
+        String json = "{\"client\": { \"name\": \"John Doe\" }}";
+        String correlationId = "12345";
+
+        // Mock behavior to throw a JsonProcessingException
+        when(objectMapper.readValue(anyString(), eq(ImportClientRequest.class))).thenThrow(new JsonProcessingException("Test Exception") {});
+
+        // Call the actual method and expect a CustomException
+        importClientService.importClient(json, correlationId);
+    }
+
+    @Test(expected = CustomException.class)
+    public void testImportClient_CustomExceptionFromService() throws CustomException, JsonProcessingException {
+        // Set up test data
+        String json = "{\"client\": { \"name\": \"John Doe\" }}";
+        String correlationId = "12345";
+
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        // Set up your ImportClientRequest with appropriate data
+
+        // Mock behavior
+        when(objectMapper.readValue(anyString(), eq(ImportClientRequest.class))).thenReturn(importClientRequest);
+        when(lossControlServiceImpl.clientPost(any(), any())).thenThrow(new CustomException("Test Exception"));
+
+        // Call the actual method and expect a CustomException
+        importClientService.importClient(json, correlationId);
+    }
+
+    // Add more test cases to cover different scenarios
+
+    // ... existing test methods ...
+
+    // End of the class
+}
+
+
+
+
+
+
+///////////
 package uk.co.allianz.rap.lc.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
