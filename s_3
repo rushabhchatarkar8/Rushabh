@@ -1,3 +1,79 @@
+package uk.co.allianz.rap.lc.service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.request.importclient.Client;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+
+import java.util.Map;
+
+//Extracting fields and data from the "data model"
+//sent from loss-control-adapter and building the API request: ImportClient
+@Slf4j
+@Service
+public class ImportClientServiceImp implements ImportClientService {
+
+    @Autowired
+    private TokenCache tokenCache;
+    @Autowired
+    private LossControlDao lossControlDao;
+    @Autowired
+    private LossControlServiceImpl lossControlServiceImpl;
+
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Override
+    public ImportClientResponse importClient(final String json, final String correlationId) throws CustomException, JsonProcessingException {
+        ImportClientResponse importClientResponse = null;
+        ImportClientRequest importClientRequest = objectMapper.readValue(json, ImportClientRequest.class);
+        Map<String, Object> result = lossControlDao.findByClientId(importClientRequest.getClient().getLookupID());
+        if(result != null){
+            Map<String,Object> lcClientId = lossControlDao.findLc360ClientID(importClientRequest.getClient().getLookupID());
+            if(lcClientId != null){
+                String lc360ClientId = (String) lcClientId.get(lcClientId.keySet().iterator().next());
+
+              
+                importClientRequest.getClient().setLookupID(lc360ClientId);
+                objectMapper.writeValueAsString(importClientRequest);
+                System.out.println(importClientRequest);
+                
+
+                log.info("Received JSON");
+                importClientResponse = lossControlServiceImpl.clientPost(importClientRequest, tokenCache.retrieveTokenFromCache(correlationId));
+            }
+            else {
+                log.info("lc360 client id not present");
+            }
+        }
+        else {
+            log.info("Client is not present");
+            lossControlDao.insertClientId(importClientRequest.getClient().getLookupID());
+            importClientResponse = lossControlServiceImpl.clientPost(importClientRequest,tokenCache.retrieveTokenFromCache(correlationId));
+            lossControlDao.updateLcClientId(importClientRequest.getClient().getLookupID(),importClientResponse.getResult().getClientLookupID());
+        }
+        log.info("importClientResponse Successfully Received");
+        return importClientResponse;
+
+    }
+}
+
+
+
+
+
+
+/////////////////////
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
