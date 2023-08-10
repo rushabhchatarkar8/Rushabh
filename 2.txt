@@ -1,3 +1,44 @@
+@Test
+public void testImportClient_LocationExists() throws CustomException, JsonProcessingException {
+    String json = "{\"client\": { \"locations\": [{ \"lookupID\": \"123\", \"policyNumber\": \"456\" }] }}";
+    String correlationId = "your-correlation-id";
+
+    ImportClientRequest importClientRequest = new ImportClientRequest();
+    
+    // Initialize the Client object with locations
+    Client client = new Client();
+    Location location = new Location();
+    location.setLookupID("123");
+    location.setPolicyNumber("456");
+    ArrayList<Location> locations = new ArrayList<>();
+    locations.add(location);
+    client.setLocations(locations);
+    
+    // Set the client in the importClientRequest
+    importClientRequest.setClient(client);
+
+    ImportClientResponse importClientResponse = new ImportClientResponse();
+    // Set up your ImportClientResponse as shown in the previous example
+
+    // Mocking behavior
+    when(objectMapper.readValue(anyString(), eq(ImportClientRequest.class))).thenReturn(importClientRequest);
+    when(lossControlDao.findByLocationId(anyString())).thenReturn(new HashMap<>());
+    when(lossControlDao.findLc360LocationID(anyString())).thenReturn(new HashMap<>());
+    when(lossControlServiceImpl.clientPost(any(), any())).thenReturn(importClientResponse);
+
+    // Mock the importClient method
+    when(importClientService.importClient(json, correlationId)).thenReturn(importClientResponse);
+
+    ImportClientResponse response = importClientService.importClient(json, correlationId);
+
+    // Verify interactions and assertions
+    verify(lossControlDao, never()).insertLocationId(anyString());
+    verify(lossControlDao, never()).updateLcLocationId(anyString(), anyString());
+    // ... more verifications
+}
+
+
+///////
 java.lang.NullPointerException: Cannot invoke "uk.co.allianz.rap.lc.model.request.importclient.Client.getLocations()" because the return value of "uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest.getClient()" is null
 
 
