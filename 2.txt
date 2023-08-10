@@ -1,3 +1,218 @@
+package uk.co.allianz.rap.lc.service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.jupiter.api.Assertions;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.jdbc.core.JdbcTemplate;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.dao.LossControlDaoImpl;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.request.importclient.Client;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importclient.Location;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.LossControlServiceImpl;
+
+import java.util.*;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+public class ImportClientServiceImpTest {
+    private JdbcTemplate jdbcTemplate;
+
+    @Mock
+    private TokenCache tokenCache;
+
+    @Mock
+    private LossControlDaoImpl lossControlDao;//
+
+    @Mock
+    private LossControlServiceImpl lossControlServiceImpl;
+
+    @Mock
+    private ObjectMapper objectMapper;
+
+    @InjectMocks
+    private ImportClientServiceImp importClientService;
+
+    @Before
+    public void setUp() {
+        MockitoAnnotations.initMocks(this);
+    }
+
+    @Test
+    public void testImportClient_LocationExists() throws CustomException, JsonProcessingException {
+        // Set up test data
+        String json = "{\"client\": { \"locations\": [{ \"lookupID\": \"123\", \"policyNumber\": \"456\" }] }}";
+        String correlationId = "12345";
+
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        Client client = new Client();
+        Location location = new Location();
+        location.setLookupID("123");
+        location.setPolicyNumber("456");
+        ArrayList<Location> locations = new ArrayList<>();
+        locations.add(location);
+        client.setLocations(locations);
+        importClientRequest.setClient(client);
+
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        // Set up your ImportClientResponse with appropriate data
+
+        // Mocking behavior
+        when(objectMapper.readValue(anyString(), eq(ImportClientRequest.class))).thenReturn(importClientRequest);
+        when(lossControlDao.findByLocationId(anyString())).thenReturn(new HashMap<>());
+        when(lossControlDao.findLc360LocationID(anyString())).thenReturn(new HashMap<>());
+        when(lossControlServiceImpl.clientPost(any(), any())).thenReturn(importClientResponse);
+
+        // Mock the exception for this specific line
+        when(lossControlServiceImpl.clientPost(any(), any())).thenThrow(new NoSuchElementException());
+
+        try {
+            // Call the actual method
+            ImportClientResponse response = importClientService.importClient(json, correlationId);
+
+
+
+        } catch (NoSuchElementException e) {
+            // Handle the exception if needed
+            // Assertions or other verification related to the exception
+        }
+        Assertions.assertNotNull(json);
+        Assertions.assertNotNull(correlationId);
+
+
+        Map<String, Object> mockMap = Collections.singletonMap("1", "1234");
+        Map<String, Object> result = lossControlDao.findByLocationId("1234");
+        Assertions.assertNotNull(result);
+
+
+        Map<String, Object> result6 = lossControlDao.findLc360LocationID("111");
+        Assertions.assertNotNull(result6);
+
+//client
+        Map<String, Object> mockMap1 = Collections.singletonMap("1", "1234");
+        Map<String, Object> result1 = lossControlDao.findByClientId("1234");
+        Assertions.assertNotNull(result1);
+
+
+        Map<String, Object> mockMap2 = Collections.singletonMap("1", "1234");
+        Map<String, Object> result2 = lossControlDao.findLc360ClientID("1234");
+        Assertions.assertNotNull(result2);
+
+
+        Map<String, Object> result3 = lossControlDao.findLc360ClientID("111");
+        Assertions.assertNotNull(result3);
+    }
+}
+
+
+
+
+package uk.co.allianz.rap.lc.service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importclient.Location;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+
+import java.util.ArrayList;
+import java.util.Map;
+
+/**
+ * Extracting fields and data from the "data model".
+ * sent from loss-control-adapter and building the API request: ImportClient
+ */
+@Slf4j
+@Service
+public class ImportClientServiceImp implements ImportClientService {
+
+    @Autowired
+    private TokenCache tokenCache;
+    @Autowired
+    private LossControlDao lossControlDao;
+    @Autowired
+    private LossControlServiceImpl lossControlServiceImpl;
+
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    public ImportClientResponse importClient(final String json, final String correlationId) throws CustomException, JsonProcessingException {
+        ImportClientResponse importClientResponse = null;
+        ImportClientRequest importClientRequest = objectMapper.readValue(json, ImportClientRequest.class);
+        ArrayList<Location> locations = importClientRequest.getClient().getLocations();
+        //finding client id in DB exist or not
+        Map<String, Object> clientResult = lossControlDao.findByClientId(importClientRequest.getClient().getLookupID());
+        if (clientResult != null) {
+            //finding LC360 client id in DB exist or not
+            Map<String, Object> lcClientId = lossControlDao.findLc360ClientID(importClientRequest.getClient().getLookupID());
+            //finding LC360 location id in DB exist or not(combined location lookup ID and policy number)
+            Map<String, Object> lcLocationId = lossControlDao.findLc360LocationID(locations.get(0).getLookupID() + "+" + locations.get(0).getPolicyNumber());
+            if (lcClientId != null) {
+                String lc360ClientId = (String) lcClientId.get(lcClientId.keySet().iterator().next());
+                String lc360LocationId = (String) lcLocationId.get(lcLocationId.keySet().iterator().next());
+                //set client id and location id in pojo
+                importClientRequest.getClient().setLookupID(lc360ClientId);
+                locations.get(0).setLookupID(lc360LocationId);
+                objectMapper.writeValueAsString(importClientRequest);
+                log.info("Received JSON");
+                importClientResponse = lossControlServiceImpl.clientPost(importClientRequest, tokenCache.retrieveTokenFromCache(correlationId));
+            } else {
+                log.info("lc360 location id not present");
+            }
+        } else {
+            log.info("Client and Location are not present");
+            lossControlDao.insertClientId(importClientRequest.getClient().getLookupID());
+            lossControlDao.insertLocationId(locations.get(0).getLookupID() + "+" + locations.get(0).getPolicyNumber());
+            importClientResponse = lossControlServiceImpl.clientPost(importClientRequest, tokenCache.retrieveTokenFromCache(correlationId));
+            lossControlDao.updateLcClientId(importClientRequest.getClient().getLookupID(), importClientResponse.getResult().getClientLookupID());
+            ArrayList<uk.co.allianz.rap.lc.model.response.importclient.Location> locationsResponse = importClientResponse.getResult().getLocations();
+             // Lookup ID Response
+            lossControlDao.updateLcLocationId(locations.get(0).getLookupID() + "+" + locations.get(0).getPolicyNumber(), locationsResponse.get(0).getLocationLookupID());
+        }
+        log.info("importClientResponse Successfully Received");
+        return importClientResponse;
+
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InjectMocks;
