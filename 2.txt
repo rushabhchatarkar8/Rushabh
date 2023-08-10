@@ -18,6 +18,93 @@ import uk.co.allianz.rap.lc.service.LossControlServiceImpl;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+public class ImportClientServiceImpTest {
+
+    @Mock
+    private TokenCache tokenCache;
+
+    @Mock
+    private LossControlDao lossControlDao;
+
+    @Mock
+    private LossControlServiceImpl lossControlServiceImpl;
+
+    @Mock
+    private ObjectMapper objectMapper;
+
+    @InjectMocks
+    private ImportClientServiceImp importClientService;
+
+    @Before
+    public void setUp() {
+        MockitoAnnotations.initMocks(this);
+    }
+
+    @Test
+    public void testImportClient_LocationExists() throws CustomException, JsonProcessingException {
+        // Set up test data
+        String json = "{\"client\": { \"locations\": [{ \"lookupID\": \"123\", \"policyNumber\": \"456\" }] }}";
+        String correlationId = "your-correlation-id";
+
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        Client client = new Client();
+        Location location = new Location();
+        location.setLookupID("123");
+        location.setPolicyNumber("456");
+        ArrayList<Location> locations = new ArrayList<>();
+        locations.add(location);
+        client.setLocations(locations);
+        importClientRequest.setClient(client);
+
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        // Set up your ImportClientResponse with appropriate data
+
+        // Mocking behavior
+        when(objectMapper.readValue(anyString(), eq(ImportClientRequest.class))).thenReturn(importClientRequest);
+        when(lossControlDao.findByLocationId(anyString())).thenReturn(new HashMap<>());
+        when(lossControlDao.findLc360LocationID(anyString())).thenReturn(new HashMap<>());
+        when(lossControlServiceImpl.clientPost(any(), any())).thenReturn(importClientResponse);
+
+        // Call the actual method
+        ImportClientResponse response = importClientService.importClient(json, correlationId);
+
+        // Verify interactions and assertions
+        verify(lossControlDao, never()).insertLocationId(anyString());
+        verify(lossControlDao, never()).updateLcLocationId(anyString(), anyString());
+        // ... more verifications
+
+        // Add assertions to verify the behavior of the importClient method
+        // Example: assertEquals(expectedResult, response);
+    }
+
+    // Add other test methods if needed
+}
+
+/////////////////
+package uk.co.allianz.rap.lc.service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.request.importclient.Client;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importclient.Location;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.LossControlServiceImpl;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 
 import static org.mockito.ArgumentMatchers.any;
