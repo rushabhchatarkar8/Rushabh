@@ -1,3 +1,10 @@
+@SpringBootTest(properties = "spring.liquibase.enabled=false")
+
+@SpringBootTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+
+
+
 
 Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
 19:43:57.636  [ERROR] o.s.boot.SpringApplication - Application run failed
