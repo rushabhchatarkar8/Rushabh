@@ -1,3 +1,15 @@
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+19:43:57.636  [ERROR] o.s.boot.SpringApplication - Application run failed
+org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'liquibase' defined in class path resource [org/springframework/boot/autoconfigure/liquibase/LiquibaseAutoConfiguration$LiquibaseConfiguration.class]: Failed to instantiate [liquibase.integration.spring.SpringLiquibase]: Factory method 'liquibase' threw exception with message: Error creating bean with name 'dataSource': Failed to replace DataSource with an embedded database for tests. If you want an embedded database please put a supported one on the classpath or tune the replace attribute of @AutoConfigureTestDatabase.
+	
+
+
+
+
+
+
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
