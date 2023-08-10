@@ -1,3 +1,20 @@
+    @Test
+    void testUpdateLcLocationId() {
+        dao.updateLcLocationId("123", "111");
+        Mockito.verify(jdbcTemplate).update(eq("update location_lookup set lc360_location_id = ? where location_id = ?"), eq("111"), eq("123"));
+    }
+
+    @Test
+    void testFindByLocationIdExists() {
+        Map<String, Object> mockMap = Collections.singletonMap("1","1234");
+        Mockito.when(jdbcTemplate.queryForMap(anyString(), any())).thenReturn(mockMap);
+        Map<String, Object> result = dao.findByLocationId("1234");
+        Assertions.assertNotNull(result);
+        Mockito.verify(jdbcTemplate).queryForMap(eq("select * from location_lookup where location_id =?"), eq("1234"));
+    }
+
+///
+
 @Test
 public void testImportClient_LocationExists() throws CustomException, JsonProcessingException {
     String json = "{\"client\": { \"locations\": [{ \"lookupID\": \"123\", \"policyNumber\": \"456\" }] }}";
