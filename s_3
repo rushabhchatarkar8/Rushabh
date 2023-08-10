@@ -1,5 +1,134 @@
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import static org.mockito.Mockito.*;
+
+class YourTestClassTest {
+
+    @Mock
+    private LossControlDao lossControlDao;
+
+    @Mock
+    private LossControlServiceImpl lossControlService;
+
+    @InjectMocks
+    private YourTestClass yourTestClass;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.initMocks(this);
+    }
+
+    @Test
+    void testProcessImport() {
+        // Create mock objects
+        ImportClientRequest importClientRequest = mock(ImportClientRequest.class);
+        ImportClientResponse importClientResponse = mock(ImportClientResponse.class);
+        Location location = mock(Location.class);
+        // ... Initialize other necessary mock objects
+
+        // Set up mock behaviors
+        when(importClientRequest.getClient().getLookupID()).thenReturn("clientLookupID");
+        // ... Set up behaviors for other methods and objects
+
+        // Mock the behavior of lossControlService.clientPost
+        when(lossControlService.clientPost(eq(importClientRequest), any()))
+                .thenReturn(importClientResponse);
+
+        // Mock the behavior of importClientResponse.getResult()
+        ImportClientResult importClientResult = mock(ImportClientResult.class);
+        when(importClientResponse.getResult()).thenReturn(importClientResult);
+
+        // Mock the behavior of importClientResult.getLocations()
+        List<Location> locationsResponse = new ArrayList<>();
+        locationsResponse.add(location);
+        when(importClientResult.getLocations()).thenReturn(locationsResponse);
+
+        // Call the method you want to test
+        yourTestClass.processImport(importClientRequest, location);
+
+        // Verify interactions with lossControlDao
+        verify(lossControlDao).insertClientId("clientLookupID");
+        // ... Verify other interactions with lossControlDao
+
+        verify(lossControlDao).updateLcClientId(eq("clientLookupID"), any());
+
+        // Verify interactions with lossControlService
+        verify(lossControlService).clientPost(eq(importClientRequest), any());
+
+        // Verify interactions with lossControlDao again
+        verify(lossControlDao).updateLcLocationId(eq("locationLookupID"), any());
+
+        // Verify no more interactions
+        verifyNoMoreInteractions(lossControlDao, lossControlService);
+    }
+}
+
+///
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import static org.mockito.Mockito.*;
+
+class YourTestClassTest {
+
+    @Mock
+    private LossControlDao lossControlDao;
+
+    @Mock
+    private LossControlServiceImpl lossControlService;
+
+    @InjectMocks
+    private YourTestClass yourTestClass;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.initMocks(this);
+    }
+
+    @Test
+    void testProcessImportClient() {
+        // Create mock objects
+        ImportClientRequest importClientRequest = mock(ImportClientRequest.class);
+        ImportClientResponse importClientResponse = mock(ImportClientResponse.class);
+        Location location = mock(Location.class);
+        // ... Initialize other necessary mock objects
+
+        // Set up mock behaviors
+        when(importClientRequest.getClient().getLookupID()).thenReturn("clientLookupID");
+        // ... Set up behaviors for other methods and objects
+
+        // Mock lossControlService.clientPost() behavior
+        when(lossControlService.clientPost(any(), any())).thenReturn(importClientResponse);
+        when(importClientResponse.getResult().getClientLookupID()).thenReturn("newClientLookupID");
+        // ... Set up behaviors for other methods and objects
+
+        // Call the method under test
+        yourTestClass.processImportClient(importClientRequest, location);
+
+        // Verify interactions with lossControlDao
+        verify(lossControlDao).insertClientId("clientLookupID");
+        verify(lossControlDao).insertLocationId(anyString());
+        verify(lossControlDao).updateLcClientId(eq("clientLookupID"), eq("newClientLookupID"));
+        verify(lossControlDao).updateLcLocationId(anyString(), anyString());
+
+        // Verify interactions with lossControlService
+        verify(lossControlService).clientPost(eq(importClientRequest), any());
+
+        // Verify no more interactions
+        verifyNoMoreInteractions(lossControlDao, lossControlService);
+    }
+}
+
+////////////////
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 
