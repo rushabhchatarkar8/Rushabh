@@ -1,3 +1,7 @@
+java.lang.NullPointerException: Cannot invoke "uk.co.allianz.rap.lc.model.request.importclient.Client.getLocations()" because the return value of "uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest.getClient()" is null
+
+
+
 @Test
 public void testImportClient_LocationExists() throws CustomException, JsonProcessingException {
     String json = "{\"client\": { \"locations\": [{ \"lookupID\": \"123\", \"policyNumber\": \"456\" }] }}";
