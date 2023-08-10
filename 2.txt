@@ -1,4 +1,85 @@
-            if (lcClientId != null) {
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.request.importclient.Client;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importclient.Location;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.LossControlServiceImpl;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.mockito.Mockito.*;
+
+public class ImportClientServiceImpTest {
+
+    @Mock
+    private TokenCache tokenCache;
+
+    @Mock
+    private LossControlDao lossControlDao;
+
+    @Mock
+    private LossControlServiceImpl lossControlServiceImpl;
+
+    @InjectMocks
+    private ImportClientServiceImp importClientService;
+
+    @Before
+    public void setUp() {
+        MockitoAnnotations.initMocks(this);
+    }
+
+    @Test
+    public void testImportClient_WithLcClientAndLcLocationId() throws CustomException {
+        String json = "{\"client\": { \"locations\": [{ \"lookupID\": \"123\", \"policyNumber\": \"456\" }] }}";
+        String correlationId = "your-correlation-id";
+
+        // Prepare a mock ImportClientResponse
+        ImportClientResponse mockImportClientResponse = new ImportClientResponse();
+
+        // Set up your mock data and behavior
+        Map<String, Object> lcClientIdMap = new HashMap<>();
+        lcClientIdMap.put("lcClientIdKey", "lc360ClientIdValue");
+        when(lossControlDao.findLc360ClientID(anyString())).thenReturn(lcClientIdMap);
+
+        Map<String, Object> lcLocationIdMap = new HashMap<>();
+        lcLocationIdMap.put("lcLocationIdKey", "lc360LocationIdValue");
+        when(lossControlDao.findLc360LocationID(anyString())).thenReturn(lcLocationIdMap);
+
+        // Set up your ImportClientRequest with Client and Location
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        Client client = new Client();
+        Location location = new Location();
+        ArrayList<Location> locations = new ArrayList<>();
+        locations.add(location);
+        client.setLocations(locations);
+        importClientRequest.setClient(client);
+
+        // Call the method to be tested
+        ImportClientResponse importClientResponse = importClientService.importClient(json, correlationId);
+
+        // Verify that the correct methods were called with expected arguments
+        verify(lossControlDao).findLc360ClientID(anyString());
+        verify(lossControlDao).findLc360LocationID(anyString());
+        verify(lossControlServiceImpl).clientPost(any(), any());
+
+        // Assertions or verifications specific to your business logic
+        // For example:
+        // assertNotNull(importClientResponse);
+        // assertEquals(expectedValue, importClientResponse.get...);
+    }
+}
+
+////////////////
+if (lcClientId != null) {
                 String lc360ClientId = (String) lcClientId.get(lcClientId.keySet().iterator().next());
                 String lc360LocationId = (String) lcLocationId.get(lcLocationId.keySet().iterator().next());
                 //set client id and location id in pojo
