@@ -1,4 +1,93 @@
- @Test
+import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.jdbc.core.JdbcTemplate;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.dao.LossControlDaoImpl; // Import the appropriate class
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.request.importclient.Client;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importclient.Location;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.LossControlServiceImpl;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Collections;
+
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+public class ImportClientServiceImpTest {
+
+    @Mock
+    private TokenCache tokenCache;
+
+    @Mock
+    private LossControlDaoImpl lossControlDao; // Use your specific class name here
+
+    @Mock
+    private LossControlServiceImpl lossControlServiceImpl;
+
+    @InjectMocks
+    private ImportClientServiceImp importClientService;
+
+    @Test
+    public void testImportClient_LocationExists() throws CustomException, JsonProcessingException {
+        // Rest of your test setup and code as before...
+    }
+
+    @Test
+    void testUpdateLcLocationId() {
+        // Create your JdbcTemplate mock
+        JdbcTemplate jdbcTemplate = mock(JdbcTemplate.class);
+
+        // Set the mocked JdbcTemplate to your LossControlDaoImpl instance
+        lossControlDao.setJdbcTemplate(jdbcTemplate);
+
+        // Perform the updateLcLocationId operation
+        lossControlDao.updateLcLocationId("123", "111");
+
+        // Verify the update statement
+        verify(jdbcTemplate).update(eq("update location_lookup set lc360_location_id = ? where location_id = ?"), eq("111"), eq("123"));
+    }
+
+    @Test
+    void testFindByLocationIdExists() {
+        // Create your JdbcTemplate mock
+        JdbcTemplate jdbcTemplate = mock(JdbcTemplate.class);
+
+        // Set the mocked JdbcTemplate to your LossControlDaoImpl instance
+        lossControlDao.setJdbcTemplate(jdbcTemplate);
+
+        // Prepare a mock map for query result
+        Map<String, Object> mockMap = Collections.singletonMap("1","1234");
+        when(jdbcTemplate.queryForMap(anyString(), any())).thenReturn(mockMap);
+
+        // Perform the findByLocationId operation
+        Map<String, Object> result = lossControlDao.findByLocationId("1234");
+
+        // Verify the query statement and assert the result
+        assertNotNull(result);
+        verify(jdbcTemplate).queryForMap(eq("select * from location_lookup where location_id =?"), eq("1234"));
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+@Test
     void testUpdateLcLocationId() {
         // Create your LossControlDaoImpl instance mock
         LossControlDaoImpl dao = mock(LossControlDaoImpl.class);
