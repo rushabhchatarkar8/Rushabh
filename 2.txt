@@ -1,3 +1,106 @@
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.model.request.importclient.Client;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.LossControlServiceImpl;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+class ImportClientServiceImpTest {
+
+    @Mock
+    private TokenCache tokenCache;
+
+    @Mock
+    private LossControlDao lossControlDao;
+
+    @Mock
+    private LossControlServiceImpl lossControlService;
+
+    @Mock
+    private ObjectMapper objectMapper;
+
+    @InjectMocks
+    private ImportClientServiceImp importClientService;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.initMocks(this);
+    }
+
+    @Test
+    void testLocationsAndClientResultExist() throws Exception {
+        // Mock behavior for importClientRequest.getClient().getLocations()
+        List<Location> locations = new ArrayList<>();
+        Location location = new Location();
+        locations.add(location);
+        Client client = new Client();
+        client.setLocations(locations);
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        importClientRequest.setClient(client);
+        when(objectMapper.readValue(any(), eq(ImportClientRequest.class)))
+                .thenReturn(importClientRequest);
+
+        // Mock behavior for lossControlDao.findByClientId
+        Map<String, Object> clientResult = mock(Map.class);
+        when(lossControlDao.findByClientId(any())).thenReturn(clientResult);
+
+        // Call the method to test
+        ImportClientResponse response = importClientService.importClient("json", "correlationId");
+
+        // Verify interactions
+        verify(lossControlDao).findByClientId(any());
+        // Add more verification as needed
+    }
+
+    @Test
+    void testLocationsAndClientResultNotExist() throws Exception {
+        // Mock behavior for importClientRequest.getClient().getLocations()
+        List<Location> locations = new ArrayList<>();
+        Location location = new Location();
+        locations.add(location);
+        Client client = new Client();
+        client.setLocations(locations);
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        importClientRequest.setClient(client);
+        when(objectMapper.readValue(any(), eq(ImportClientRequest.class)))
+                .thenReturn(importClientRequest);
+
+        // Mock behavior for lossControlDao.findByClientId
+        when(lossControlDao.findByClientId(any())).thenReturn(null);
+
+        // Call the method to test
+        ImportClientResponse response = importClientService.importClient("json", "correlationId");
+
+        // Verify interactions
+        verify(lossControlDao).findByClientId(any());
+        // Add more verification as needed
+    }
+
+    // Add more test methods to cover different scenarios
+}
+
+
+
+
+
+
+
+
+
+
 public class ImportClientServiceImpTest {
     // ... existing imports and setup ...
 
