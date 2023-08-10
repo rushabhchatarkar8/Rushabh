@@ -1,3 +1,274 @@
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importclient.Location;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.LossControlServiceImpl;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class ImportClientServiceImpTest {
+
+    @Mock
+    private TokenCache tokenCache;
+
+    @Mock
+    private LossControlDao lossControlDao;
+
+    @Mock
+    private LossControlServiceImpl lossControlServiceImpl;
+
+    @Mock
+    private ObjectMapper objectMapper;
+
+    @InjectMocks
+    private ImportClientServiceImp importClientService;
+
+    @Before
+    public void setUp() {
+        MockitoAnnotations.initMocks(this);
+    }
+
+    @Test
+    public void testImportClient_LcLocationIdExists() throws CustomException, JsonProcessingException {
+        // Set up test data
+        String json = "{\"client\": { \"locations\": [{ \"lookupID\": \"123\", \"policyNumber\": \"456\" }] }}";
+        String correlationId = "12345";
+        String combineLocationID = "123+456";
+
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        // Set up your ImportClientRequest with appropriate data
+
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        // Set up your ImportClientResponse with appropriate data
+
+        // Mocking behavior for the scenario where LC360 location ID exists
+        when(objectMapper.readValue(anyString(), eq(ImportClientRequest.class))).thenReturn(importClientRequest);
+        when(lossControlDao.findByLocationId(anyString())).thenReturn(Collections.singletonMap("1", "1234"));
+        when(lossControlDao.findLc360LocationID(anyString())).thenReturn(Collections.singletonMap("1", "lc360LocationId"));
+        when(lossControlServiceImpl.clientPost(any(), any())).thenReturn(importClientResponse);
+
+        // Call the actual method
+        ImportClientResponse response = importClientService.importClient(json, correlationId);
+
+        // Assertions or verifications based on expected behavior
+        assertNotNull(response);
+        // Add more assertions based on your expected behavior
+    }
+
+    @Test
+    public void testImportClient_LcLocationIdNotExists() throws CustomException, JsonProcessingException {
+        // Set up test data
+        String json = "{\"client\": { \"locations\": [{ \"lookupID\": \"123\", \"policyNumber\": \"456\" }] }}";
+        String correlationId = "12345";
+        String combineLocationID = "123+456";
+
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        // Set up your ImportClientRequest with appropriate data
+
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        // Set up your ImportClientResponse with appropriate data
+
+        // Mocking behavior for the scenario where LC360 location ID doesn't exist
+        when(objectMapper.readValue(anyString(), eq(ImportClientRequest.class))).thenReturn(importClientRequest);
+        when(lossControlDao.findByLocationId(anyString())).thenReturn(Collections.singletonMap("1", "1234"));
+        when(lossControlDao.findLc360LocationID(anyString())).thenReturn(null);
+        when(lossControlServiceImpl.clientPost(any(), any())).thenReturn(importClientResponse);
+
+        // Call the actual method
+        ImportClientResponse response = importClientService.importClient(json, correlationId);
+
+        // Assertions or verifications based on expected behavior
+        assertNotNull(response);
+        // Add more assertions based on your expected behavior
+    }
+
+    @Test
+    public void testImportClient_LocationNotPresent() throws CustomException, JsonProcessingException {
+        // Set up test data
+        String json = "{\"client\": { \"locations\": [{ \"lookupID\": \"123\", \"policyNumber\": \"456\" }] }}";
+        String correlationId = "12345";
+        String combineLocationID = "123+456";
+
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        // Set up your ImportClientRequest with appropriate data
+
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        // Set up your ImportClientResponse with appropriate data
+
+        // Mocking behavior for the scenario where location is not present
+        when(objectMapper.readValue(anyString(), eq(ImportClientRequest.class))).thenReturn(importClientRequest);
+        when(lossControlDao.findByLocationId(anyString())).thenReturn(null);
+        when(lossControlServiceImpl.clientPost(any(), any())).thenReturn(importClientResponse);
+        when(lossControlDao.findLc360LocationID(anyString())).thenReturn(Collections.singletonMap("1", "lc360LocationId"));
+
+        // Call the actual method
+        ImportClientResponse response = importClientService.importClient(json, correlationId);
+
+        // Assertions or verifications based on expected behavior
+        assertNotNull(response);
+        // Add more assertions based on your expected behavior
+    }
+
+    // Add more test cases to cover different scenarios
+
+    // ... more test methods ...
+
+    // End of the class
+}
+
+
+
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.Before;
+import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importclient.Location;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.LossControlServiceImpl;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class ImportClientServiceImpTest {
+
+    @Mock
+    private TokenCache tokenCache;
+
+    @Mock
+    private LossControlDao lossControlDao;
+
+    @Mock
+    private LossControlServiceImpl lossControlServiceImpl;
+
+    @Mock
+    private ObjectMapper objectMapper;
+
+    @InjectMocks
+    private ImportClientServiceImp importClientService;
+
+    @Before
+    public void setUp() {
+        MockitoAnnotations.initMocks(this);
+    }
+
+    @Test
+    public void testImportClient_LocationExists() throws CustomException, JsonProcessingException {
+        // Set up test data
+        String json = "{\"client\": { \"locations\": [{ \"lookupID\": \"123\", \"policyNumber\": \"456\" }] }}";
+        String correlationId = "12345";
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        // Set up your ImportClientRequest with appropriate data
+        Location location = new Location();
+        location.setLookupID("123");
+        location.setPolicyNumber("456");
+        ArrayList<Location> locations = new ArrayList<>();
+        locations.add(location);
+        importClientRequest.setClient(new Client());
+        importClientRequest.getClient().setLocations(locations);
+
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        // Set up your ImportClientResponse with appropriate data
+
+        // Mocking behavior for the existing location scenario
+        when(objectMapper.readValue(anyString(), eq(ImportClientRequest.class))).thenReturn(importClientRequest);
+        when(lossControlDao.findByLocationId(anyString())).thenReturn(new HashMap<>());
+        when(lossControlDao.findLc360LocationID(anyString())).thenReturn(new HashMap<>());
+        when(lossControlServiceImpl.clientPost(any(), any())).thenReturn(importClientResponse);
+
+        // Call the actual method
+        ImportClientResponse response = importClientService.importClient(json, correlationId);
+
+        // Assertions or verifications based on the expected behavior
+        assertNotNull(response);
+        // Verify other method calls, assertions, etc.
+    }
+
+    @Test
+    public void testImportClient_NewLocation() throws CustomException, JsonProcessingException {
+        // Set up test data
+        String json = "{\"client\": { \"locations\": [{ \"lookupID\": \"123\", \"policyNumber\": \"456\" }] }}";
+        String correlationId = "12345";
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        // Set up your ImportClientRequest with appropriate data
+        Location location = new Location();
+        location.setLookupID("123");
+        location.setPolicyNumber("456");
+        ArrayList<Location> locations = new ArrayList<>();
+        locations.add(location);
+        importClientRequest.setClient(new Client());
+        importClientRequest.getClient().setLocations(locations);
+
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        // Set up your ImportClientResponse with appropriate data
+
+        // Mocking behavior for the new location scenario
+        when(objectMapper.readValue(anyString(), eq(ImportClientRequest.class))).thenReturn(importClientRequest);
+        when(lossControlDao.findByLocationId(anyString())).thenReturn(null);
+        when(lossControlServiceImpl.clientPost(any(), any())).thenReturn(importClientResponse);
+        when(lossControlDao.insertLocationId(anyString())).thenReturn(new HashMap<>());
+        when(lossControlDao.updateLcLocationId(anyString(), anyString())).thenReturn(new HashMap<>());
+
+        // Call the actual method
+        ImportClientResponse response = importClientService.importClient(json, correlationId);
+
+        // Assertions or verifications based on the expected behavior
+        assertNotNull(response);
+        // Verify other method calls, assertions, etc.
+    }
+
+    // Add more test cases to cover other scenarios
+
+    // ... more test methods ...
+
+    // End of the class
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 package uk.co.allianz.rap.lc.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
