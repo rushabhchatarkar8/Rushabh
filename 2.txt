@@ -1,3 +1,37 @@
+@Test
+public void testImportClient_LocationExists() throws CustomException, JsonProcessingException {
+    String json = "{\"client\": { \"locations\": [{ \"lookupID\": \"123\", \"policyNumber\": \"456\" }] }}";
+    String correlationId = "your-correlation-id";
+
+    ImportClientRequest importClientRequest = new ImportClientRequest();
+    // Set up your ImportClientRequest as shown in the previous example
+
+    ImportClientResponse importClientResponse = new ImportClientResponse();
+    // Set up your ImportClientResponse as shown in the previous example
+
+    // Mocking behavior
+    when(objectMapper.readValue(anyString(), eq(ImportClientRequest.class))).thenReturn(importClientRequest);
+    when(lossControlDao.findByLocationId(anyString())).thenReturn(new HashMap<>());
+    when(lossControlDao.findLc360LocationID(anyString())).thenReturn(new HashMap<>());
+    
+    // Mock the exception for this specific line
+    when(lossControlServiceImpl.clientPost(any(), any())).thenThrow(new NoSuchElementException());
+
+    try {
+        // Call the actual method
+        ImportClientResponse response = importClientService.importClient(json, correlationId);
+
+        // Assertions for scenarios where an exception is not thrown
+        fail("Expected NoSuchElementException, but it was not thrown.");
+    } catch (NoSuchElementException e) {
+        // Handle the exception if needed
+        // Assertions or other verification related to the exception
+    }
+}
+
+
+
+
 OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
 
 java.util.NoSuchElementException
