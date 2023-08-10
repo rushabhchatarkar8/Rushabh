@@ -3,6 +3,38 @@ public void testGetClientResponse() throws CustomException {
     ImportClientResponse importClientResponse = new ImportClientResponse();
     
     ImportClientRequest importClientRequest = new ImportClientRequest();
+    
+    Client client = new Client();
+    client.setLookupID("clientLookupID"); // Set a valid lookup ID
+    importClientRequest.setClient(client);
+    
+    ArrayList<Location> locations = new ArrayList<>();
+    Location location = new Location();
+    location.setLookupID("locationLookupID"); // Set a valid lookup ID
+    locations.add(location);
+    
+    String correlationId = "correlationId";
+
+    ImportClientResponse result = clientLocation.getClientResponse(importClientResponse, importClientRequest, locations, correlationId);
+
+    assertNotNull(result);
+    // Add more assertions as needed
+}
+
+
+
+
+
+
+
+
+
+
+@Test
+public void testGetClientResponse() throws CustomException {
+    ImportClientResponse importClientResponse = new ImportClientResponse();
+    
+    ImportClientRequest importClientRequest = new ImportClientRequest();
     importClientRequest.setClient(new Client()); // Initialize the Client object
     ArrayList<Location> locations = new ArrayList<>();
     locations.add(new Location());
