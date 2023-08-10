@@ -1,3 +1,369 @@
+package uk.co.allianz.rap.lc.service;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
+import uk.co.allianz.rap.lc.model.ServiceCallUrlModel;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importinspections.ImportInspectionsRequest;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.model.response.importinspections.ImportInspectionResponse;
+
+@Slf4j
+@Component
+public class LossControlServiceImpl implements LossControlService {
+    @Autowired
+    private ServiceCallUrlModel seviceCallUrlModel;
+    private WebClient webClient = WebClient.create();
+
+    /***
+     *     method used for invoke second LC360 api
+     *     post http request
+     *     input bearer token and related json data
+     */
+    @Override
+    public ImportClientResponse clientPost(final ImportClientRequest importClientRequest, final String bearerToken) {
+        //passing jwt bearer token into header
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Authorization", "Bearer " + bearerToken);
+        log.info("Token set in header.");
+        ImportClientResponse importClientResponse =
+                webClient.post()
+                        .uri(seviceCallUrlModel.getImportClientUrl())
+                        .headers(httpHeaders -> httpHeaders.addAll(headers))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(importClientRequest)
+                        .retrieve()
+                        .bodyToMono(ImportClientResponse.class)
+                        .block();
+        return importClientResponse;
+    }
+
+    /***
+     *     method used for invoke third LC360 api
+     *     post http request
+     *     input bearer token and related json data
+     */
+    @Override
+    public ImportInspectionResponse inspectionsPost(final ImportInspectionsRequest importInspectionsRequest, final String bearerToken) {
+        //passing jwt bearer token into header
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Authorization", "Bearer " + bearerToken);
+        log.info("Token set in header.");
+        ImportInspectionResponse importInspectionResponse =
+                webClient.post()
+                        .uri(seviceCallUrlModel.getImportInspectionsUrl())
+                        .headers(httpHeaders -> httpHeaders.addAll(headers))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(importInspectionsRequest)
+                        .retrieve()
+                        .bodyToMono(ImportInspectionResponse.class)
+                        .block();
+        return importInspectionResponse;
+    }
+}
+
+
+
+
+
+
+
+
+package uk.co.allianz.rap.lc.dao;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Repository;
+
+import java.util.Map;
+
+@Repository
+public class LossControlDaoImpl implements LossControlDao {
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+    //client methods
+    @Override
+    public void insertClientId(String client_id) {
+        String insert = "insert into client_lookup(client_id) values(?)";
+        int update = this.jdbcTemplate.update(insert, client_id);
+    }
+
+    @Override
+    public void updateLcClientId(String client_id, String lc360_client_id) {
+        String update = "update client_lookup set lc360_client_id = ? where client_id = ?";
+        this.jdbcTemplate.update(update, lc360_client_id, client_id);
+    }
+
+    @Override
+    public Map<String, Object> findByClientId(String client_id) {
+        String checkClientId = "select * from client_lookup where client_id =?";
+        Map<String, Object> result;
+        try {
+            result = this.jdbcTemplate.queryForMap(checkClientId, client_id);
+        } catch (EmptyResultDataAccessException exception) {
+            return null;
+        }
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> findLc360ClientID(String client_id) {
+        String lc360ClientId = "select lc360_client_id from client_lookup where client_id = ? ";
+        Map<String, Object> result;
+        try {
+            result = this.jdbcTemplate.queryForMap(lc360ClientId, client_id);
+        } catch (EmptyResultDataAccessException exception) {
+            return null;
+        }
+        return result;
+    }
+
+    // Locations methods
+    @Override
+    public void insertLocationId(String location_id) {
+        String insert = "insert into location_lookup(location_id) values(?)";
+        int update = this.jdbcTemplate.update(insert, location_id);
+    }
+
+    @Override
+    public void updateLcLocationId(String location_id, String lc360_location_id) {
+        String update = "update location_lookup set lc360_location_id = ? where location_id = ?";
+        this.jdbcTemplate.update(update, lc360_location_id, location_id);
+    }
+
+    @Override
+    public Map<String, Object> findByLocationId(String location_id) {
+        String checkLocationId = "select * from location_lookup where location_id =?";
+        Map<String, Object> result;
+        try {
+            result = this.jdbcTemplate.queryForMap(checkLocationId, location_id);
+        } catch (EmptyResultDataAccessException exception) {
+            return null;
+        }
+        return result;
+    }
+
+    @Override
+    public Map<String, Object> findLc360LocationID(String location_id) {
+        String lc360LocationId = "select lc360_location_id from location_lookup where location_id = ? ";
+        Map<String, Object> result;
+        try {
+            result = this.jdbcTemplate.queryForMap(lc360LocationId, location_id);
+        } catch (EmptyResultDataAccessException exception) {
+            return null;
+        }
+        return result;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+package uk.co.allianz.rap.lc.cache;
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.Cache;
+import org.springframework.cache.CacheManager;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Component;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.util.JwtUtil;
+
+//1. Implement a  token caching logic within loss-control-service
+@Slf4j
+@Component
+public class TokenCache {
+
+    private static final String TOKEN_CACHE_NAME = "tokens";
+    @Autowired
+    protected JwtUtil jwtUtil;
+    @Autowired
+    protected CacheManager cacheManager;
+
+    @Cacheable(value = TOKEN_CACHE_NAME)
+    public String getToken() throws CustomException {
+
+        // Retrieve the token from the cache or data source
+        Cache cache = cacheManager.getCache(TOKEN_CACHE_NAME);
+        if (cache != null) {
+            Cache.ValueWrapper valueWrapper = cache.get(TOKEN_CACHE_NAME);
+            if (valueWrapper != null) {
+                return (String) valueWrapper.get();
+            }
+        }
+        String tokenFromDataSource = retrieveTokenFromDataSource();
+        log.info("Generated Token");
+        // Cache the token for future use
+        cacheToken(tokenFromDataSource);
+        return tokenFromDataSource;
+    }
+
+    public String retrieveTokenFromDataSource() throws CustomException {
+        // Perform the actual retrieval of the token from the jwtUtil class
+        String jwtToken = jwtUtil.getAuthToken();
+        return jwtToken;
+    }
+
+    //token store in cache
+    public void cacheToken(final String token) {
+        Cache cache = cacheManager.getCache(TOKEN_CACHE_NAME);
+        if (cache != null) {
+            cache.put(TOKEN_CACHE_NAME, token);
+        }
+    }
+
+    //retrieve Token From Cache & request contains the correlation id
+    public String retrieveTokenFromCache(final String correlationId) throws CustomException {
+        if (log.isInfoEnabled()) {
+            log.info("Start invoking for token : Correlation ID: " + correlationId);
+        }
+        String token = getToken();
+        log.info("Token fetch from cache");
+        if (log.isInfoEnabled()) {
+            log.info("Successfully retrieved the token: Correlation ID: " + correlationId);
+        }
+        return token;
+    }
+}
+
+
+
+
+
+
+
+
+package uk.co.allianz.rap.lc.service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importclient.Location;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+
+import java.util.ArrayList;
+import java.util.Map;
+
+/**
+ * Extracting fields and data from the "data model".
+ * sent from loss-control-adapter and building the API request: ImportClient
+ */
+@Slf4j
+@Service
+public class ImportClientServiceImp implements ImportClientService {
+
+    @Autowired
+    private TokenCache tokenCache;
+    @Autowired
+    private LossControlDao lossControlDao;
+    @Autowired
+    private LossControlServiceImpl lossControlServiceImpl;
+
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    public ImportClientResponse importClient(final String json, final String correlationId) throws CustomException, JsonProcessingException {
+        ImportClientResponse importClientResponse = null;
+        ImportClientRequest importClientRequest = objectMapper.readValue(json, ImportClientRequest.class);
+        ArrayList<Location> locations = importClientRequest.getClient().getLocations();
+        //finding client id in DB exist or not
+        Map<String, Object> clientResult = lossControlDao.findByClientId(importClientRequest.getClient().getLookupID());
+        if (clientResult != null) {
+            //finding LC360 client id in DB exist or not
+            Map<String, Object> lcClientId = lossControlDao.findLc360ClientID(importClientRequest.getClient().getLookupID());
+            //finding LC360 location id in DB exist or not(combined location lookup ID and client id)
+            Map<String, Object> lcLocationId = lossControlDao.findLc360LocationID(locations.get(0).getLookupID() + "_" + importClientRequest.getClient().getLookupID());
+            if (lcClientId != null) {
+                String lc360ClientId = (String) lcClientId.get(lcClientId.keySet().iterator().next());
+                String lc360LocationId = (String) lcLocationId.get(lcLocationId.keySet().iterator().next());
+                //set client id and location id in pojo
+                importClientRequest.getClient().setLookupID(lc360ClientId);
+                locations.get(0).setLookupID(lc360LocationId);
+                objectMapper.writeValueAsString(importClientRequest);
+                log.info("Received JSON");
+                importClientResponse = lossControlServiceImpl.clientPost(importClientRequest, tokenCache.retrieveTokenFromCache(correlationId));
+            } else {
+                log.info("lc360 location id not present");
+            }
+        } else {
+            log.info("Client and Location are not present");
+            lossControlDao.insertClientId(importClientRequest.getClient().getLookupID());
+            lossControlDao.insertLocationId(locations.get(0).getLookupID() + "_" + importClientRequest.getClient().getLookupID());
+            importClientResponse = lossControlServiceImpl.clientPost(importClientRequest, tokenCache.retrieveTokenFromCache(correlationId));
+            lossControlDao.updateLcClientId(importClientRequest.getClient().getLookupID(), importClientResponse.getResult().getClientLookupID());
+            ArrayList<uk.co.allianz.rap.lc.model.response.importclient.Location> locationsResponse = importClientResponse.getResult().getLocations();
+             // Lookup ID Response
+            lossControlDao.updateLcLocationId(locations.get(0).getLookupID() + "_" + importClientRequest.getClient().getLookupID(), locationsResponse.get(0).getLocationLookupID());
+        }
+        log.info("importClientResponse Successfully Received");
+        return importClientResponse;
+
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
