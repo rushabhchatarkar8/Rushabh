@@ -1,3 +1,203 @@
+import org.junit.Before;
+import org.junit.Test;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.model.response.importclient.Location;
+import uk.co.allianz.rap.lc.service.LossControlServiceImpl;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.Assert.assertEquals;
+import static org.mockito.Mockito.*;
+
+public class ClientLocationTest {
+
+    private ClientLocation clientLocation;
+    private TokenCache tokenCache;
+    private LossControlDao lossControlDao;
+    private LossControlServiceImpl lossControlService;
+    private ImportClientRequest importClientRequest;
+    private ArrayList<Location> locations;
+
+    @Before
+    public void setUp() {
+        tokenCache = mock(TokenCache.class);
+        lossControlDao = mock(LossControlDao.class);
+        lossControlService = mock(LossControlServiceImpl.class);
+        clientLocation = new ClientLocation();
+        clientLocation.tokenCache = tokenCache;
+        clientLocation.lossControlDao = lossControlDao;
+        clientLocation.lossControlServiceImpl = lossControlService;
+
+        importClientRequest = new ImportClientRequest();
+        locations = new ArrayList<>();
+        Location location = new Location();
+        location.setLookupID("locationLookupID");
+        locations.add(location);
+    }
+
+    @Test
+    public void testGetClientResponse() throws CustomException {
+        ImportClientResponse response = new ImportClientResponse();
+        when(tokenCache.retrieveTokenFromCache(anyString())).thenReturn("token");
+        when(lossControlDao.findLc360ClientID(anyString())).thenReturn(null);
+        when(lossControlService.clientPost(any(), any())).thenReturn(response);
+
+        ImportClientResponse result = clientLocation.getClientResponse(
+            new ImportClientResponse(),
+            importClientRequest,
+            locations,
+            "correlationId"
+        );
+
+        assertEquals(response, result);
+        verify(lossControlDao).insertClientId(anyString());
+        verify(lossControlDao).insertLocationId(anyString());
+        verify(lossControlDao).updateLcClientId(anyString(), anyString());
+        verify(lossControlDao).updateLcLocationId(anyString(), anyString());
+        verify(lossControlService).clientPost(any(), any());
+    }
+
+    @Test
+    public void testIfClientIsPresent() throws CustomException {
+        ImportClientResponse response = new ImportClientResponse();
+        when(tokenCache.retrieveTokenFromCache(anyString())).thenReturn("token");
+        when(lossControlDao.findLc360ClientID(anyString())).thenReturn(new HashMap<>());
+        when(lossControlDao.findLc360LocationID(anyString())).thenReturn(new HashMap<>());
+        when(lossControlService.clientPost(any(), any())).thenReturn(response);
+
+        ImportClientResponse result = clientLocation.ifClientIsPresent(
+            new ImportClientResponse(),
+            importClientRequest,
+            locations,
+            "correlationId"
+        );
+
+        assertEquals(response, result);
+        verify(lossControlDao).findLc360ClientID(anyString());
+        verify(lossControlDao).findLc360LocationID(anyString());
+        verify(lossControlDao, times(0)).insertClientId(anyString());
+        verify(lossControlDao, times(0)).insertLocationId(anyString());
+        verify(lossControlDao, times(0)).updateLcClientId(anyString(), anyString());
+        verify(lossControlDao, times(0)).updateLcLocationId(anyString(), anyString());
+        verify(lossControlService).clientPost(any(), any());
+    }
+}
+
+
+
+
+
+
+
+
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importclient.Location;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+
+@SpringBootTest
+public class ClientLocationTest {
+
+    private ClientLocation clientLocation;
+
+    @BeforeEach
+    public void setUp() {
+        clientLocation = new ClientLocation();
+    }
+
+    @Test
+    public void testGetClientResponse() throws CustomException {
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        ArrayList<Location> locations = new ArrayList<>();
+        locations.add(new Location());
+        String correlationId = "correlationId";
+
+        ImportClientResponse result = clientLocation.getClientResponse(importClientResponse, importClientRequest, locations, correlationId);
+
+        assertNotNull(result);
+        // Add more assertions as needed
+    }
+
+    @Test
+    public void testIfClientIsPresent_ClientPresent() throws CustomException {
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        ArrayList<Location> locations = new ArrayList<>();
+        locations.add(new Location());
+        String correlationId = "correlationId";
+
+        Map<String, Object> lcClientId = new HashMap<>();
+        lcClientId.put("key", "lc360ClientId");
+        Map<String, Object> lcLocationId = new HashMap<>();
+        lcLocationId.put("key", "lc360LocationId");
+
+        // Set up lossControlDao mock to return lcClientId and lcLocationId
+
+        ImportClientResponse result = clientLocation.ifClientIsPresent(importClientResponse, importClientRequest, locations, correlationId);
+
+        assertNotNull(result);
+        // Add more assertions as needed
+    }
+
+    @Test
+    public void testIfClientIsPresent_ClientNotPresent() throws CustomException {
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        ArrayList<Location> locations = new ArrayList<>();
+        locations.add(new Location());
+        String correlationId = "correlationId";
+
+        // Set up lossControlDao mock to return null for lcClientId
+
+        ImportClientResponse result = clientLocation.ifClientIsPresent(importClientResponse, importClientRequest, locations, correlationId);
+
+        assertNotNull(result);
+        // Add more assertions as needed
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 package uk.co.allianz.rap.lc.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
