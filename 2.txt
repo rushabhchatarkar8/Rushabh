@@ -1,3 +1,71 @@
+public class ImportClientServiceImpTest {
+    // ... existing imports and setup ...
+
+    @Test
+    public void testImportClient_NewClientAndLocation() throws CustomException, JsonProcessingException {
+        // Set up test data for a new client and location
+        String json = "{\"client\": { \"locations\": [{ \"lookupID\": \"123\", \"policyNumber\": \"456\" }] }}";
+        String correlationId = "12345";
+
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        Client client = new Client();
+        Location location = new Location();
+        location.setLookupID("123");
+        location.setPolicyNumber("456");
+        ArrayList<Location> locations = new ArrayList<>();
+        locations.add(location);
+        client.setLocations(locations);
+        importClientRequest.setClient(client);
+
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        // Set up your ImportClientResponse with appropriate data
+
+        // Mocking behavior for the new client and location scenario
+        when(objectMapper.readValue(anyString(), eq(ImportClientRequest.class))).thenReturn(importClientRequest);
+        when(lossControlDao.findByClientId(anyString())).thenReturn(null);
+        when(lossControlDao.findByLocationId(anyString())).thenReturn(null);
+        when(lossControlServiceImpl.clientPost(any(), any())).thenReturn(importClientResponse);
+
+        // Call the actual method
+        ImportClientResponse response = importClientService.importClient(json, correlationId);
+
+        // Assertions to verify the behavior and response
+        assertNotNull(response);
+        // Add more assertions based on your expected behavior
+    }
+
+    @Test
+    public void testImportClient_ExceptionDuringProcessing() throws CustomException, JsonProcessingException {
+        // Set up test data
+        String json = "{\"client\": { \"locations\": [{ \"lookupID\": \"123\", \"policyNumber\": \"456\" }] }}";
+        String correlationId = "12345";
+
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        // Set up your ImportClientRequest with appropriate data
+
+        // Mocking behavior for throwing a CustomException during processing
+        when(objectMapper.readValue(anyString(), eq(ImportClientRequest.class))).thenReturn(importClientRequest);
+        when(lossControlDao.findByClientId(anyString())).thenReturn(null);
+        when(lossControlDao.findByLocationId(anyString())).thenReturn(null);
+        when(lossControlServiceImpl.clientPost(any(), any())).thenThrow(new CustomException("Test Exception"));
+
+        // Call the actual method and handle the exception
+        try {
+            ImportClientResponse response = importClientService.importClient(json, correlationId);
+            fail("CustomException should have been thrown");
+        } catch (CustomException e) {
+            // Handle the exception and perform necessary assertions
+        }
+    }
+
+    // Add more test cases to cover different scenarios
+
+    // ... existing test methods ...
+
+    // End of the class
+}
+
+////////////////
 package uk.co.allianz.rap.lc.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
