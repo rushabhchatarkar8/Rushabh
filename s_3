@@ -1,3 +1,43 @@
+08:57:26.278 [main] INFO uk.co.allianz.rap.lc.util.ClientLocation -- Client and Location are not present
+
+java.lang.NullPointerException: Cannot invoke "uk.co.allianz.rap.lc.model.request.importclient.Client.getLookupID()" because the return value of "uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest.getClient()" is null
+
+
+
+        clientLocation.getClientResponse(importClientResponse, importClientRequest, locations, correlationId);
+        lossControlDao.insertClientId(importClientRequest.getClient().getLookupID());
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 package uk.co.allianz.rap.lc.service;
 
 import lombok.extern.slf4j.Slf4j;
