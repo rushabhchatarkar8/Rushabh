@@ -1,3 +1,46 @@
+@Test
+void testGetClientResponse() throws CustomException {
+    String correlationId = "correlation-id";
+
+    ArrayList<uk.co.allianz.rap.lc.model.request.importclient.Location> locations = new ArrayList<>();
+
+    // Create and add a mock Location object to the ArrayList
+    uk.co.allianz.rap.lc.model.request.importclient.Location mockLocation = mock(uk.co.allianz.rap.lc.model.request.importclient.Location.class);
+    when(mockLocation.getLookupID()).thenReturn("test-location-lookup-id"); // You might need to adjust this based on your actual Location class
+    locations.add(mockLocation);
+
+    // Mock the Client object
+    Client mockClient = mock(Client.class);
+    when(mockClient.getLookupID()).thenReturn("test-client-lookup-id");
+
+    // Mock the ImportClientRequest and associate it with the mocked Client
+    ImportClientRequest mockImportClientRequest = mock(ImportClientRequest.class);
+    when(mockImportClientRequest.getClient()).thenReturn(mockClient); // Fix: associate the mockClient with getClient()
+
+    when(tokenCache.retrieveTokenFromCache(correlationId)).thenReturn("test-token");
+    when(lossControlServiceImpl.clientPost(mockImportClientRequest, "test-token")).thenReturn(importClientResponse);
+
+    // Mocking lossControlDao methods
+    when(lossControlDao.findLc360ClientID(anyString())).thenReturn(null);
+    when(lossControlDao.findLc360LocationID(anyString())).thenReturn(null);
+
+    clientLocation.getClientResponse(importClientResponse, mockImportClientRequest, locations, correlationId);
+
+    verify(lossControlDao, times(1)).insertClientId("test-client-lookup-id");
+    verify(lossControlDao, times(1)).insertLocationId("test-location-lookup-id_test-client-lookup-id"); // Adjust this based on your actual location and client lookup IDs
+    verify(lossControlServiceImpl, times(1)).clientPost(mockImportClientRequest, "test-token");
+    verify(lossControlDao, times(1)).updateLcClientId(anyString(), anyString());
+    verify(lossControlDao, times(1)).updateLcLocationId(anyString(), anyString());
+}
+
+
+
+
+
+
+
+
+
 // Mock the ImportClientRequest and associate it with the mocked Client
 ImportClientRequest mockImportClientRequest = mock(ImportClientRequest.class);
 Client mockClient = mock(Client.class);
