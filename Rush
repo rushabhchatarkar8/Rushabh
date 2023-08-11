@@ -6,7 +6,7 @@ import org.mockito.Mock;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-public class ClientLocationTest {
+public class ClientLocationTest45 {
 
     @Mock
     private TokenCache tokenCache;
@@ -71,7 +71,7 @@ import java.util.Map;
 
 import static org.mockito.Mockito.*;
 
-class ClientLocationTest {
+class ClientLocationTest44 {
 
     @Mock
     private TokenCache tokenCache;
@@ -175,7 +175,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
-public class ClientLocationTest {
+public class ClientLocationTest43 {
 
     @Mock
     private TokenCache tokenCache;
@@ -285,7 +285,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ClientLocationTest {
+public class ClientLocationTest42 {
 
     private TokenCache tokenCache;
     private LossControlDao lossControlDao;
@@ -380,7 +380,7 @@ import uk.co.allianz.rap.lc.service.LossControlServiceImpl;
 import uk.co.allianz.rap.lc.util.ClientLocation;
 import uk.co.allianz.rap.lc.util.ObjectMapper;
 
-public class ClientLocationTest {
+public class ClientLocationTest41 {
 
     @Mock
     private TokenCache tokenCache;
