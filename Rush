@@ -1,3 +1,17 @@
+        when(importClientResponse.getResult().getLocations()).thenReturn(locationsResponse);
+
+
+java.lang.NullPointerException: Cannot invoke "uk.co.allianz.rap.lc.model.response.importclient.Result.getLocations()" because the return value of "uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse.getResult()" is null
+
+
+
+
+
+
+
+
+
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
