@@ -1,3 +1,468 @@
+import static org.mockito.Mockito.*;
+
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest
+public class ClientLocationTest {
+
+    @Mock
+    private TokenCache tokenCache;
+
+    @Mock
+    private LossControlDao lossControlDao;
+
+    @Mock
+    private LossControlServiceImpl lossControlServiceImpl;
+
+    @InjectMocks
+    private ClientLocation clientLocation;
+
+    @Test
+    public void testGetClientResponse() throws CustomException {
+        // Mocking necessary data and interactions
+        ImportClientRequest importClientRequest = ... // create a mock request
+        ArrayList<Location> locations = ... // create mock locations list
+        ImportClientResponse importClientResponse = ... // create mock response
+
+        when(lossControlDao.findLc360ClientID(anyString())).thenReturn(null);
+        when(lossControlDao.findLc360LocationID(anyString())).thenReturn(null);
+        when(lossControlServiceImpl.clientPost(any(), anyString())).thenReturn(importClientResponse);
+        when(tokenCache.retrieveTokenFromCache(anyString())).thenReturn("mockedToken");
+
+        // Call the method to test
+        ImportClientResponse result = clientLocation.getClientResponse(importClientResponse, importClientRequest, locations, "correlationId");
+
+        // Perform assertions on the result or interactions
+        // ...
+    }
+
+    @Test
+    public void testIfClientIsPresent() throws CustomException, JsonProcessingException {
+        // Similar setup as the previous test, but you need to mock the DAO responses
+        when(lossControlDao.findLc360ClientID(anyString())).thenReturn(someMockedClientId);
+        when(lossControlDao.findLc360LocationID(anyString())).thenReturn(someMockedLocationId);
+
+        // Rest of the test logic
+    }
+}
+
+
+
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.LossControlServiceImpl;
+import com.fasterxml.jackson.core.JsonProcessingException;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.mockito.Mockito.*;
+
+class ClientLocationTest {
+
+    @Mock
+    private TokenCache tokenCache;
+
+    @Mock
+    private LossControlDao lossControlDao;
+
+    @Mock
+    private LossControlServiceImpl lossControlServiceImpl;
+
+    @Mock
+    private ImportClientRequest importClientRequest;
+
+    @Mock
+    private ImportClientResponse importClientResponse;
+
+    @InjectMocks
+    private ClientLocation clientLocation;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    void testGetClientResponse() throws CustomException {
+        String correlationId = "correlation-id";
+
+        ArrayList<uk.co.allianz.rap.lc.model.request.importclient.Location> locations = new ArrayList<>();
+        // Add locations to the ArrayList
+
+        when(tokenCache.retrieveTokenFromCache(correlationId)).thenReturn("test-token");
+        when(lossControlServiceImpl.clientPost(importClientRequest, "test-token")).thenReturn(importClientResponse);
+
+        // Mocking lossControlDao methods
+        when(lossControlDao.findLc360ClientID(anyString())).thenReturn(null);
+        when(lossControlDao.findLc360LocationID(anyString())).thenReturn(null);
+
+        clientLocation.getClientResponse(importClientResponse, importClientRequest, locations, correlationId);
+
+        verify(lossControlDao, times(1)).insertClientId(anyString());
+        verify(lossControlDao, times(1)).insertLocationId(anyString());
+        verify(lossControlServiceImpl, times(1)).clientPost(importClientRequest, "test-token");
+        verify(lossControlDao, times(1)).updateLcClientId(anyString(), anyString());
+        verify(lossControlDao, times(1)).updateLcLocationId(anyString(), anyString());
+    }
+
+    @Test
+    void testIfClientIsPresent() throws CustomException, JsonProcessingException {
+        String correlationId = "correlation-id";
+
+        ArrayList<uk.co.allianz.rap.lc.model.request.importclient.Location> locations = new ArrayList<>();
+        // Add locations to the ArrayList
+
+        Map<String, Object> lcClientIdMap = new HashMap<>();
+        lcClientIdMap.put("lc360_client_id", "test-lc360-client-id");
+        when(lossControlDao.findLc360ClientID(anyString())).thenReturn(lcClientIdMap);
+
+        Map<String, Object> lcLocationIdMap = new HashMap<>();
+        lcLocationIdMap.put("lc360_location_id", "test-lc360-location-id");
+        when(lossControlDao.findLc360LocationID(anyString())).thenReturn(lcLocationIdMap);
+
+        when(tokenCache.retrieveTokenFromCache(correlationId)).thenReturn("test-token");
+        when(lossControlServiceImpl.clientPost(importClientRequest, "test-token")).thenReturn(importClientResponse);
+
+        String result = clientLocation.ifClientIsPresent(importClientResponse, importClientRequest, locations, correlationId);
+
+        verify(lossControlDao, never()).insertClientId(anyString());
+        verify(lossControlDao, never()).insertLocationId(anyString());
+        verify(lossControlServiceImpl, times(1)).clientPost(importClientRequest, "test-token");
+        verify(lossControlDao, never()).updateLcClientId(anyString(), anyString());
+        verify(lossControlDao, never()).updateLcLocationId(anyString(), anyString());
+
+        // Add more assertions based on your actual scenario
+    }
+}
+
+
+
+
+
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.model.response.importclient.Location;
+import uk.co.allianz.rap.lc.service.LossControlServiceImpl;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.*;
+
+public class ClientLocationTest {
+
+    @Mock
+    private TokenCache tokenCache;
+
+    @Mock
+    private LossControlDao lossControlDao;
+
+    @Mock
+    private LossControlServiceImpl lossControlService;
+
+    @Mock
+    private ObjectMapper objectMapper;
+
+    @InjectMocks
+    private ClientLocation clientLocation;
+
+    @BeforeEach
+    public void setup() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testGetClientResponse() throws CustomException {
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        ArrayList<Location> locations = new ArrayList<>();
+        // Set up your importClientRequest and locations as needed
+        
+        String correlationId = "testCorrelationId";
+        
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        // Set up your importClientResponse as needed
+        
+        when(lossControlDao.findLc360ClientID(anyString())).thenReturn(null);
+        when(lossControlDao.findLc360LocationID(anyString())).thenReturn(null);
+        when(lossControlService.clientPost(any(), any())).thenReturn(importClientResponse);
+        when(tokenCache.retrieveTokenFromCache(anyString())).thenReturn("testToken");
+        
+        ImportClientResponse result = clientLocation.getClientResponse(importClientResponse, importClientRequest, locations, correlationId);
+        
+        verify(lossControlDao, times(1)).insertClientId(anyString());
+        verify(lossControlDao, times(1)).insertLocationId(anyString());
+        verify(lossControlService, times(1)).clientPost(any(), any());
+        verify(lossControlDao, times(1)).updateLcClientId(anyString(), anyString());
+        verify(lossControlDao, times(1)).updateLcLocationId(anyString(), anyString());
+        
+        assertEquals(importClientResponse, result);
+    }
+
+    @Test
+    public void testIfClientIsPresent() throws CustomException, JsonProcessingException {
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        ArrayList<Location> locations = new ArrayList<>();
+        // Set up your importClientRequest and locations as needed
+        
+        String correlationId = "testCorrelationId";
+        
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        // Set up your importClientResponse as needed
+        
+        Map<String, Object> lcClientIdMap = new HashMap<>();
+        lcClientIdMap.put("lc360ClientIdKey", "lc360ClientIdValue");
+        
+        Map<String, Object> lcLocationIdMap = new HashMap<>();
+        lcLocationIdMap.put("lc360LocationIdKey", "lc360LocationIdValue");
+        
+        when(lossControlDao.findLc360ClientID(anyString())).thenReturn(lcClientIdMap);
+        when(lossControlDao.findLc360LocationID(anyString())).thenReturn(lcLocationIdMap);
+        when(lossControlService.clientPost(any(), any())).thenReturn(importClientResponse);
+        when(tokenCache.retrieveTokenFromCache(anyString())).thenReturn("testToken");
+        
+        ImportClientResponse result = clientLocation.ifClientIsPresent(importClientResponse, importClientRequest, locations, correlationId);
+        
+        verify(lossControlDao, times(1)).findLc360ClientID(anyString());
+        verify(lossControlDao, times(1)).findLc360LocationID(anyString());
+        verify(lossControlService, times(1)).clientPost(any(), any());
+        
+        assertEquals(importClientResponse, result);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import static org.mockito.Mockito.*;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.LossControlServiceImpl;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+public class ClientLocationTest {
+
+    private TokenCache tokenCache;
+    private LossControlDao lossControlDao;
+    private LossControlServiceImpl lossControlService;
+    private ClientLocation clientLocation;
+
+    @BeforeEach
+    public void setUp() {
+        tokenCache = mock(TokenCache.class);
+        lossControlDao = mock(LossControlDao.class);
+        lossControlService = mock(LossControlServiceImpl.class);
+        clientLocation = new ClientLocation();
+        clientLocation.tokenCache = tokenCache;
+        clientLocation.lossControlDao = lossControlDao;
+        clientLocation.lossControlServiceImpl = lossControlService;
+    }
+
+    @Test
+    public void testIfClientIsPresent() throws CustomException, JsonProcessingException {
+        // Mocking the input data
+        String correlationId = "testCorrelationId";
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        ArrayList<uk.co.allianz.rap.lc.model.request.importclient.Location> locations = new ArrayList<>();
+        locations.add(new uk.co.allianz.rap.lc.model.request.importclient.Location());
+
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        importClientResponse.setResult(new ImportClientResponse.Result());
+        importClientResponse.getResult().setClientLookupID("lc360ClientId");
+
+        Map<String, Object> lcClientId = new HashMap<>();
+        lcClientId.put("lc360ClientIdKey", "lc360ClientId");
+        when(lossControlDao.findLc360ClientID(importClientRequest.getClient().getLookupID())).thenReturn(lcClientId);
+
+        Map<String, Object> lcLocationId = new HashMap<>();
+        lcLocationId.put("lc360LocationIdKey", "lc360LocationId");
+        when(lossControlDao.findLc360LocationID(any())).thenReturn(lcLocationId);
+
+        when(lossControlService.clientPost(any(), any())).thenReturn(importClientResponse);
+        when(tokenCache.retrieveTokenFromCache(correlationId)).thenReturn("testToken");
+
+        // Calling the method to be tested
+        ImportClientResponse result = clientLocation.ifClientIsPresent(importClientResponse, importClientRequest, locations, correlationId);
+
+        // Verifying the interactions and assertions
+        verify(lossControlDao).findLc360ClientID(importClientRequest.getClient().getLookupID());
+        verify(lossControlDao).findLc360LocationID(any());
+        verify(tokenCache).retrieveTokenFromCache(correlationId);
+        verify(lossControlService).clientPost(any(), any());
+
+        // Asserting the result
+        assert result != null;
+        assert result.getResult() != null;
+        assert "lc360ClientId".equals(result.getResult().getClientLookupID());
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import static org.mockito.Mockito.*;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.model.response.importclient.Location;
+import uk.co.allianz.rap.lc.service.LossControlServiceImpl;
+import uk.co.allianz.rap.lc.util.ClientLocation;
+import uk.co.allianz.rap.lc.util.ObjectMapper;
+
+public class ClientLocationTest {
+
+    @Mock
+    private TokenCache tokenCache;
+
+    @Mock
+    private LossControlDao lossControlDao;
+
+    @Mock
+    private LossControlServiceImpl lossControlService;
+
+    @Mock
+    private ObjectMapper objectMapper;
+
+    @InjectMocks
+    private ClientLocation clientLocation;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testGetClientResponse() throws CustomException {
+        // Mocking data
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        ArrayList<Location> locations = new ArrayList<>();
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+
+        // Mocking behavior of dependencies
+        when(lossControlDao.findLc360ClientID(anyString())).thenReturn(null);
+        when(lossControlDao.findLc360LocationID(anyString())).thenReturn(null);
+        when(tokenCache.retrieveTokenFromCache(anyString())).thenReturn("mockedToken");
+        when(lossControlServiceImpl.clientPost(any(), anyString())).thenReturn(importClientResponse);
+
+        // Perform the test
+        clientLocation.getClientResponse(importClientResponse, importClientRequest, locations, "correlationId");
+
+        // Verify interactions
+        verify(lossControlDao).insertClientId(anyString());
+        verify(lossControlDao).insertLocationId(anyString());
+        verify(lossControlServiceImpl).clientPost(eq(importClientRequest), eq("mockedToken"));
+        verify(lossControlDao).updateLcClientId(anyString(), anyString());
+        verify(lossControlDao).updateLcLocationId(anyString(), anyString());
+    }
+
+    @Test
+    public void testIfClientIsPresent() throws CustomException {
+        // Mocking data
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        ArrayList<Location> locations = new ArrayList<>();
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+
+        // Mocking behavior of dependencies
+        Map<String, Object> lcClientIdMap = new HashMap<>();
+        lcClientIdMap.put("lcClientId", "mockedLCClientId");
+        Map<String, Object> lcLocationIdMap = new HashMap<>();
+        lcLocationIdMap.put("lcLocationId", "mockedLCLocationId");
+
+        when(lossControlDao.findLc360ClientID(anyString())).thenReturn(lcClientIdMap);
+        when(lossControlDao.findLc360LocationID(anyString())).thenReturn(lcLocationIdMap);
+        when(tokenCache.retrieveTokenFromCache(anyString())).thenReturn("mockedToken");
+        when(lossControlServiceImpl.clientPost(any(), anyString())).thenReturn(importClientResponse);
+
+        // Perform the test
+        clientLocation.ifClientIsPresent(importClientResponse, importClientRequest, locations, "correlationId");
+
+        // Verify interactions
+        verify(lossControlServiceImpl).clientPost(eq(importClientRequest), eq("mockedToken"));
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////
 public class ImportClientServiceImpTest35 {
 
     @InjectMocks
