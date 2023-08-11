@@ -1,3 +1,149 @@
+    @Test
+    public void testImportClientWhenClientIsPresent() throws CustomException, JsonProcessingException {
+        // Prepare test data
+        String json = "{\n" +
+                "  \"divisionLookupID\" : \"AZ_UK\",\n" +
+                "  \"client\" : {\n" +
+                "    \"LookupID\" : \"C008032905\",\n" +
+                "    \"ContactFirstName\" : null,\n" +
+                "    \"ContactLastName\" : null,\n" +
+                "    \"PolicyNumber\" : \"SP26853149\",\n" +
+                "    \"Name\" : \"CLIENT CI Test\",\n" +
+                "    \"Phone\" : null,\n" +
+                "    \"Email\" : null,\n" +
+                "    \"Address\" : {\n" +
+                "      \"Country\" : \"United Kingdom\",\n" +
+                "      \"OverseasTerritories\" : null,\n" +
+                "      \"Street1\" : null,\n" +
+                "      \"Street2\" : null,\n" +
+                "      \"City\" : null,\n" +
+                "      \"Region1\" : null,\n" +
+                "      \"Region2\" : null,\n" +
+                "      \"Region3\" : null,\n" +
+                "      \"Region4\" : null,\n" +
+                "      \"ZipCode\" : null\n" +
+                "    },\n" +
+                "    \"Agent\" : {\n" +
+                "      \"AgencyCode\" : \"22576\",\n" +
+                "      \"AgencyName\" : \"Arthur J. Gallagher\",\n" +
+                "      \"AgentCode\" : \"13332\",\n" +
+                "      \"AgentName\" : null,\n" +
+                "      \"Email\" : null,\n" +
+                "      \"FaxNumber\" : null,\n" +
+                "      \"PhoneNumber\" : null,\n" +
+                "      \"Address\" : {\n" +
+                "        \"Country\" : \"GB\",\n" +
+                "        \"OverseasTerritories\" : null,\n" +
+                "        \"Street1\" : null,\n" +
+                "        \"Street2\" : null,\n" +
+                "        \"City\" : null,\n" +
+                "        \"Region1\" : null,\n" +
+                "        \"Region2\" : null,\n" +
+                "        \"Region3\" : null,\n" +
+                "        \"Region4\" : null,\n" +
+                "        \"ZipCode\" : null\n" +
+                "      },\n" +
+                "      \"AgentType\" : \"Broker\"\n" +
+                "    },\n" +
+                "    \"Underwriter\" : null,\n" +
+                "    \"Locations\" : [ {\n" +
+                "      \"genericFields\" : null,\n" +
+                "      \"LookupID\" : \"111105\",\n" +
+                "      \"Name\" : null,\n" +
+                "      \"PolicyNumber\" : \"SP26853148\",\n" +
+                "      \"PolicyEffectiveDate\" : null,\n" +
+                "      \"PolicyExpirationDate\" : null,\n" +
+                "      \"PolicyRenewalDate\" : null,\n" +
+                "      \"Address\" : {\n" +
+                "        \"Country\" : \"United Kingdom\",\n" +
+                "        \"OverseasTerritories\" : null,\n" +
+                "        \"Street1\" : \"NEW CROSS DEWEL\",\n" +
+                "        \"Street2\" : \"SD 11 JEW TOWN\",\n" +
+                "        \"City\" : \"MM KEMSTONE\",\n" +
+                "        \"Region1\" : \"UK\",\n" +
+                "        \"Region2\" : null,\n" +
+                "        \"Region3\" : null,\n" +
+                "        \"Region4\" : null,\n" +
+                "        \"ZipCode\" : \"GU1 1DB\"\n" +
+                "      },\n" +
+                "      \"OriginalEffectiveDate\" : null,\n" +
+                "      \"EffectiveDate\" : null,\n" +
+                "      \"ExpirationDate\" : null,\n" +
+                "      \"RenewalDate\" : \"2024-07-17\",\n" +
+                "      \"LastInspectedDate\" : null,\n" +
+                "      \"Coverages\" : [ {\n" +
+                "        \"CoverageTypeLookup\" : \"PD_TIV\",\n" +
+                "        \"CoverageReference\" : \"Coverage 1\",\n" +
+                "        \"GenericFields\" : [ {\n" +
+                "          \"Number\" : \"1123\",\n" +
+                "          \"Key\" : \"01. PD Building\",\n" +
+                "          \"GenericFieldValueType\" : 1,\n" +
+                "          \"Text\" : null\n" +
+                "        }, {\n" +
+                "          \"Number\" : \"0\",\n" +
+                "          \"Key\" : \"04. PD Other\",\n" +
+                "          \"GenericFieldValueType\" : 1,\n" +
+                "          \"Text\" : null\n" +
+                "        }, {\n" +
+                "          \"Number\" : null,\n" +
+                "          \"Key\" : \"05. PD Other Description\",\n" +
+                "          \"GenericFieldValueType\" : 0,\n" +
+                "          \"Text\" : \"\"\n" +
+                "        }, {\n" +
+                "          \"Number\" : \"1123\",\n" +
+                "          \"Key\" : \"06. TIV PD\",\n" +
+                "          \"GenericFieldValueType\" : 1,\n" +
+                "          \"Text\" : null\n" +
+                "        }, {\n" +
+                "          \"Number\" : \"332198\",\n" +
+                "          \"Key\" : \"07. TIV BI\",\n" +
+                "          \"GenericFieldValueType\" : 1,\n" +
+                "          \"Text\" : null\n" +
+                "        }, {\n" +
+                "          \"Number\" : \"\",\n" +
+                "          \"Key\" : \"08. BI Base Period (Months)\",\n" +
+                "          \"GenericFieldValueType\" : 1,\n" +
+                "          \"Text\" : null\n" +
+                "        }, {\n" +
+                "          \"Number\" : \"332198\",\n" +
+                "          \"Key\" : \"09. TIV (PD + BI )\",\n" +
+                "          \"GenericFieldValueType\" : 1,\n" +
+                "          \"Text\" : null\n" +
+                "        } ]\n" +
+                "      } ],\n" +
+                "      \"Contact\" : null\n" +
+                "    } ]\n" +
+                "  }\n" +
+                "}";
+        String correlationId = "correlation123";
+        ImportClientRequest importClientRequest = objectMapper.readValue(json, ImportClientRequest.class);
+        ArrayList<Location> locations = importClientRequest.getClient().getLocations();
+        
+        // Insert mock client data in the database
+//        lossControlDao.insertClientId(importClientRequest.getClient().getLookupID());
+        
+        // Execute the method
+        ImportClientResponse importClientResponse = importClientService.importClient(json, correlationId);
+        
+        // Assertions
+        assertNotNull(importClientResponse);
+        // Add more assertions based on your use case
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//////////////////////
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
