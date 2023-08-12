@@ -1,6 +1,52 @@
 @Test
 void testImportClientWhenClientNotExists() throws CustomException, JsonProcessingException {
     ImportClientRequest request = new ImportClientRequest();
+    
+    // Initialize a Client object with locations
+    Client client = new Client();
+    Location location = new Location(); // Initialize Location object
+    List<Location> locations = new ArrayList<>();
+    locations.add(location);
+    client.setLocations(locations);
+    
+    request.setClient(client); // Set the client object in the request
+    
+    ImportClientResponse expectedResponse = new ImportClientResponse();
+    
+    when(objectMapper.readValue(anyString(), Mockito.eq(ImportClientRequest.class)))
+            .thenReturn(request);
+
+    when(lossControlDao.findByClientId(anyString()))
+            .thenReturn(null);
+
+    ImportClientResponse actualResponse = importClientService.importClient("json", "correlationId");
+
+    assertEquals(expectedResponse, actualResponse);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@Test
+void testImportClientWhenClientNotExists() throws CustomException, JsonProcessingException {
+    ImportClientRequest request = new ImportClientRequest();
     // Mock the behavior of methods called on ImportClientRequest
     when(request.getClient()).thenReturn(new Client()); // Mock the getClient method to return a non-null Client object
     when(request.getClient().getLocations()).thenReturn(new ArrayList<>()); // Mock the getLocations method to return an empty list
