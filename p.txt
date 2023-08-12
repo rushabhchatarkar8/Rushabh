@@ -1,3 +1,457 @@
+import static org.mockito.Mockito.*;
+
+@RunWith(MockitoJUnitRunner.class)
+public class ImportClientServiceImpTest71 {
+
+    @InjectMocks
+    private ImportClientServiceImp importClientService;
+
+    @Mock
+    private TokenCache tokenCache;
+
+    @Mock
+    private LossControlDao lossControlDao;
+
+    @Mock
+    private LossControlServiceImpl lossControlServiceImpl;
+
+    @Mock
+    private ObjectMapper objectMapper;
+
+    @Test
+    public void testImportClient_ClientExists() throws CustomException, JsonProcessingException {
+        // Prepare test data
+        String json = "{...}"; // Your JSON data
+        String correlationId = "correlation123";
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        ImportClientResponse mockImportClientResponse = new ImportClientResponse();
+        when(objectMapper.readValue(json, ImportClientRequest.class)).thenReturn(importClientRequest);
+        when(lossControlDao.findByClientId(any())).thenReturn(Collections.singletonMap("key", "value"));
+        when(lossControlServiceImpl.clientPost(any(), any())).thenReturn(mockImportClientResponse);
+
+        // Execute the method
+        ImportClientResponse result = importClientService.importClient(json, correlationId);
+
+        // Assert
+        assertNotNull(result);
+        // Add more assertions as needed
+    }
+
+    @Test
+    public void testImportClient_ClientDoesNotExist() throws CustomException, JsonProcessingException {
+        // Prepare test data
+        String json = "{...}"; // Your JSON data
+        String correlationId = "correlation123";
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        ImportClientResponse mockImportClientResponse = new ImportClientResponse();
+        when(objectMapper.readValue(json, ImportClientRequest.class)).thenReturn(importClientRequest);
+        when(lossControlDao.findByClientId(any())).thenReturn(null);
+        when(lossControlServiceImpl.clientPost(any(), any())).thenReturn(mockImportClientResponse);
+
+        // Execute the method
+        ImportClientResponse result = importClientService.importClient(json, correlationId);
+
+        // Assert
+        assertNotNull(result);
+        // Add more assertions as needed
+    }
+
+    // Add more test cases as needed
+}
+
+
+
+
+
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importclient.Location;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.LossControlServiceImpl;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+class ImportClientServiceImpTest72 {
+
+    @Mock
+    private TokenCache tokenCache;
+
+    @Mock
+    private LossControlDao lossControlDao;
+
+    @Mock
+    private LossControlServiceImpl lossControlServiceImpl;
+
+    @Mock
+    private ObjectMapper objectMapper;
+
+    @InjectMocks
+    private ImportClientServiceImp importClientService;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    void testImportClientWhenClientExists() throws CustomException, JsonProcessingException {
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        importClientRequest.setClient(new ImportClientRequest.Client());
+        importClientRequest.getClient().setLookupID("123");
+
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+
+        when(objectMapper.readValue(any(String.class), eq(ImportClientRequest.class)))
+            .thenReturn(importClientRequest);
+
+        when(lossControlDao.findByClientId("123"))
+            .thenReturn(new HashMap<>());
+
+        when(importClientService.ifClientIsPresent(any(), any(), any(), any()))
+            .thenReturn(importClientResponse);
+
+        ImportClientResponse result = importClientService.importClient("json_data", "correlation_id");
+
+        // Verify appropriate method calls and assertions here
+    }
+
+    @Test
+    void testImportClientWhenClientDoesNotExist() throws CustomException, JsonProcessingException {
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        importClientRequest.setClient(new ImportClientRequest.Client());
+        importClientRequest.getClient().setLookupID("456");
+
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+
+        when(objectMapper.readValue(any(String.class), eq(ImportClientRequest.class)))
+            .thenReturn(importClientRequest);
+
+        when(lossControlDao.findByClientId("456"))
+            .thenReturn(null);
+
+        when(importClientService.getClientResponse(any(), any(), any(), any()))
+            .thenReturn(importClientResponse);
+
+        ImportClientResponse result = importClientService.importClient("json_data", "correlation_id");
+
+        // Verify appropriate method calls and assertions here
+    }
+
+    // Add more test cases for other scenarios
+}
+
+
+
+
+
+
+
+
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.request.importclient.Client;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importclient.Location;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.LossControlServiceImpl;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+class ImportClientServiceImpTest73 {
+
+    @Mock
+    private TokenCache tokenCache;
+
+    @Mock
+    private LossControlDao lossControlDao;
+
+    @Mock
+    private LossControlServiceImpl lossControlServiceImpl;
+
+    @Mock
+    private ObjectMapper objectMapper;
+
+    @InjectMocks
+    private ImportClientServiceImp importClientServiceImp;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    void testImportClientWhenClientExists() throws CustomException, JsonProcessingException {
+        ImportClientRequest request = new ImportClientRequest();
+        Client client = new Client();
+        client.setLookupID("clientLookupID");
+        Location location = new Location();
+        location.setLookupID("locationLookupID");
+        ArrayList<Location> locations = new ArrayList<>();
+        locations.add(location);
+        client.setLocations(locations);
+        request.setClient(client);
+
+        ImportClientResponse expectedResponse = new ImportClientResponse();
+
+        when(objectMapper.readValue(any(String.class), eq(ImportClientRequest.class))).thenReturn(request);
+        when(lossControlDao.findByClientId(any(String.class))).thenReturn(new HashMap<>());
+        when(lossControlServiceImpl.clientPost(any(ImportClientRequest.class), anyString())).thenReturn(expectedResponse);
+
+        ImportClientResponse result = importClientServiceImp.importClient("dummy json", "correlationId");
+
+        verify(lossControlServiceImpl, times(1)).clientPost(any(ImportClientRequest.class), anyString());
+        verify(lossControlDao, never()).insertClientId(any(String.class));
+        verify(lossControlDao, never()).insertLocationId(any(String.class));
+        verify(lossControlDao, never()).updateLcClientId(any(String.class), any(String.class));
+        verify(lossControlDao, never()).updateLcLocationId(any(String.class), any(String.class));
+
+        // Perform assertions on the result if needed
+    }
+
+    @Test
+    void testImportClientWhenClientDoesNotExist() throws CustomException, JsonProcessingException {
+        ImportClientRequest request = new ImportClientRequest();
+        Client client = new Client();
+        client.setLookupID("clientLookupID");
+        Location location = new Location();
+        location.setLookupID("locationLookupID");
+        ArrayList<Location> locations = new ArrayList<>();
+        locations.add(location);
+        client.setLocations(locations);
+        request.setClient(client);
+
+        ImportClientResponse expectedResponse = new ImportClientResponse();
+
+        when(objectMapper.readValue(any(String.class), eq(ImportClientRequest.class))).thenReturn(request);
+        when(lossControlDao.findByClientId(any(String.class))).thenReturn(null);
+        when(lossControlServiceImpl.clientPost(any(ImportClientRequest.class), anyString())).thenReturn(expectedResponse);
+
+        ImportClientResponse result = importClientServiceImp.importClient("dummy json", "correlationId");
+
+        verify(lossControlServiceImpl, times(1)).clientPost(any(ImportClientRequest.class), anyString());
+        verify(lossControlDao, times(1)).insertClientId(any(String.class));
+        verify(lossControlDao, times(1)).insertLocationId(any(String.class));
+        verify(lossControlDao, times(1)).updateLcClientId(any(String.class), any(String.class));
+        verify(lossControlDao, times(1)).updateLcLocationId(any(String.class), any(String.class));
+
+        // Perform assertions on the result if needed
+    }
+}
+
+
+
+
+
+
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+
+import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importclient.Location;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
+
+class ImportClientServiceImpTest74 {
+
+    @Mock
+    private TokenCache tokenCache;
+
+    @Mock
+    private LossControlDao lossControlDao;
+
+    @Mock
+    private LossControlServiceImpl lossControlServiceImpl;
+
+    @Mock
+    private ObjectMapper objectMapper;
+
+    @InjectMocks
+    private ImportClientServiceImp importClientService;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    void testImportClientWhenClientExists() throws CustomException, JsonProcessingException {
+        ImportClientRequest request = new ImportClientRequest(); // Create your request object
+        ImportClientResponse expectedResponse = new ImportClientResponse(); // Create your expected response object
+        
+        when(objectMapper.readValue(anyString(), Mockito.eq(ImportClientRequest.class)))
+                .thenReturn(request);
+
+        Map<String, Object> clientResult = new HashMap<>();
+        clientResult.put("client_id", "123");
+        when(lossControlDao.findByClientId(anyString()))
+                .thenReturn(clientResult);
+
+        ImportClientResponse actualResponse = importClientService.importClient("json", "correlationId");
+
+        assertEquals(expectedResponse, actualResponse);
+    }
+
+    @Test
+    void testImportClientWhenClientNotExists() throws CustomException, JsonProcessingException {
+        ImportClientRequest request = new ImportClientRequest(); // Create your request object
+        ImportClientResponse expectedResponse = new ImportClientResponse(); // Create your expected response object
+        
+        when(objectMapper.readValue(anyString(), Mockito.eq(ImportClientRequest.class)))
+                .thenReturn(request);
+
+        when(lossControlDao.findByClientId(anyString()))
+                .thenReturn(null);
+
+        ImportClientResponse actualResponse = importClientService.importClient("json", "correlationId");
+
+        assertEquals(expectedResponse, actualResponse);
+    }
+
+    // Additional test cases can be added for other methods in the class
+}
+
+
+
+
+
+
+
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importclient.Location;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.mockito.Mockito.*;
+
+public class ImportClientServiceImpTest75 {
+
+    @Mock
+    private TokenCache tokenCache;
+
+    @Mock
+    private LossControlDao lossControlDao;
+
+    @Mock
+    private LossControlServiceImpl lossControlServiceImpl;
+
+    @Mock
+    private ObjectMapper objectMapper;
+
+    @InjectMocks
+    private ImportClientServiceImp importClientService;
+
+    @BeforeEach
+    public void setup() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testImportClient_ClientPresent() throws CustomException, JsonProcessingException {
+        String json = "{\"client\": {\"lookupID\": \"123\", \"locations\": []}}";
+        String correlationId = "corrId";
+
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        importClientRequest.getClient().setLookupID("123");
+        when(objectMapper.readValue(json, ImportClientRequest.class)).thenReturn(importClientRequest);
+
+        Map<String, Object> clientResult = new HashMap<>();
+        when(lossControlDao.findByClientId("123")).thenReturn(clientResult);
+
+        ImportClientResponse response = new ImportClientResponse(); // Create your response object here
+        when(importClientService.ifClientIsPresent(any(), any(), any(), any())).thenReturn(response);
+
+        ImportClientResponse result = importClientService.importClient(json, correlationId);
+        // Add assertions for the result
+    }
+
+    @Test
+    public void testImportClient_ClientNotPresent() throws CustomException, JsonProcessingException {
+        String json = "{\"client\": {\"lookupID\": \"123\", \"locations\": []}}";
+        String correlationId = "corrId";
+
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        importClientRequest.getClient().setLookupID("123");
+        when(objectMapper.readValue(json, ImportClientRequest.class)).thenReturn(importClientRequest);
+
+        when(lossControlDao.findByClientId("123")).thenReturn(null);
+
+        ImportClientResponse response = new ImportClientResponse(); // Create your response object here
+        when(importClientService.getClientResponse(any(), any(), any(), any())).thenReturn(response);
+
+        ImportClientResponse result = importClientService.importClient(json, correlationId);
+        // Add assertions for the result
+    }
+
+    // More test cases can be added for different scenarios
+}
+
+
+
+
+
+
+
+
+///////////////////////////
 package uk.co.allianz.rap.lc.util;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
