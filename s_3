@@ -1,3 +1,300 @@
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importclient.Location;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+//import uk.co.allianz.rap.lc.util.ClientLocation;
+
+import java.util.ArrayList;
+import java.util.Map;
+
+/**
+ * Extracting fields and data from the "data model".
+ * sent from loss-control-adapter and building the API request: ImportClient
+ */
+@Slf4j
+@Service
+public class ImportClientServiceImp implements ImportClientService {
+
+    @Autowired
+    private TokenCache tokenCache;
+    @Autowired
+    private LossControlDao lossControlDao;
+    @Autowired
+    private LossControlServiceImpl lossControlServiceImpl;
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    public ImportClientResponse importClient(final String json, final String correlationId) throws CustomException, JsonProcessingException {
+        ImportClientResponse importClientResponse = null;
+        ImportClientRequest importClientRequest = objectMapper.readValue(json, ImportClientRequest.class);
+        ArrayList<Location> locations = importClientRequest.getClient().getLocations();
+        //finding client id in DB exist or not
+        Map<String, Object> clientResult = lossControlDao.findByClientId(importClientRequest.getClient().getLookupID());
+        if (clientResult != null) {
+
+
+            importClientResponse = ifClientIsPresent(importClientResponse, importClientRequest, locations, correlationId);
+        } else {
+            importClientResponse = getClientResponse(importClientResponse, importClientRequest, locations, correlationId);
+
+        }
+        log.info("importClientResponse Successfully Received");
+        return importClientResponse;
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+package uk.co.allianz.rap.lc.service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.mockito.Spy;  // Import the Spy annotation
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importclient.Location;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+
+
+ 
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+ 
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.*;
+
+ 
+
+public class ImportClientServiceImpTest32 {
+
+ 
+
+    @InjectMocks
+    private ImportClientServiceImp importClientService;
+
+ 
+
+    @Mock
+    private LossControlDao lossControlDao;
+
+ 
+
+    @Mock
+    private ImportClientServiceImp clientLocation;
+
+ 
+
+    @Spy  // Use the Spy annotation here
+    private ObjectMapper objectMapper = new ObjectMapper();
+
+ 
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+ 
+
+    @Test
+    public void testImportClientWhenClientIsPresent() throws CustomException, JsonProcessingException {
+        // Prepare test data
+        String json = "{\n" +
+                "  \"divisionLookupID\" : \"AZ_UK\",\n" +
+                "  \"client\" : {\n" +
+                "    \"LookupID\" : \"C008032906\",\n" +
+                "    \"ContactFirstName\" : null,\n" +
+                "    \"ContactLastName\" : null,\n" +
+                "    \"PolicyNumber\" : \"SP26853149\",\n" +
+                "    \"Name\" : \"CLIENT CI Test\",\n" +
+                "    \"Phone\" : null,\n" +
+                "    \"Email\" : null,\n" +
+                "    \"Address\" : {\n" +
+                "      \"Country\" : \"United Kingdom\",\n" +
+                "      \"OverseasTerritories\" : null,\n" +
+                "      \"Street1\" : null,\n" +
+                "      \"Street2\" : null,\n" +
+                "      \"City\" : null,\n" +
+                "      \"Region1\" : null,\n" +
+                "      \"Region2\" : null,\n" +
+                "      \"Region3\" : null,\n" +
+                "      \"Region4\" : null,\n" +
+                "      \"ZipCode\" : null\n" +
+                "    },\n" +
+                "    \"Agent\" : {\n" +
+                "      \"AgencyCode\" : \"22576\",\n" +
+                "      \"AgencyName\" : \"Arthur J. Gallagher\",\n" +
+                "      \"AgentCode\" : \"13332\",\n" +
+                "      \"AgentName\" : null,\n" +
+                "      \"Email\" : null,\n" +
+                "      \"FaxNumber\" : null,\n" +
+                "      \"PhoneNumber\" : null,\n" +
+                "      \"Address\" : {\n" +
+                "        \"Country\" : \"GB\",\n" +
+                "        \"OverseasTerritories\" : null,\n" +
+                "        \"Street1\" : null,\n" +
+                "        \"Street2\" : null,\n" +
+                "        \"City\" : null,\n" +
+                "        \"Region1\" : null,\n" +
+                "        \"Region2\" : null,\n" +
+                "        \"Region3\" : null,\n" +
+                "        \"Region4\" : null,\n" +
+                "        \"ZipCode\" : null\n" +
+                "      },\n" +
+                "      \"AgentType\" : \"Broker\"\n" +
+                "    },\n" +
+                "    \"Underwriter\" : null,\n" +
+                "    \"Locations\" : [ {\n" +
+                "      \"genericFields\" : null,\n" +
+                "      \"LookupID\" : \"111106\",\n" +
+                "      \"Name\" : null,\n" +
+                "      \"PolicyNumber\" : \"SP26853148\",\n" +
+                "      \"PolicyEffectiveDate\" : null,\n" +
+                "      \"PolicyExpirationDate\" : null,\n" +
+                "      \"PolicyRenewalDate\" : null,\n" +
+                "      \"Address\" : {\n" +
+                "        \"Country\" : \"United Kingdom\",\n" +
+                "        \"OverseasTerritories\" : null,\n" +
+                "        \"Street1\" : \"NEW CROSS DEWEL\",\n" +
+                "        \"Street2\" : \"SD 11 JEW TOWN\",\n" +
+                "        \"City\" : \"MM KEMSTONE\",\n" +
+                "        \"Region1\" : \"UK\",\n" +
+                "        \"Region2\" : null,\n" +
+                "        \"Region3\" : null,\n" +
+                "        \"Region4\" : null,\n" +
+                "        \"ZipCode\" : \"GU1 1DB\"\n" +
+                "      },\n" +
+                "      \"OriginalEffectiveDate\" : null,\n" +
+                "      \"EffectiveDate\" : null,\n" +
+                "      \"ExpirationDate\" : null,\n" +
+                "      \"RenewalDate\" : \"2024-07-17\",\n" +
+                "      \"LastInspectedDate\" : null,\n" +
+                "      \"Coverages\" : [ {\n" +
+                "        \"CoverageTypeLookup\" : \"PD_TIV\",\n" +
+                "        \"CoverageReference\" : \"Coverage 1\",\n" +
+                "        \"GenericFields\" : [ {\n" +
+                "          \"Number\" : \"1123\",\n" +
+                "          \"Key\" : \"01. PD Building\",\n" +
+                "          \"GenericFieldValueType\" : 1,\n" +
+                "          \"Text\" : null\n" +
+                "        }, {\n" +
+                "          \"Number\" : \"0\",\n" +
+                "          \"Key\" : \"04. PD Other\",\n" +
+                "          \"GenericFieldValueType\" : 1,\n" +
+                "          \"Text\" : null\n" +
+                "        }, {\n" +
+                "          \"Number\" : null,\n" +
+                "          \"Key\" : \"05. PD Other Description\",\n" +
+                "          \"GenericFieldValueType\" : 0,\n" +
+                "          \"Text\" : \"\"\n" +
+                "        }, {\n" +
+                "          \"Number\" : \"1123\",\n" +
+                "          \"Key\" : \"06. TIV PD\",\n" +
+                "          \"GenericFieldValueType\" : 1,\n" +
+                "          \"Text\" : null\n" +
+                "        }, {\n" +
+                "          \"Number\" : \"332198\",\n" +
+                "          \"Key\" : \"07. TIV BI\",\n" +
+                "          \"GenericFieldValueType\" : 1,\n" +
+                "          \"Text\" : null\n" +
+                "        }, {\n" +
+                "          \"Number\" : \"\",\n" +
+                "          \"Key\" : \"08. BI Base Period (Months)\",\n" +
+                "          \"GenericFieldValueType\" : 1,\n" +
+                "          \"Text\" : null\n" +
+                "        }, {\n" +
+                "          \"Number\" : \"332198\",\n" +
+                "          \"Key\" : \"09. TIV (PD + BI )\",\n" +
+                "          \"GenericFieldValueType\" : 1,\n" +
+                "          \"Text\" : null\n" +
+                "        } ]\n" +
+                "      } ],\n" +
+                "      \"Contact\" : null\n" +
+                "    } ]\n" +
+                "  }\n" +
+                "}";
+        String correlationId = "correlation123";
+        ImportClientRequest importClientRequest = objectMapper.readValue(json, ImportClientRequest.class);
+        ArrayList<Location> locations = importClientRequest.getClient().getLocations();
+
+        // Mock behavior of lossControlDao and clientLocation
+        when(lossControlDao.findByClientId(anyString())).thenReturn(new HashMap<>());
+        when(clientLocation.ifClientIsPresent(any(), any(), any(), any())).thenReturn(new ImportClientResponse());
+
+ 
+
+        // Execute the method
+        ImportClientResponse importClientResponse = importClientService.importClient(json, correlationId);
+
+        // Assertions
+        assertNotNull(importClientResponse);
+        // Add more assertions based on your use case
+
+ 
+
+        // Verify method calls
+        verify(lossControlDao).findByClientId(anyString());
+        verify(clientLocation).ifClientIsPresent(any(), any(), any(), any());
+        verifyNoMoreInteractions(lossControlDao, clientLocation);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
