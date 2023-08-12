@@ -1,3 +1,402 @@
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.mockito.Mockito.*;
+
+public class ImportClientServiceImpTest21 {
+
+    @Mock
+    private TokenCache tokenCache;
+
+    @Mock
+    private LossControlDao lossControlDao;
+
+    @Mock
+    private LossControlServiceImpl lossControlServiceImpl;
+
+    @Mock
+    private ObjectMapper objectMapper;
+
+    @InjectMocks
+    private ImportClientServiceImp importClientService;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testImportClientWhenClientExists() throws Exception {
+        String json = "your_json_data_here";
+        String correlationId = "your_correlation_id_here";
+
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        importClientRequest.setClient(new Client()); // Initialize the Client object
+        importClientRequest.getClient().setLookupID("sampleLookupID");
+        importClientRequest.getClient().setLocations(new ArrayList<>()); // Initialize the Locations list
+
+        when(objectMapper.readValue(json, ImportClientRequest.class)).thenReturn(importClientRequest);
+        when(lossControlDao.findByClientId("sampleLookupID")).thenReturn(new HashMap<>());
+
+        importClientService.importClient(json, correlationId);
+
+        // Add your verification/assertion here
+    }
+
+    @Test
+    public void testImportClientWhenClientDoesNotExist() throws Exception {
+        String json = "your_json_data_here";
+        String correlationId = "your_correlation_id_here";
+
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        importClientRequest.setClient(new Client()); // Initialize the Client object
+        importClientRequest.getClient().setLookupID("sampleLookupID");
+        importClientRequest.getClient().setLocations(new ArrayList<>()); // Initialize the Locations list
+
+        when(objectMapper.readValue(json, ImportClientRequest.class)).thenReturn(importClientRequest);
+        when(lossControlDao.findByClientId("sampleLookupID")).thenReturn(null);
+
+        importClientService.importClient(json, correlationId);
+
+        // Add your verification/assertion here
+    }
+
+    // Add more test cases as needed
+}
+
+
+
+
+
+
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import java.util.Collections;
+
+import static org.mockito.Mockito.*;
+
+public class ImportClientServiceImpTest22 {
+
+    @Mock
+    private TokenCache tokenCache;
+
+    @Mock
+    private LossControlDao lossControlDao;
+
+    @Mock
+    private LossControlServiceImpl lossControlServiceImpl;
+
+    @Mock
+    private ObjectMapper objectMapper;
+
+    @InjectMocks
+    private ImportClientServiceImp importClientService;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testImportClientWhenClientExists() throws Exception {
+        String json = "your_json_data_here";
+        String correlationId = "your_correlation_id_here";
+
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        Client client = new Client();
+        client.setLookupID("sampleLookupID");
+        client.setLocations(Collections.singletonList(new Location()));
+        importClientRequest.setClient(client);
+
+        when(objectMapper.readValue(json, ImportClientRequest.class)).thenReturn(importClientRequest);
+        when(lossControlDao.findByClientId("sampleLookupID")).thenReturn(Collections.singletonMap("key", "value"));
+
+        importClientService.importClient(json, correlationId);
+
+        // Add your verification/assertion here
+    }
+
+    @Test
+    public void testImportClientWhenClientDoesNotExist() throws Exception {
+        String json = "your_json_data_here";
+        String correlationId = "your_correlation_id_here";
+
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        Client client = new Client();
+        client.setLookupID("sampleLookupID");
+        client.setLocations(Collections.singletonList(new Location()));
+        importClientRequest.setClient(client);
+
+        when(objectMapper.readValue(json, ImportClientRequest.class)).thenReturn(importClientRequest);
+        when(lossControlDao.findByClientId("sampleLookupID")).thenReturn(null);
+
+        importClientService.importClient(json, correlationId);
+
+        // Add your verification/assertion here
+    }
+
+    // Add more test cases as needed
+}
+
+
+
+
+
+
+
+
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import java.util.Collections;
+
+import static org.mockito.Mockito.*;
+
+public class ImportClientServiceImpTest23 {
+
+    @Mock
+    private TokenCache tokenCache;
+
+    @Mock
+    private LossControlDao lossControlDao;
+
+    @Mock
+    private LossControlServiceImpl lossControlServiceImpl;
+
+    @Mock
+    private ObjectMapper objectMapper;
+
+    @InjectMocks
+    private ImportClientServiceImp importClientService;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testImportClientWhenClientExists() throws Exception {
+        String json = "your_json_data_here";
+        String correlationId = "your_correlation_id_here";
+
+        ImportClientRequest importClientRequest = new ImportClientRequest(); // Create a sample request
+        Client client = new Client();
+        client.setLookupID("sampleLookupID");
+        client.setLocations(Collections.emptyList());
+        importClientRequest.setClient(client);
+
+        when(objectMapper.readValue(json, ImportClientRequest.class)).thenReturn(importClientRequest);
+        when(lossControlDao.findByClientId("sampleLookupID")).thenReturn(Collections.singletonMap("key", "value"));
+
+        importClientService.importClient(json, correlationId);
+
+        // Add your verification/assertion here
+    }
+
+    @Test
+    public void testImportClientWhenClientDoesNotExist() throws Exception {
+        String json = "your_json_data_here";
+        String correlationId = "your_correlation_id_here";
+
+        ImportClientRequest importClientRequest = new ImportClientRequest(); // Create a sample request
+        Client client = new Client();
+        client.setLookupID("sampleLookupID");
+        client.setLocations(Collections.emptyList());
+        importClientRequest.setClient(client);
+
+        when(objectMapper.readValue(json, ImportClientRequest.class)).thenReturn(importClientRequest);
+        when(lossControlDao.findByClientId("sampleLookupID")).thenReturn(null);
+
+        importClientService.importClient(json, correlationId);
+
+        // Add your verification/assertion here
+    }
+
+    // Add more test cases as needed
+}
+
+
+
+
+
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import java.util.Collections;
+
+import static org.mockito.Mockito.*;
+
+public class ImportClientServiceImpTest24 {
+
+    @Mock
+    private TokenCache tokenCache;
+
+    @Mock
+    private LossControlDao lossControlDao;
+
+    @Mock
+    private LossControlServiceImpl lossControlServiceImpl;
+
+    @Mock
+    private ObjectMapper objectMapper;
+
+    @InjectMocks
+    private ImportClientServiceImp importClientService;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testImportClientWhenClientExists() throws Exception {
+        String json = "your_json_data_here";
+        String correlationId = "your_correlation_id_here";
+
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        Client client = new Client();
+        client.setLookupID("sampleLookupID");
+        client.setLocations(Collections.emptyList());
+        importClientRequest.setClient(client);
+
+        when(objectMapper.readValue(json, ImportClientRequest.class)).thenReturn(importClientRequest);
+        when(lossControlDao.findByClientId("sampleLookupID")).thenReturn(Collections.singletonMap("key", "value"));
+
+        importClientService.importClient(json, correlationId);
+
+        // Add your verification/assertion here
+    }
+
+    @Test
+    public void testImportClientWhenClientDoesNotExist() throws Exception {
+        String json = "your_json_data_here";
+        String correlationId = "your_correlation_id_here";
+
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        Client client = new Client();
+        client.setLookupID("sampleLookupID");
+        client.setLocations(Collections.emptyList());
+        importClientRequest.setClient(client);
+
+        when(objectMapper.readValue(json, ImportClientRequest.class)).thenReturn(importClientRequest);
+        when(lossControlDao.findByClientId("sampleLookupID")).thenReturn(null);
+
+        importClientService.importClient(json, correlationId);
+
+        // Add your verification/assertion here
+    }
+
+    // Add more test cases as needed
+}
+
+
+
+
+
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import java.util.Collections;
+
+import static org.mockito.Mockito.*;
+
+public class ImportClientServiceImpTest25 {
+
+    @Mock
+    private TokenCache tokenCache;
+
+    @Mock
+    private LossControlDao lossControlDao;
+
+    @Mock
+    private LossControlServiceImpl lossControlServiceImpl;
+
+    @Mock
+    private ObjectMapper objectMapper;
+
+    @InjectMocks
+    private ImportClientServiceImp importClientService;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testImportClientWhenClientExists() throws Exception {
+        String json = "your_json_data_here";
+        String correlationId = "your_correlation_id_here";
+
+        ImportClientRequest importClientRequest = new ImportClientRequest(); // Create a sample request
+        Client client = new Client();
+        client.setLookupID("sampleLookupID");
+        client.setLocations(Collections.emptyList());
+        importClientRequest.setClient(client);
+
+        when(objectMapper.readValue(json, ImportClientRequest.class)).thenReturn(importClientRequest);
+        when(lossControlDao.findByClientId("sampleLookupID")).thenReturn(Collections.singletonMap("key", "value"));
+
+        importClientService.importClient(json, correlationId);
+
+        // Add your verification/assertion here
+    }
+
+    @Test
+    public void testImportClientWhenClientDoesNotExist() throws Exception {
+        String json = "your_json_data_here";
+        String correlationId = "your_correlation_id_here";
+
+        ImportClientRequest importClientRequest = new ImportClientRequest(); // Create a sample request
+        Client client = new Client();
+        client.setLookupID("sampleLookupID");
+        client.setLocations(Collections.emptyList());
+        importClientRequest.setClient(client);
+
+        when(objectMapper.readValue(json, ImportClientRequest.class)).thenReturn(importClientRequest);
+        when(lossControlDao.findByClientId("sampleLookupID")).thenReturn(null);
+
+        importClientService.importClient(json, correlationId);
+
+        // Add your verification/assertion here
+    }
+
+    // Add more test cases as needed
+}
+
+
+
+
+/////////////////////////////////////////////////
 import static org.mockito.Mockito.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
