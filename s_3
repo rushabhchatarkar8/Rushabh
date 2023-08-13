@@ -1,4 +1,76 @@
-        importClientService.importClient(json, correlationId);
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.request.importclient.Client;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importclient.Location;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.ImportClientServiceImp;
+
+import java.util.ArrayList;
+import java.util.Collections;
+
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.mockito.Mockito.when;
+
+public class ImportClientServiceImpTest {
+
+    @InjectMocks
+    private ImportClientServiceImp importClientService;
+
+    @Mock
+    private LossControlDao lossControlDao;
+
+    @Mock
+    private ObjectMapper objectMapper;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testImportClientWhenClientDoesNotExist() throws Exception {
+        String json = "{...}"; // Your JSON input here
+        String correlationId = "123";
+
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        Client mockClient = mock(Client.class);
+        when(importClientRequest.getClient()).thenReturn(mockClient);
+        when(mockClient.getLookupID()).thenReturn("C008032810");
+        ArrayList<Location> locations = new ArrayList<>();
+        Location mockLocation = mock(Location.class);
+        locations.add(mockLocation);
+        when(mockClient.getLocations()).thenReturn(locations);
+
+        when(objectMapper.readValue(json, ImportClientRequest.class)).thenReturn(importClientRequest);
+        when(lossControlDao.findByClientId("C008032810")).thenReturn(null);
+
+        // Execute the method
+        ImportClientResponse response = importClientService.importClient(json, correlationId);
+
+        // Assertions
+        assertNotNull(response);
+        // Add more assertions based on your use case
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+importClientService.importClient(json, correlationId);
 
 
 
