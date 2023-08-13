@@ -1,3 +1,80 @@
+importClientRequest.setClient(new Client());
+Location location = new Location();
+location.setLocationID("123");
+List<Location> locations = new ArrayList<>();
+locations.add(location);
+importClientRequest.getClient().setLocations(locations);
+
+
+
+
+
+@Test
+public void testImportClient_Success() throws CustomException, JsonProcessingException {
+    ImportClientRequest importClientRequest = new ImportClientRequest();
+    Client client = new Client();
+    Location location = new Location();
+    location.setLocationID("123");
+    client.setLocations(Collections.singletonList(location));  // Set the locations list for the client
+    importClientRequest.setClient(client);  // Set the client for the importClientRequest
+
+    Map<String, Object> clientResult = new HashMap<>();
+    when(lossControlDao.findByClientId(anyString())).thenReturn(clientResult);
+    when(objectMapper.readValue(anyString(), eq(ImportClientRequest.class))).thenReturn(importClientRequest);
+    when(lossControlServiceImpl.clientPost(any(), any())).thenReturn(new ImportClientResponse());
+
+    ImportClientResponse response = importClientServiceImp.importClient("json", "correlationId");
+
+    // Add assertions here based on your implementation and expected behavior
+}
+
+
+
+
+
+
+
+
+
+
+
+
+@Test
+public void testImportClient_Success() throws CustomException, JsonProcessingException {
+    ImportClientRequest importClientRequest = new ImportClientRequest();
+
+    // Assuming the structure of ImportClientRequest is like:
+    // importClientRequest.setClient(new Client());
+    // importClientRequest.getClient().setLocations(Collections.singletonList(location));
+
+    Map<String, Object> clientResult = new HashMap<>();
+    when(lossControlDao.findByClientId(anyString())).thenReturn(clientResult);
+    when(objectMapper.readValue(anyString(), eq(ImportClientRequest.class))).thenReturn(importClientRequest);
+    when(lossControlServiceImpl.clientPost(any(), any())).thenReturn(new ImportClientResponse());
+
+    ImportClientResponse response = importClientServiceImp.importClient("json", "correlationId");
+
+    // Add assertions here based on your implementation and expected behavior
+}
+
+@Test
+public void testImportClient_ClientNotFound() throws CustomException, JsonProcessingException {
+    ImportClientRequest importClientRequest = new ImportClientRequest();
+
+    // Assuming the structure of ImportClientRequest is like:
+    // importClientRequest.setClient(new Client());
+    // importClientRequest.getClient().setLocations(Collections.singletonList(location));
+
+    when(lossControlDao.findByClientId(anyString())).thenReturn(null);
+    when(objectMapper.readValue(anyString(), eq(ImportClientRequest.class))).thenReturn(importClientRequest);
+
+    // Add assertions here based on your implementation and expected behavior
+}
+
+// Add more test cases for different scenarios
+
+
+///////////////////////
 import static org.mockito.Mockito.*;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
