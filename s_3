@@ -1,4 +1,63 @@
-        ImportClientResponse response = importClientServiceImp.ifClientIsPresent(null, importClientRequest, locationsList, "123");
+import static org.mockito.Mockito.*;
+
+import java.util.List;
+
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest
+public class ImportClientServiceTest603 {
+
+    @Mock
+    private ImportClientRepository importClientRepository;
+
+    @InjectMocks
+    private ImportClientServiceImp importClientService;
+
+    @Test
+    public void testIfClientIsPresent() {
+        // Create mock objects and data
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        List<Location> locationsList = List.of(new Location("Location1"), new Location("Location2"));
+        String clientId = "123";
+
+        // Stub the behavior of the mock repository
+        when(importClientRepository.findByClientId(eq(clientId))).thenReturn(new ImportClient());
+
+        // Call the method under test
+        ImportClientResponse response = importClientService.ifClientIsPresent(null, importClientRequest, locationsList, clientId);
+
+        // Verify that the mock repository method was called
+        verify(importClientRepository).findByClientId(eq(clientId));
+
+        // Perform assertions on the response
+        // Assuming your ImportClientServiceImp method transforms the input into ImportClientResponse
+        // You can add your own assertions based on the actual behavior of your method
+        assertNotNull(response);
+        // Add more assertions as needed
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ImportClientResponse response = importClientServiceImp.ifClientIsPresent(null, importClientRequest, locationsList, "123");
 
 
 
