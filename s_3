@@ -1,3 +1,45 @@
+@Test
+public void testImportClient_Success() throws CustomException, JsonProcessingException {
+    ImportClientRequest importClientRequest = new ImportClientRequest();
+    Client client = new Client();
+    Location location = new Location();
+    location.setLocationID("123");
+    
+    // Create a list of locations and add the location to it
+    ArrayList<Location> locationsList = new ArrayList<>();
+    locationsList.add(location);
+    
+    // Set the lookupID for the first location (if you have lc360LocationId)
+    String lc360LocationId = "your_lc360_location_id";
+    if (!locationsList.isEmpty()) {
+        locationsList.get(0).setLookupID(lc360LocationId);
+    }
+    
+    client.setLocations(locationsList);  // Set the locations list for the client
+    importClientRequest.setClient(client);  // Set the client for the importClientRequest
+
+    Map<String, Object> clientResult = new HashMap<>();
+    when(lossControlDao.findByClientId(anyString())).thenReturn(clientResult);
+    when(objectMapper.readValue(anyString(), eq(ImportClientRequest.class))).thenReturn(importClientRequest);
+    when(lossControlServiceImpl.clientPost(any(), any())).thenReturn(new ImportClientResponse());
+
+    ImportClientResponse response = importClientServiceImp.importClient("json", "correlationId");
+
+    // Add assertions here based on your implementation and expected behavior
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 locations.get(0).setLookupID(lc360LocationId);
 
 ArrayList<uk.co.allianz.rap.lc.model.request.importclient.Location> locations
