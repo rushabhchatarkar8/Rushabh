@@ -1,3 +1,20 @@
+    Client mockClient = mock(Client.class);
+        when(importClientRequest.getClient()).thenReturn(mockClient);
+        uk.co.allianz.rap.lc.model.request.importclient.Location mockLocation = mock(uk.co.allianz.rap.lc.model.request.importclient.Location.class);
+        ArrayList<uk.co.allianz.rap.lc.model.request.importclient.Location> locations = new ArrayList<>();
+        locations.add(mockLocation);
+
+
+
+
+
+
+
+
+
+
+
+
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -16,7 +33,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
-public class ImportClientServiceImpTest {
+public class ImportClientServiceImpTest201 {
 
     @InjectMocks
     private ImportClientServiceImp importClientService;
