@@ -1,3 +1,210 @@
+        importClientService.importClient(json, correlationId);
+
+
+
+
+
+java.lang.IndexOutOfBoundsException: Index 0 out of bounds for length 0
+
+	at java.base/jdk.internal.util.Preconditions.outOfBounds(Preconditions.java:64)
+	at java.base/jdk.internal.util.Preconditions.outOfBoundsCheckIndex(Preconditions.java:70)
+	at java.base/jdk.internal.util.Preconditions.checkIndex(Preconditions.java:266)
+	at java.base/java.util.Objects.checkIndex(Objects.java:361)
+	at java.base/java.util.ArrayList.get(ArrayList.java:427)
+	at uk.co.allianz.rap.lc.service.ImportClientServiceImp.getClientResponse(ImportClientServiceImp.java:58)
+	at uk.co.allianz.rap.lc.service.ImportClientServiceImp.importClient(ImportClientServiceImp.java:47)
+	at uk.co.allianz.rap.lc.service.ImportClientServiceImpTest21.testImportClientWhenClientDoesNotExist(ImportClientServiceImpTest21.java:300)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:568)
+	at org.junit.platform.commons.util.ReflectionUtils.invokeMethod(ReflectionUtils.java:727)
+	at org.junit.jupiter.engine.execution.MethodInvocation.proceed(MethodInvocation.java:60)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$ValidatingInvocation.proceed(InvocationInterceptorChain.java:131)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.intercept(TimeoutExtension.java:156)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestableMethod(TimeoutExtension.java:147)
+	at org.junit.jupiter.engine.extension.TimeoutExtension.interceptTestMethod(TimeoutExtension.java:86)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker$ReflectiveInterceptorCall.lambda$ofVoidMethod$0(InterceptingExecutableInvoker.java:103)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.lambda$invoke$0(InterceptingExecutableInvoker.java:93)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain$InterceptedInvocation.proceed(InvocationInterceptorChain.java:106)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.proceed(InvocationInterceptorChain.java:64)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.chainAndInvoke(InvocationInterceptorChain.java:45)
+	at org.junit.jupiter.engine.execution.InvocationInterceptorChain.invoke(InvocationInterceptorChain.java:37)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:92)
+	at org.junit.jupiter.engine.execution.InterceptingExecutableInvoker.invoke(InterceptingExecutableInvoker.java:86)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.lambda$invokeTestMethod$7(TestMethodTestDescriptor.java:217)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.invokeTestMethod(TestMethodTestDescriptor.java:213)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:138)
+	at org.junit.jupiter.engine.descriptor.TestMethodTestDescriptor.execute(TestMethodTestDescriptor.java:68)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$6(NodeTestTask.java:151)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$8(NodeTestTask.java:141)
+	at org.junit.platform.engine.support.hierarchical.Node.around(Node.java:137)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.lambda$executeRecursively$9(NodeTestTask.java:139)
+	at org.junit.platform.engine.support.hierarchical.ThrowableCollector.execute(ThrowableCollector.java:73)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.executeRecursively(NodeTestTask.java:138)
+	at org.junit.platform.engine.support.hierarchical.NodeTestTask.execute(NodeTestTask.java:95)
+	
+
+
+
+
+
+
+
+
+@Test
+    public void testImportClientWhenClientDoesNotExist() throws Exception {
+        String json = "{\n" +
+                "  \"divisionLookupID\" : \"AZ_UK\",\n" +
+                "  \"client\" : {\n" +
+                "    \"LookupID\" : \"C008032810\",\n" +
+                "    \"ContactFirstName\" : null,\n" +
+                "    \"ContactLastName\" : null,\n" +
+                "    \"PolicyNumber\" : \"SP26853149\",\n" +
+                "    \"Name\" : \"CLIENT CI Test\",\n" +
+                "    \"Phone\" : null,\n" +
+                "    \"Email\" : null,\n" +
+                "    \"Address\" : {\n" +
+                "      \"Country\" : \"United Kingdom\",\n" +
+                "      \"OverseasTerritories\" : null,\n" +
+                "      \"Street1\" : null,\n" +
+                "      \"Street2\" : null,\n" +
+                "      \"City\" : null,\n" +
+                "      \"Region1\" : null,\n" +
+                "      \"Region2\" : null,\n" +
+                "      \"Region3\" : null,\n" +
+                "      \"Region4\" : null,\n" +
+                "      \"ZipCode\" : null\n" +
+                "    },\n" +
+                "    \"Agent\" : {\n" +
+                "      \"AgencyCode\" : \"22576\",\n" +
+                "      \"AgencyName\" : \"Arthur J. Gallagher\",\n" +
+                "      \"AgentCode\" : \"13332\",\n" +
+                "      \"AgentName\" : null,\n" +
+                "      \"Email\" : null,\n" +
+                "      \"FaxNumber\" : null,\n" +
+                "      \"PhoneNumber\" : null,\n" +
+                "      \"Address\" : {\n" +
+                "        \"Country\" : \"GB\",\n" +
+                "        \"OverseasTerritories\" : null,\n" +
+                "        \"Street1\" : null,\n" +
+                "        \"Street2\" : null,\n" +
+                "        \"City\" : null,\n" +
+                "        \"Region1\" : null,\n" +
+                "        \"Region2\" : null,\n" +
+                "        \"Region3\" : null,\n" +
+                "        \"Region4\" : null,\n" +
+                "        \"ZipCode\" : null\n" +
+                "      },\n" +
+                "      \"AgentType\" : \"Broker\"\n" +
+                "    },\n" +
+                "    \"Underwriter\" : null,\n" +
+                "    \"Locations\" : [ {\n" +
+                "      \"genericFields\" : null,\n" +
+                "      \"LookupID\" : \"111810\",\n" +
+                "      \"Name\" : null,\n" +
+                "      \"PolicyNumber\" : \"SP26853148\",\n" +
+                "      \"PolicyEffectiveDate\" : null,\n" +
+                "      \"PolicyExpirationDate\" : null,\n" +
+                "      \"PolicyRenewalDate\" : null,\n" +
+                "      \"Address\" : {\n" +
+                "        \"Country\" : \"United Kingdom\",\n" +
+                "        \"OverseasTerritories\" : null,\n" +
+                "        \"Street1\" : \"NEW CROSS DEWEL\",\n" +
+                "        \"Street2\" : \"SD 11 JEW TOWN\",\n" +
+                "        \"City\" : \"MM KEMSTONE\",\n" +
+                "        \"Region1\" : \"UK\",\n" +
+                "        \"Region2\" : null,\n" +
+                "        \"Region3\" : null,\n" +
+                "        \"Region4\" : null,\n" +
+                "        \"ZipCode\" : \"GU1 1DB\"\n" +
+                "      },\n" +
+                "      \"OriginalEffectiveDate\" : null,\n" +
+                "      \"EffectiveDate\" : null,\n" +
+                "      \"ExpirationDate\" : null,\n" +
+                "      \"RenewalDate\" : \"2024-07-17\",\n" +
+                "      \"LastInspectedDate\" : null,\n" +
+                "      \"Coverages\" : [ {\n" +
+                "        \"CoverageTypeLookup\" : \"PD_TIV\",\n" +
+                "        \"CoverageReference\" : \"Coverage 1\",\n" +
+                "        \"GenericFields\" : [ {\n" +
+                "          \"Number\" : \"1123\",\n" +
+                "          \"Key\" : \"01. PD Building\",\n" +
+                "          \"GenericFieldValueType\" : 1,\n" +
+                "          \"Text\" : null\n" +
+                "        }, {\n" +
+                "          \"Number\" : \"0\",\n" +
+                "          \"Key\" : \"04. PD Other\",\n" +
+                "          \"GenericFieldValueType\" : 1,\n" +
+                "          \"Text\" : null\n" +
+                "        }, {\n" +
+                "          \"Number\" : null,\n" +
+                "          \"Key\" : \"05. PD Other Description\",\n" +
+                "          \"GenericFieldValueType\" : 0,\n" +
+                "          \"Text\" : \"\"\n" +
+                "        }, {\n" +
+                "          \"Number\" : \"1123\",\n" +
+                "          \"Key\" : \"06. TIV PD\",\n" +
+                "          \"GenericFieldValueType\" : 1,\n" +
+                "          \"Text\" : null\n" +
+                "        }, {\n" +
+                "          \"Number\" : \"332198\",\n" +
+                "          \"Key\" : \"07. TIV BI\",\n" +
+                "          \"GenericFieldValueType\" : 1,\n" +
+                "          \"Text\" : null\n" +
+                "        }, {\n" +
+                "          \"Number\" : \"\",\n" +
+                "          \"Key\" : \"08. BI Base Period (Months)\",\n" +
+                "          \"GenericFieldValueType\" : 1,\n" +
+                "          \"Text\" : null\n" +
+                "        }, {\n" +
+                "          \"Number\" : \"332198\",\n" +
+                "          \"Key\" : \"09. TIV (PD + BI )\",\n" +
+                "          \"GenericFieldValueType\" : 1,\n" +
+                "          \"Text\" : null\n" +
+                "        } ]\n" +
+                "      } ],\n" +
+                "      \"Contact\" : null\n" +
+                "    } ]\n" +
+                "  }\n" +
+                "}";
+        String correlationId = "123";
+
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        importClientRequest.setClient(new Client()); // Initialize the Client object
+        importClientRequest.getClient().setLookupID("C008032810");
+        importClientRequest.getClient().setLocations(new ArrayList<>()); // Initialize the Locations list
+
+        when(objectMapper.readValue(json, ImportClientRequest.class)).thenReturn(importClientRequest);
+        when(lossControlDao.findByClientId("C008032810")).thenReturn(null);
+
+        importClientService.importClient(json, correlationId);
+
+        // Add your verification/assertion here
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
