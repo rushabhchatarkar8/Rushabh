@@ -1,3 +1,7 @@
+locations.get(0).setLookupID(lc360LocationId);
+
+ArrayList<uk.co.allianz.rap.lc.model.request.importclient.Location> locations
+
 importClientRequest.setClient(new Client());
 Location location = new Location();
 location.setLocationID("123");
