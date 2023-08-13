@@ -21,7 +21,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
-public class ImportClientServiceImpTest {
+public class ImportClientServiceImpTest801 {
 
     @InjectMocks
     private ImportClientServiceImp importClientService;
@@ -105,7 +105,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
-public class ImportClientServiceImpTest {
+public class ImportClientServiceImpTest802 {
 
     @InjectMocks
     private ImportClientServiceImp importClientService;
@@ -178,7 +178,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
-public class ImportClientServiceImpTest {
+public class ImportClientServiceImpTest803 {
 
     @InjectMocks
     private ImportClientServiceImp importClientService;
@@ -260,7 +260,7 @@ import java.util.Map;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
-public class ImportClientServiceImpTest {
+public class ImportClientServiceImpTest804 {
 
     @InjectMocks
     private ImportClientServiceImp importClientService;
@@ -333,7 +333,7 @@ import java.util.Map;
 
 import static org.mockito.Mockito.*;
 
-public class ImportClientServiceImpTest {
+public class ImportClientServiceImpTest805 {
 
     @InjectMocks
     private ImportClientServiceImp importClientService;
