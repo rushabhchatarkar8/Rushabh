@@ -1,3 +1,47 @@
+@Test
+public void testIfClientIsPresent_Success() throws CustomException, JsonProcessingException {
+    ImportClientRequest importClientRequest = new ImportClientRequest();
+    Client client = new Client();
+    Location location = new Location();
+    location.setLookupID("123");
+    ArrayList<Location> locationsList = new ArrayList<>();
+    locationsList.add(location);
+
+    importClientRequest.setClient(client);
+    client.setLocations(locationsList);
+
+    Map<String, Object> lcClientId = new HashMap<>();
+    lcClientId.put("lcClientIdKey", "lcClientIdValue"); // Replace with your actual data
+
+    Map<String, Object> lcLocationId = new HashMap<>();
+    lcLocationId.put("lcLocationIdKey", "lcLocationIdValue"); // Replace with your actual data
+
+    when(lossControlDao.findLc360ClientID(anyString())).thenReturn(lcClientId);
+    when(lossControlDao.findLc360LocationID(anyString())).thenReturn(lcLocationId);
+
+    ImportClientResponse response = importClientServiceImp.ifClientIsPresent(null, importClientRequest, locationsList, "correlationId");
+
+    // Add assertions here based on your implementation and expected behavior
+    assertNotNull(response);
+    // Verify that the correct methods were called with the expected arguments
+    verify(lossControlDao).findLc360ClientID(anyString());
+    verify(lossControlDao).findLc360LocationID(anyString());
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 package uk.co.allianz.rap.lc.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
