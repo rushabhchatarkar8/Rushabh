@@ -1,3 +1,9 @@
+lossControlDao.findLc360LocationID(locations.get(0).getLookupID() + "_" + importClientRequest.getClient().getLookupID()
+
+
+
+
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
