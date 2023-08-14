@@ -1,4 +1,4 @@
-lossControlDao.findLc360LocationID(locations.get(0).getLookupID() + "_" + importClientRequest.getClient().getLookupID()
+        Map<String, Object> lcLocationId = lossControlDao.findLc360LocationID(locations.get(0).getLookupID() + "_" + importClientRequest.getClient().getLookupID());
 
 
 
