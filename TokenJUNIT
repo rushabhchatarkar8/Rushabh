@@ -1,3 +1,16 @@
+        when(requestBodyUriSpec.uri(any(URI.class))).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.headers(any())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.contentType(any())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.accept(any())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.bodyValue(any())).thenReturn(requestHeadersSpec);
+
+
+Cannot resolve method 'thenReturn(RequestHeadersSpec<capture of ?>)'
+
+
+
+//////
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
