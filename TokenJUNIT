@@ -18,7 +18,242 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-class LossControlServiceImplTest6 {
+class LossControlServiceImplTest10 {
+
+    @Mock
+    private WebClient webClient;
+
+    @InjectMocks
+    private LossControlServiceImpl lossControlService;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    void testInspectionsPost() {
+        ImportInspectionsRequest importInspectionsRequest = new ImportInspectionsRequest();
+        String bearerToken = "sampleBearerToken";
+
+        ImportInspectionResponse expectedResponse = new ImportInspectionResponse();
+        // Set up your expectedResponse accordingly
+
+        when(webClient.post()
+                .uri(any())
+                .headers(any())
+                .accept(any())
+                .contentType(any())
+                .body(any(Mono.class), eq(ImportInspectionResponse.class))
+                .retrieve()
+                .bodyToMono(ImportInspectionResponse.class))
+                .thenReturn(Mono.just(expectedResponse));
+
+        ImportInspectionResponse result = lossControlService.inspectionsPost(importInspectionsRequest, bearerToken);
+
+        assertEquals(expectedResponse, result);
+
+        // Verify the WebClient interaction
+        verify(webClient, times(1)).post();
+        // Add more verification if needed
+    }
+}
+
+
+//
+package uk.co.allianz.rap.lc.service;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importinspections.ImportInspectionsRequest;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.model.response.importinspections.ImportInspectionResponse;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+class LossControlServiceImplTest11 {
+
+    @Mock
+    private WebClient webClient;
+
+    @InjectMocks
+    private LossControlServiceImpl lossControlService;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    void testInspectionsPost() {
+        ImportInspectionsRequest importInspectionsRequest = new ImportInspectionsRequest();
+        String bearerToken = "sampleBearerToken";
+
+        ImportInspectionResponse expectedResponse = new ImportInspectionResponse();
+        // Initialize expectedResponse with the expected data
+
+        // Mock WebClient response
+        when(webClient.post()
+                .uri(any())
+                .headers(any())
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .bodyValue(importInspectionsRequest)
+                .retrieve()
+                .bodyToMono(ImportInspectionResponse.class))
+                .thenReturn(Mono.just(expectedResponse));
+
+        ImportInspectionResponse result = lossControlService.inspectionsPost(importInspectionsRequest, bearerToken);
+
+        // Verify the WebClient interaction
+        verify(webClient, times(1)).post();
+        // Add more verification if necessary
+
+        // Verify the expected response
+        assertEquals(expectedResponse, result, "The actual response does not match the expected response.");
+    }
+}
+
+
+//
+package uk.co.allianz.rap.lc.service;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
+import uk.co.allianz.rap.lc.model.request.importinspections.ImportInspectionsRequest;
+import uk.co.allianz.rap.lc.model.response.importinspections.ImportInspectionResponse;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+class LossControlServiceImplTest12 {
+
+    @Mock
+    private WebClient webClient;
+
+    @InjectMocks
+    private LossControlServiceImpl lossControlService;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    void testInspectionsPost() {
+        ImportInspectionsRequest importInspectionsRequest = new ImportInspectionsRequest();
+        String bearerToken = "sampleBearerToken";
+
+        ImportInspectionResponse expectedResponse = new ImportInspectionResponse();
+        // Set up your expected response as needed
+        
+        // Mock WebClient behavior
+        when(webClient.post())
+                .thenReturn(WebClient.builder().build()
+                        .post()
+                        .uri("/your/endpoint/here")
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + bearerToken)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .bodyValue(importInspectionsRequest)
+                        .retrieve()
+                        .bodyToMono(ImportInspectionResponse.class));
+
+        ImportInspectionResponse result = lossControlService.inspectionsPost(importInspectionsRequest, bearerToken);
+
+        // Verify that the WebClient.post() method was called
+        verify(webClient).post();
+
+        // You might want to verify other WebClient method calls and headers here
+
+        assertEquals(expectedResponse, result);
+    }
+}
+
+//
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+class LossControlServiceImplTest13 {
+
+    @Mock
+    private WebClient webClient;
+
+    @InjectMocks
+    private LossControlServiceImpl lossControlService;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    void testInspectionsPost() {
+        ImportInspectionsRequest importInspectionsRequest = new ImportInspectionsRequest();
+        String bearerToken = "sampleBearerToken";
+
+        ImportInspectionResponse expectedResponse = new ImportInspectionResponse();
+        // Set up your expected response as needed
+
+        // Mock WebClient behavior
+        when(webClient.post())
+            .thenReturn(WebClient.RequestBodySpec.class);
+        when(WebClient.RequestBodySpec.uri(any(String.class)))
+            .thenReturn(WebClient.RequestBodyUriSpec.class);
+        when(WebClient.RequestBodyUriSpec.header(any(String.class), any()))
+            .thenReturn(WebClient.RequestBodyUriSpec.class);
+        when(WebClient.RequestBodyUriSpec.contentType(any(MediaType.class)))
+            .thenReturn(WebClient.RequestBodySpec.class);
+        when(WebClient.RequestBodySpec.body(any(Mono.class), any(Class.class)))
+            .thenReturn(Mono.just(expectedResponse));
+
+        ImportInspectionResponse result = lossControlService.inspectionsPost(importInspectionsRequest, bearerToken);
+
+        assertEquals(expectedResponse, result);
+    }
+}
+
+///
+package uk.co.allianz.rap.lc.service;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importinspections.ImportInspectionsRequest;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.model.response.importinspections.ImportInspectionResponse;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+class LossControlServiceImplTest14 {
 
     @Mock
     private WebClient webClient;
