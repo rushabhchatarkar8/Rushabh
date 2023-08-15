@@ -1,4 +1,20 @@
-        when(requestBodyUriSpec.uri(any(URI.class))).thenReturn(requestHeadersSpec);
+when(webClientBuilder.baseUrl(anyString())).thenReturn(webClientBuilder);
+when(webClientBuilder.build()).thenReturn(webClient);
+when(webClient.post()).thenReturn(requestBodyUriSpec);
+when(requestBodyUriSpec.uri(any(URI.class))).thenReturn(requestBodyUriSpec);
+when(requestBodyUriSpec.header(anyString(), anyString())).thenReturn(requestBodyUriSpec);
+when(requestBodyUriSpec.contentType(any())).thenReturn(requestBodyUriSpec);
+when(requestBodyUriSpec.accept(any())).thenReturn(requestBodyUriSpec);
+when(requestBodyUriSpec.bodyValue(any())).thenReturn(requestBodyUriSpec);
+when(requestBodyUriSpec.retrieve()).thenReturn(responseSpec);
+when(responseSpec.bodyToMono(eq(ImportInspectionResponse.class))).thenReturn(Mono.just(expectedResponse));
+
+
+
+
+
+
+when(requestBodyUriSpec.uri(any(URI.class))).thenReturn(requestHeadersSpec);
         when(requestHeadersSpec.headers(any())).thenReturn(requestHeadersSpec);
         when(requestHeadersSpec.contentType(any())).thenReturn(requestHeadersSpec);
         when(requestHeadersSpec.accept(any())).thenReturn(requestHeadersSpec);
