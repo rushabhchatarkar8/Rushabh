@@ -1,0 +1,71 @@
+package uk.co.allianz.rap.lc.service;
+
+
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.stereotype.Component;
+import org.springframework.web.reactive.function.client.WebClient;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importinspections.ImportInspectionsRequest;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.model.response.importinspections.ImportInspectionResponse;
+
+@Slf4j
+@Component
+public class LossControlServiceImpl implements LossControlService {
+
+    @Value("${losscontrol.service-url.import-client}")
+    private String importClientUrl;
+    @Value("${losscontrol.service-url.import-inspections}")
+    private String importInspectionsUrl;
+
+    private WebClient webClient = WebClient.create();
+
+    /***
+     *     method used for invoke second LC360 api
+     *     post http request
+     *     input bearer token and related json data
+     */
+    @Override
+    public ImportClientResponse clientPost(final ImportClientRequest importClientRequest, final String bearerToken) {
+        //passing jwt bearer token into header
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Authorization", "Bearer " + bearerToken);
+        log.info("Token set in header.");
+        ImportClientResponse importClientResponse =
+                webClient.post()
+                        .uri(importClientUrl)
+                        .headers(httpHeaders -> httpHeaders.addAll(headers))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(importClientRequest)
+                        .retrieve()
+                        .bodyToMono(ImportClientResponse.class)
+                        .block();
+        return importClientResponse;
+    }
+
+    /***
+     *     method used for invoke third LC360 api
+     *     post http request
+     *     input bearer token and related json data
+     */
+    @Override
+    public ImportInspectionResponse inspectionsPost(final ImportInspectionsRequest importInspectionsRequest, final String bearerToken) {
+        //passing jwt bearer token into header
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Authorization", "Bearer " + bearerToken);
+        log.info("Token set in header.");
+        ImportInspectionResponse importInspectionResponse =
+                webClient.post()
+                        .uri(importInspectionsUrl)
+                        .headers(httpHeaders -> httpHeaders.addAll(headers))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .bodyValue(importInspectionsRequest)
+                        .retrieve()
+                        .bodyToMono(ImportInspectionResponse.class)
+                        .block();
+        return importInspectionResponse;
+    }
+}
