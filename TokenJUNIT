@@ -1,0 +1,517 @@
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.reactive.server.MockWebClient;
+import reactor.core.publisher.Mono;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importinspections.ImportInspectionsRequest;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.model.response.importinspections.ImportInspectionResponse;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
+
+class LossControlServiceImplTest {
+
+    @Mock
+    private WebClient.Builder webClientBuilder;
+
+    private LossControlServiceImpl lossControlService;
+
+    private MockWebClient.RequestHeadersUriSpec requestHeadersUriSpec;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+        requestHeadersUriSpec = MockWebClient.mockRequest(
+                HttpMethod.POST, "http://example.com"
+        ).header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE);
+        when(webClientBuilder.build()).thenReturn(requestHeadersUriSpec);
+        lossControlService = new LossControlServiceImpl(webClientBuilder);
+    }
+
+    @Test
+    void testClientPost() {
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        String bearerToken = "dummyToken";
+        ImportClientResponse expectedResponse = new ImportClientResponse();
+
+        when(requestHeadersUriSpec.headers(any())).thenReturn(requestHeadersUriSpec);
+        when(requestHeadersUriSpec.bodyValue(importClientRequest)).thenReturn(requestHeadersUriSpec);
+        when(requestHeadersUriSpec.retrieve()).thenReturn(MockWebClient.MockResponseSpec.ok().body(Mono.just(expectedResponse), ImportClientResponse.class));
+
+        ImportClientResponse response = lossControlService.clientPost(importClientRequest, bearerToken);
+
+        assertNotNull(response);
+        assertEquals(expectedResponse, response);
+    }
+
+    @Test
+    void testInspectionsPost() {
+        ImportInspectionsRequest importInspectionsRequest = new ImportInspectionsRequest();
+        String bearerToken = "dummyToken";
+        ImportInspectionResponse expectedResponse = new ImportInspectionResponse();
+
+        when(requestHeadersUriSpec.headers(any())).thenReturn(requestHeadersUriSpec);
+        when(requestHeadersUriSpec.bodyValue(importInspectionsRequest)).thenReturn(requestHeadersUriSpec);
+        when(requestHeadersUriSpec.retrieve()).thenReturn(MockWebClient.MockResponseSpec.ok().body(Mono.just(expectedResponse), ImportInspectionResponse.class));
+
+        ImportInspectionResponse response = lossControlService.inspectionsPost(importInspectionsRequest, bearerToken);
+
+        assertNotNull(response);
+        assertEquals(expectedResponse, response);
+    }
+}
+
+
+
+
+........................
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importinspections.ImportInspectionsRequest;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.model.response.importinspections.ImportInspectionResponse;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class LossControlServiceImplTest {
+
+    @Mock
+    private WebClient.Builder webClientBuilder;
+
+    @Mock
+    private WebClient.RequestHeadersUriSpec<?> requestHeadersUriSpec;
+
+    @Mock
+    private WebClient.RequestHeadersSpec<?> requestHeadersSpec;
+
+    @Mock
+    private WebClient.ResponseSpec responseSpec;
+
+    @InjectMocks
+    private LossControlServiceImpl lossControlService;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+        lossControlService = new LossControlServiceImpl();
+        lossControlService.setWebClientBuilder(webClientBuilder);
+    }
+
+    @Test
+    public void testClientPost() {
+        String importClientUrl = "http://example.com/import-client";
+        String bearerToken = "mockBearerToken";
+
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        ImportClientResponse mockResponse = new ImportClientResponse();
+
+        when(webClientBuilder.build()).thenReturn(webClientBuilder);
+        when(webClientBuilder.baseUrl(importClientUrl)).thenReturn(webClientBuilder);
+        when(webClientBuilder.build().post()).thenReturn(requestHeadersUriSpec);
+        when(requestHeadersUriSpec.uri(importClientUrl)).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.headers(any())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.contentType(MediaType.APPLICATION_JSON)).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.bodyValue(importClientRequest)).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.bodyToMono(ImportClientResponse.class)).thenReturn(Mono.just(mockResponse));
+        when(responseSpec.block()).thenReturn(mockResponse);
+
+        ImportClientResponse result = lossControlService.clientPost(importClientRequest, bearerToken);
+
+        assertNotNull(result);
+        assertEquals(mockResponse, result);
+
+        verify(webClientBuilder).build();
+        verify(webClientBuilder).baseUrl(importClientUrl);
+        verify(webClientBuilder.build().post()).uri(importClientUrl);
+        verify(requestHeadersSpec).headers(any());
+        verify(requestHeadersSpec).contentType(MediaType.APPLICATION_JSON);
+        verify(requestHeadersSpec).bodyValue(importClientRequest);
+        verify(requestHeadersSpec).retrieve();
+        verify(responseSpec).bodyToMono(ImportClientResponse.class);
+        verify(responseSpec).block();
+    }
+
+    @Test
+    public void testInspectionsPost() {
+        String importInspectionsUrl = "http://example.com/import-inspections";
+        String bearerToken = "mockBearerToken";
+
+        ImportInspectionsRequest importInspectionsRequest = new ImportInspectionsRequest();
+        ImportInspectionResponse mockResponse = new ImportInspectionResponse();
+
+        when(webClientBuilder.build()).thenReturn(webClientBuilder);
+        when(webClientBuilder.baseUrl(importInspectionsUrl)).thenReturn(webClientBuilder);
+        when(webClientBuilder.build().post()).thenReturn(requestHeadersUriSpec);
+        when(requestHeadersUriSpec.uri(importInspectionsUrl)).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.headers(any())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.contentType(MediaType.APPLICATION_JSON)).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.bodyValue(importInspectionsRequest)).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.bodyToMono(ImportInspectionResponse.class)).thenReturn(Mono.just(mockResponse));
+        when(responseSpec.block()).thenReturn(mockResponse);
+
+        ImportInspectionResponse result = lossControlService.inspectionsPost(importInspectionsRequest, bearerToken);
+
+        assertNotNull(result);
+        assertEquals(mockResponse, result);
+
+        verify(webClientBuilder).build();
+        verify(webClientBuilder).baseUrl(importInspectionsUrl);
+        verify(webClientBuilder.build().post()).uri(importInspectionsUrl);
+        verify(requestHeadersSpec).headers(any());
+        verify(requestHeadersSpec).contentType(MediaType.APPLICATION_JSON);
+        verify(requestHeadersSpec).bodyValue(importInspectionsRequest);
+        verify(requestHeadersSpec).retrieve();
+        verify(responseSpec).bodyToMono(ImportInspectionResponse.class);
+        verify(responseSpec).block();
+    }
+}
+.............
+
+
+import static org.mockito.Mockito.*;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importinspections.ImportInspectionsRequest;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.model.response.importinspections.ImportInspectionResponse;
+
+public class LossControlServiceImplTest5 {
+
+    @Mock
+    private WebClient.Builder webClientBuilder;
+
+    @Mock
+    private WebClient.RequestHeadersUriSpec<?> requestHeadersUriSpec;
+
+    @Mock
+    private WebClient.RequestHeadersSpec<?> requestHeadersSpec;
+
+    @Mock
+    private WebClient.ResponseSpec responseSpec;
+
+    private LossControlServiceImpl lossControlService;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+        lossControlService = new LossControlServiceImpl();
+        lossControlService.setWebClientBuilder(webClientBuilder);
+
+        when(webClientBuilder.build()).thenReturn(webClientBuilder);
+        when(webClientBuilder.baseUrl(anyString())).thenReturn(webClientBuilder);
+        when(webClientBuilder.defaultHeader(anyString(), anyString())).thenReturn(webClientBuilder);
+        when(webClientBuilder.build().post()).thenReturn(requestHeadersUriSpec);
+        when(requestHeadersUriSpec.uri(anyString())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.headers(any())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.contentType(any())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.bodyValue(any())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+    }
+
+    @Test
+    public void testClientPost() {
+        ImportClientRequest importClientRequest = new ImportClientRequest(/* initialize with required data */);
+        String bearerToken = "yourBearerTokenHere";
+
+        ImportClientResponse expectedResponse = new ImportClientResponse(/* initialize with expected data */);
+        when(responseSpec.bodyToMono(ImportClientResponse.class)).thenReturn(Mono.just(expectedResponse));
+
+        ImportClientResponse actualResponse = lossControlService.clientPost(importClientRequest, bearerToken);
+
+        verify(webClientBuilder.build().post(), times(1));
+        verify(requestHeadersUriSpec.uri(lossControlService.getImportClientUrl()), times(1));
+        verify(requestHeadersSpec.headers(any(HttpHeaders.class)), times(1));
+        verify(requestHeadersSpec.contentType(MediaType.APPLICATION_JSON), times(1));
+        verify(requestHeadersSpec.bodyValue(importClientRequest), times(1));
+        verify(requestHeadersSpec.retrieve(), times(1));
+        verify(responseSpec.bodyToMono(ImportClientResponse.class), times(1));
+        
+        // Additional assertions to compare actualResponse with expectedResponse
+    }
+
+    @Test
+    public void testInspectionsPost() {
+        ImportInspectionsRequest importInspectionsRequest = new ImportInspectionsRequest(/* initialize with required data */);
+        String bearerToken = "yourBearerTokenHere";
+
+        ImportInspectionResponse expectedResponse = new ImportInspectionResponse(/* initialize with expected data */);
+        when(responseSpec.bodyToMono(ImportInspectionResponse.class)).thenReturn(Mono.just(expectedResponse));
+
+        ImportInspectionResponse actualResponse = lossControlService.inspectionsPost(importInspectionsRequest, bearerToken);
+
+        verify(webClientBuilder.build().post(), times(1));
+        verify(requestHeadersUriSpec.uri(lossControlService.getImportInspectionsUrl()), times(1));
+        verify(requestHeadersSpec.headers(any(HttpHeaders.class)), times(1));
+        verify(requestHeadersSpec.contentType(MediaType.APPLICATION_JSON), times(1));
+        verify(requestHeadersSpec.bodyValue(importInspectionsRequest), times(1));
+        verify(requestHeadersSpec.retrieve(), times(1));
+        verify(responseSpec.bodyToMono(ImportInspectionResponse.class), times(1));
+        
+        // Additional assertions to compare actualResponse with expectedResponse
+    }
+}
+
+
+
+///
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importinspections.ImportInspectionsRequest;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.model.response.importinspections.ImportInspectionResponse;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+class LossControlServiceImplTest6 {
+
+    @Mock
+    private WebClient webClient;
+
+    @InjectMocks
+    private LossControlServiceImpl lossControlService;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    void testClientPost() {
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        String bearerToken = "sampleBearerToken";
+
+        ImportClientResponse expectedResponse = new ImportClientResponse();
+        // Mock WebClient behavior
+        WebClient.RequestHeadersUriSpec requestHeadersUriSpecMock = mock(WebClient.RequestHeadersUriSpec.class);
+        when(webClient.post()).thenReturn(requestHeadersUriSpecMock);
+        WebClient.RequestHeadersSpec requestHeadersSpecMock = mock(WebClient.RequestHeadersSpec.class);
+        when(requestHeadersUriSpecMock.uri(any(String.class))).thenReturn(requestHeadersSpecMock);
+        WebClient.RequestHeadersSpec requestHeadersWithHeadersMock = mock(WebClient.RequestHeadersSpec.class);
+        when(requestHeadersSpecMock.headers(any())).thenReturn(requestHeadersWithHeadersMock);
+        WebClient.RequestBodyUriSpec requestBodyUriSpecMock = mock(WebClient.RequestBodyUriSpec.class);
+        when(requestHeadersWithHeadersMock.contentType(MediaType.APPLICATION_JSON)).thenReturn(requestBodyUriSpecMock);
+        WebClient.RequestBodySpec requestBodySpecMock = mock(WebClient.RequestBodySpec.class);
+        when(requestBodyUriSpecMock.bodyValue(importClientRequest)).thenReturn(requestBodySpecMock);
+        WebClient.ResponseSpec responseSpecMock = mock(WebClient.ResponseSpec.class);
+        when(requestBodySpecMock.retrieve()).thenReturn(responseSpecMock);
+        Mono<ImportClientResponse> responseMono = Mono.just(expectedResponse);
+        when(responseSpecMock.bodyToMono(ImportClientResponse.class)).thenReturn(responseMono);
+        
+        ImportClientResponse result = lossControlService.clientPost(importClientRequest, bearerToken);
+
+        verify(webClient, times(1)).post();
+        verify(requestHeadersUriSpecMock, times(1)).uri(lossControlService.getImportClientUrl());
+        verify(requestHeadersWithHeadersMock, times(1)).contentType(MediaType.APPLICATION_JSON);
+        verify(requestBodyUriSpecMock, times(1)).bodyValue(importClientRequest);
+        verify(responseSpecMock, times(1)).bodyToMono(ImportClientResponse.class);
+
+        assertEquals(expectedResponse, result);
+    }
+
+    @Test
+    void testInspectionsPost() {
+        ImportInspectionsRequest importInspectionsRequest = new ImportInspectionsRequest();
+        String bearerToken = "sampleBearerToken";
+
+        ImportInspectionResponse expectedResponse = new ImportInspectionResponse();
+        // Similar mocking process as the previous test
+
+        ImportInspectionResponse result = lossControlService.inspectionsPost(importInspectionsRequest, bearerToken);
+
+        // Similar verification process as the previous test
+
+        assertEquals(expectedResponse, result);
+    }
+}
+//
+
+import static org.mockito.Mockito.*;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
+
+public class LossControlServiceImplTest7 {
+
+    @Mock
+    private WebClient.Builder webClientBuilder;
+
+    @InjectMocks
+    private LossControlServiceImpl lossControlService;
+
+    @BeforeEach
+    public void setup() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testClientPost() {
+        // Mock WebClient
+        WebClient.RequestBodyUriSpec requestUriSpec = mock(WebClient.RequestBodyUriSpec.class);
+        WebClient.RequestHeadersSpec<?> requestHeadersSpec = mock(WebClient.RequestHeadersSpec.class);
+        WebClient.ResponseSpec responseSpec = mock(WebClient.ResponseSpec.class);
+
+        when(webClientBuilder.build()).thenReturn(webClientBuilder);
+        when(webClientBuilder.baseUrl(anyString())).thenReturn(webClientBuilder);
+        when(webClientBuilder.build().post()).thenReturn(requestUriSpec);
+        when(requestUriSpec.uri(anyString())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.headers(any())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.contentType(MediaType.APPLICATION_JSON)).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.bodyValue(any())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.bodyToMono(ImportClientResponse.class)).thenReturn(Mono.just(new ImportClientResponse()));
+
+        // Call the method being tested
+        ImportClientResponse result = lossControlService.clientPost(new ImportClientRequest(), "fakeToken");
+
+        // Verify interactions
+        verify(webClientBuilder).build();
+        verify(webClientBuilder).baseUrl(anyString());
+        verify(requestUriSpec).uri(anyString());
+        verify(requestHeadersSpec).headers(any());
+        verify(requestHeadersSpec).contentType(MediaType.APPLICATION_JSON);
+        verify(requestHeadersSpec).bodyValue(any());
+        verify(requestHeadersSpec).retrieve();
+        verify(responseSpec).bodyToMono(ImportClientResponse.class);
+
+        // Perform assertions
+        assertNotNull(result);
+        // You can perform more specific assertions on the result if needed
+    }
+
+    // Similar test for inspectionsPost method
+}
+
+
+
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.reactive.server.WebTestClient;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importinspections.ImportInspectionsRequest;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.model.response.importinspections.ImportInspectionResponse;
+
+public class LossControlServiceImplTest8 {
+
+    @InjectMocks
+    private LossControlServiceImpl lossControlService;
+
+    @Mock
+    private WebClient.Builder webClientBuilder;
+
+    @Mock
+    private WebClient.RequestBodyUriSpec requestBodyUriSpec;
+
+    @Mock
+    private WebClient.RequestHeadersSpec requestHeadersSpec;
+
+    @Mock
+    private WebClient.RequestHeadersUriSpec<?> requestHeadersUriSpec;
+
+    @Mock
+    private WebClient.ResponseSpec responseSpec;
+
+    @Mock
+    private WebClient webClient;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+
+        when(webClientBuilder.baseUrl(anyString())).thenReturn(webClientBuilder);
+        when(webClientBuilder.build()).thenReturn(webClient);
+        when(webClient.post()).thenReturn(requestBodyUriSpec);
+        when(requestBodyUriSpec.uri(anyString())).thenReturn(requestHeadersUriSpec);
+        when(requestHeadersUriSpec.headers(any())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.contentType(any())).thenReturn(requestBodyUriSpec);
+        when(requestBodyUriSpec.bodyValue(any())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+    }
+
+    @Test
+    public void testClientPost() {
+        ImportClientRequest request = new ImportClientRequest();
+        String bearerToken = "dummyToken";
+
+        ImportClientResponse expectedResponse = new ImportClientResponse();
+        Mono<ImportClientResponse> responseMono = Mono.just(expectedResponse);
+        when(responseSpec.bodyToMono(eq(ImportClientResponse.class))).thenReturn(responseMono);
+
+        ImportClientResponse actualResponse = lossControlService.clientPost(request, bearerToken);
+
+        verify(requestHeadersSpec).contentType(MediaType.APPLICATION_JSON);
+        verify(requestHeadersSpec).bodyValue(request);
+        verify(requestHeadersSpec).headers(any());
+
+        assertEquals(expectedResponse, actualResponse);
+    }
+
+    @Test
+    public void testInspectionsPost() {
+        ImportInspectionsRequest request = new ImportInspectionsRequest();
+        String bearerToken = "dummyToken";
+
+        ImportInspectionResponse expectedResponse = new ImportInspectionResponse();
+        Mono<ImportInspectionResponse> responseMono = Mono.just(expectedResponse);
+        when(responseSpec.bodyToMono(eq(ImportInspectionResponse.class))).thenReturn(responseMono);
+
+        ImportInspectionResponse actualResponse = lossControlService.inspectionsPost(request, bearerToken);
+
+        verify(requestHeadersSpec).contentType(MediaType.APPLICATION_JSON);
+        verify(requestHeadersSpec).bodyValue(request);
+        verify(requestHeadersSpec).headers(any());
+
+        assertEquals(expectedResponse, actualResponse);
+    }
+}
