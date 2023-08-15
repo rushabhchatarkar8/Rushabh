@@ -1,3 +1,82 @@
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.web.reactive.function.client.WebClient;
+import reactor.core.publisher.Mono;
+import uk.co.allianz.rap.lc.model.request.importinspections.ImportInspectionsRequest;
+import uk.co.allianz.rap.lc.model.response.importinspections.ImportInspectionResponse;
+
+import java.net.URI;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+class LossControlServiceImplTest11 {
+
+    @Mock
+    private WebClient.Builder webClientBuilder;
+
+    @InjectMocks
+    private LossControlServiceImpl lossControlService;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    void testInspectionsPost() {
+        ImportInspectionsRequest importInspectionsRequest = new ImportInspectionsRequest();
+        String bearerToken = "sampleBearerToken";
+
+        ImportInspectionResponse expectedResponse = new ImportInspectionResponse();
+        // Initialize expectedResponse with the expected data
+
+        WebClient.RequestBodyUriSpec requestBodyUriSpec = mock(WebClient.RequestBodyUriSpec.class);
+        WebClient.RequestHeadersSpec<?> requestHeadersSpec = mock(WebClient.RequestHeadersSpec.class);
+        WebClient.ResponseSpec responseSpec = mock(WebClient.ResponseSpec.class);
+
+        // Mock WebClient behavior
+        when(webClientBuilder.baseUrl(anyString())).thenReturn(webClientBuilder);
+        when(webClientBuilder.build()).thenReturn(WebClient.builder().build());
+        when(webClientBuilder.defaultHeader(any(), any())).thenReturn(webClientBuilder);
+        when(webClientBuilder.defaultHeaders(any())).thenReturn(webClientBuilder);
+        when(webClientBuilder.build().post()).thenReturn(requestBodyUriSpec);
+        when(requestBodyUriSpec.uri(any(URI.class))).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.headers(any())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.contentType(any())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.accept(any())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.bodyValue(any())).thenReturn(requestHeadersSpec);
+        when(requestHeadersSpec.retrieve()).thenReturn(responseSpec);
+        when(responseSpec.bodyToMono(ImportInspectionResponse.class)).thenReturn(Mono.just(expectedResponse));
+
+        ImportInspectionResponse result = lossControlService.inspectionsPost(importInspectionsRequest, bearerToken);
+
+        // Verify the WebClient interaction
+        verify(webClientBuilder, times(1)).build();
+        verify(requestBodyUriSpec, times(1)).uri(any(URI.class));
+        // Add more verification if necessary
+
+        // Verify the expected response
+        assertEquals(expectedResponse, result, "The actual response does not match the expected response.");
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
 java.lang.NullPointerException: Cannot invoke "org.springframework.web.reactive.function.client.WebClient$RequestBodyUriSpec.uri(java.net.URI)" because the return value of "org.springframework.web.reactive.function.client.WebClient.post()" is null
 
 	at uk.co.allianz.rap.lc.service.LossControlServiceImplTest11.testInspectionsPost(LossControlServiceImplTest11.java:47)
