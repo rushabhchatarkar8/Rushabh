@@ -1,5 +1,61 @@
 // ...
 import java.net.URI;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+// ...
+
+class LossControlServiceImplTest11 {
+
+    @Mock
+    private WebClient webClient;
+
+    @InjectMocks
+    private LossControlServiceImpl lossControlService;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    void testInspectionsPost() throws URISyntaxException {
+        ImportInspectionsRequest importInspectionsRequest = new ImportInspectionsRequest();
+        String bearerToken = "sampleBearerToken";
+
+        ImportInspectionResponse expectedResponse = new ImportInspectionResponse();
+        // Initialize expectedResponse with the expected data
+
+        // Mock WebClient response
+        when(webClient.post()
+                .uri(eq(new URI("https://example.com/api/endpoint")))  // Replace with your expected URI
+                .headers(any())
+                .contentType(MediaType.APPLICATION_JSON)
+                .accept(MediaType.APPLICATION_JSON)
+                .bodyValue(importInspectionsRequest)
+                .retrieve()
+                .bodyToMono(ImportInspectionResponse.class))
+                .thenReturn(Mono.just(expectedResponse));
+
+        ImportInspectionResponse result = lossControlService.inspectionsPost(importInspectionsRequest, bearerToken);
+
+        // Verify the WebClient interaction
+        verify(webClient, times(1)).post();
+        // Add more verification if necessary
+
+        // Verify the expected response
+        assertEquals(expectedResponse, result, "The actual response does not match the expected response.");
+    }
+}
+
+
+
+
+
+
+
+
+// ...
+import java.net.URI;
 import static org.mockito.ArgumentMatchers.eq;
 // ...
 
