@@ -1,3 +1,9 @@
+java.lang.NullPointerException: Cannot invoke "org.springframework.web.reactive.function.client.WebClient$RequestBodyUriSpec.uri(java.net.URI)" because the return value of "org.springframework.web.reactive.function.client.WebClient.post()" is null
+
+	at uk.co.allianz.rap.lc.service.LossControlServiceImplTest11.testInspectionsPost(LossControlServiceImplTest11.java:47)
+
+
+
 // ...
 import java.net.URI;
 import static org.mockito.ArgumentMatchers.any;
