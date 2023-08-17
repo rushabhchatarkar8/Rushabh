@@ -3,6 +3,190 @@ package uk.co.allianz.rap.lc.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import uk.co.allianz.rap.lc.exception.CustomException;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.*;
+
+public class ValidationServiceImplTestC {
+    @InjectMocks
+    private ValidationServiceImpl validationServiceImpl;
+
+    @Mock
+    private ValidationServiceImpl mockValidationService;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testProcessJsonSingleValueJsonThrowsCustomException() throws CustomException, JsonProcessingException {
+        when(mockValidationService.isSingleValue(any())).thenReturn(true);
+        doCallRealMethod().when(mockValidationService).processJson(anyString());
+
+        String json = "\"value\"";
+        assertThrows(CustomException.class, () -> mockValidationService.processJson(json));
+
+        verify(mockValidationService).isSingleValue(any());
+    }
+
+    @Test
+    public void testProcessJsonWithSingleValueJsonThrowsCustomException() throws CustomException, JsonProcessingException {
+        when(mockValidationService.isSingleValue(any())).thenReturn(true);
+        doCallRealMethod().when(mockValidationService).processJson(anyString());
+
+        String json = "123"; // Single value JSON
+        assertThrows(CustomException.class, () -> mockValidationService.processJson(json));
+
+        verify(mockValidationService).isSingleValue(any());
+    }
+
+    // ... other test methods ...
+}
+
+
+//
+package uk.co.allianz.rap.lc.service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import uk.co.allianz.rap.lc.exception.CustomException;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.when;
+
+public class ValidationServiceImplTestB {
+    @Mock
+    private ValidationServiceImpl validationServiceImpl;
+
+    @InjectMocks
+    private ValidationServiceImpl validationService;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testProcessJsonSingleValueJson() {
+        String json = "\"John\"";
+        assertThrows(CustomException.class, () -> validationService.processJson(json));
+    }
+
+    @Test
+    public void testProcessJsonNoExceptionThrown() throws CustomException, JsonProcessingException {
+        String json = "{\"key\": \"value\"}";
+        assertDoesNotThrow(() -> validationService.processJson(json));
+    }
+
+    @Test
+    public void testProcessJsonSingleValueJsonThrowsCustomException() {
+        String json = "\"value\"";
+        assertThrows(CustomException.class, () -> validationService.processJson(json));
+    }
+
+    @Test
+    public void testProcessJsonWithSingleValueJson() {
+        String json = "123"; // Single value JSON
+        assertThrows(CustomException.class, () -> validationService.processJson(json));
+    }
+
+    @Test
+    public void testProcessJsonWithObject() {
+        String json = "[]"; // Empty JSON Object / Array
+        assertThrows(CustomException.class, () -> validationService.processJson(json));
+    }
+}
+
+//
+package uk.co.allianz.rap.lc.service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import uk.co.allianz.rap.lc.exception.CustomException;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.*;
+
+public class ValidationServiceImplTestA {
+    @Mock
+    private ValidationServiceImpl validationServiceImpl;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @InjectMocks
+    private ValidationServiceImpl realValidationServiceImpl;
+
+    @Test
+    public void testProcessJsonSingleValueJsonThrowsCustomException() throws CustomException, JsonProcessingException {
+        when(validationServiceImpl.isSingleValue(any())).thenCallRealMethod();
+
+        String json = "\"value\"";
+        assertThrows(CustomException.class, () -> realValidationServiceImpl.processJson(json));
+
+        verify(validationServiceImpl).isSingleValue(any());
+    }
+
+    @Test
+    public void testProcessJsonWithSingleValueJsonThrowsCustomException() throws CustomException, JsonProcessingException {
+        when(validationServiceImpl.isSingleValue(any())).thenCallRealMethod();
+
+        String json = "123"; // Single value JSON
+        assertThrows(CustomException.class, () -> realValidationServiceImpl.processJson(json));
+
+        verify(validationServiceImpl).isSingleValue(any());
+    }
+
+    @Test
+    public void testProcessJsonWithObjectThrowsCustomException() throws CustomException, JsonProcessingException {
+        when(validationServiceImpl.isSingleValue(any())).thenReturn(false);
+        when(validationServiceImpl.isEmptyObject(any())).thenReturn(true);
+
+        String json = "[]"; // Empty JSON Object / Array
+        assertThrows(CustomException.class, () -> validationServiceImpl.processJson(json));
+
+        verify(validationServiceImpl).isSingleValue(any());
+        verify(validationServiceImpl).isEmptyObject(any());
+    }
+
+    @Test
+    public void testProcessJsonNoExceptionThrown() throws CustomException, JsonProcessingException {
+        when(validationServiceImpl.isSingleValue(any())).thenReturn(false);
+        when(validationServiceImpl.isEmptyObject(any())).thenReturn(false);
+
+        String json = "{\"key\": \"value\"}";
+        assertDoesNotThrow(() -> validationServiceImpl.processJson(json));
+
+        verify(validationServiceImpl).isSingleValue(any());
+        verify(validationServiceImpl).isEmptyObject(any());
+    }
+}
+
+
+//////
+package uk.co.allianz.rap.lc.service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import uk.co.allianz.rap.lc.exception.CustomException;
