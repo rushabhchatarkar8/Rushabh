@@ -1,0 +1,114 @@
+JUnit
+
+
+
+package uk.co.allianz.rap.lc.service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import uk.co.allianz.rap.lc.exception.CustomException;
+
+import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+
+
+public class ValidationServiceImplTest {
+    @Mock
+    private ValidationServiceImpl validationServiceImpl;
+
+    @BeforeEach
+    void setUp() {
+        validationServiceImpl = new ValidationServiceImpl();
+    }
+
+    @Test
+    public void testProcessJsonSingleValueJson() {
+
+        String json = "\"John\"";
+        Assertions.assertThrows(CustomException.class, () -> validationServiceImpl.processJson(json));
+    }
+
+    @Test
+    public void testProcessJsonNoExceptionThrown() {
+
+        String json = "{\"key\": \"value\"}";
+        assertDoesNotThrow(() -> validationServiceImpl.processJson(json));
+    }
+
+    @Test
+    public void testProcessJsonSingleValueJsonThrowsCustomException() {
+
+        String json = "\"value\"";
+
+        assertThrows(CustomException.class, () -> validationServiceImpl.processJson(json));
+    }
+
+
+    @Test
+    public void testProcessJsonWithSingleValueJson() {
+
+        String json = "123"; // Single value JSON
+
+        assertThrows(CustomException.class, () -> validationServiceImpl.processJson(json));
+    }
+
+    @Test
+    public void testProcessJsonWithObject() {
+
+        String json = "[]"; // Empty JSON Object / Array
+
+        assertThrows(CustomException.class, () -> validationServiceImpl.processJson(json));
+    }
+}
+
+
+
+
+package uk.co.allianz.rap.lc.service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.google.json.JsonSanitizer;
+import org.springframework.stereotype.Service;
+import uk.co.allianz.rap.lc.exception.CustomException;
+
+/***
+ * Build standard JSON validation on incoming data.
+ */
+@Service
+public class ValidationServiceImpl implements ValidationService {
+    public String processJson(final String json) throws CustomException, JsonProcessingException {
+        System.out.println("In ValidationServiceImpl");
+        // Parse the JSON string into a JsonElement
+        JsonElement jsonElement;
+        jsonElement = JsonParser.parseString(json);
+        // Check if the JSON is a single value (string or number) or empty object/array
+        if (isSingleValue(jsonElement)) {
+            throw new CustomException("JSON is a single value. ");
+        } else if (isEmptyObject(jsonElement) || isEmptyArray(jsonElement)) {
+            throw new CustomException("JSON is empty object/array. ");
+        }
+        String sanitizedJson = JsonSanitizer.sanitize(json);
+        return sanitizedJson;
+    }
+
+    // Helper method to check if the JSON element is a single value
+    private boolean isSingleValue(final JsonElement jsonElement) {
+        return !jsonElement.isJsonObject() && !jsonElement.isJsonArray();
+    }
+
+    // Helper method to check if the JSON element is an empty object ({})
+    private boolean isEmptyObject(final JsonElement jsonElement) {
+        return jsonElement.isJsonObject() && jsonElement.getAsJsonObject().entrySet().isEmpty();
+    }
+
+    // Helper method to check if the JSON element is an empty array ([])
+    private boolean isEmptyArray(final JsonElement jsonElement) {
+        return jsonElement.isJsonArray() && jsonElement.getAsJsonArray().size() == 0;
+    }
+}
