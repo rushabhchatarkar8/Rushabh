@@ -1,0 +1,64 @@
+package uk.co.allianz.rap.lc.service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import uk.co.allianz.rap.lc.exception.CustomException;
+
+import static org.mockito.Mockito.*;
+
+public class ValidationServiceImplTest {
+    @Mock
+    private ValidationServiceImpl validationServiceImpl;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testProcessJsonSingleValueJsonThrowsCustomException() throws CustomException, JsonProcessingException {
+        when(validationServiceImpl.isSingleValue(any())).thenReturn(true);
+
+        String json = "\"value\"";
+        assertThrows(CustomException.class, () -> validationServiceImpl.processJson(json));
+
+        verify(validationServiceImpl).isSingleValue(any());
+    }
+
+    @Test
+    public void testProcessJsonWithSingleValueJsonThrowsCustomException() throws CustomException, JsonProcessingException {
+        when(validationServiceImpl.isSingleValue(any())).thenReturn(true);
+
+        String json = "123"; // Single value JSON
+        assertThrows(CustomException.class, () -> validationServiceImpl.processJson(json));
+
+        verify(validationServiceImpl).isSingleValue(any());
+    }
+
+    @Test
+    public void testProcessJsonWithObjectThrowsCustomException() throws CustomException, JsonProcessingException {
+        when(validationServiceImpl.isSingleValue(any())).thenReturn(false);
+        when(validationServiceImpl.isEmptyObject(any())).thenReturn(true);
+
+        String json = "[]"; // Empty JSON Object / Array
+        assertThrows(CustomException.class, () -> validationServiceImpl.processJson(json));
+
+        verify(validationServiceImpl).isSingleValue(any());
+        verify(validationServiceImpl).isEmptyObject(any());
+    }
+
+    @Test
+    public void testProcessJsonNoExceptionThrown() throws CustomException, JsonProcessingException {
+        when(validationServiceImpl.isSingleValue(any())).thenReturn(false);
+        when(validationServiceImpl.isEmptyObject(any())).thenReturn(false);
+
+        String json = "{\"key\": \"value\"}";
+        assertDoesNotThrow(() -> validationServiceImpl.processJson(json));
+
+        verify(validationServiceImpl).isSingleValue(any());
+        verify(validationServiceImpl).isEmptyObject(any());
+    }
+}
