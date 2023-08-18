@@ -1,3 +1,44 @@
+Fortify on Demand Security Review
+
+sink: From in Dockerfile:1 Enclosing method
+
+Dockerfile Misconfiguration: Dependency Confusion
+
+
+FROM docker.allianzuk.cloud/azuk/azuk-corretto-17:latest
+
+ARG user=rap
+ARG group=rap
+ARG uid=2000
+ARG gid=2000
+
+RUN addgroup -g ${gid} ${group} && adduser -h "/home/${user}" -u ${uid} -G ${group} -s /bin/bash -D ${user}
+
+VOLUME /tmp
+
+ADD ./deployment/certs/*  /usr/local/share/ca-certificates/
+
+COPY ./deployment/certs/rootca3_base64.crt /usr/lib/jvm/java-17-amazon-corretto/lib/security
+
+RUN cd /usr/lib/jvm/java-17-amazon-corretto/lib/security && keytool -import -trustcacerts -keystore cacerts -storepass changeit -noprompt -alias roor -file rootca3_base64.crt
+
+ARG VERSION
+
+WORKDIR /etc/app
+
+ENV LOG_FORMAT=json
+
+ADD target/service.jar /etc/app/service.jar
+
+EXPOSE 8080 8080
+
+RUN echo '#!/bin/sh' >  ./entrypoint.sh \
+ && echo 'exec java -Djavax.net.ssl.trustStore=/etc/apps/cacerts.jks -Djavax.net.ssl.trustStorePassword=changeit -jar /etc/app/service.jar'   >> ./entrypoint.sh
+
+RUN chmod +x ./entrypoint.sh
+ENTRYPOINT ["./entrypoint.sh"]
+
+...............................................................................................
 JUnit
 
 
