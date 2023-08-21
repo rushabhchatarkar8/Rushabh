@@ -1,3 +1,41 @@
+issues:
+
+Issue Detail
+Below is an enumeration of all issues found in the project. The issues are organized by priority and
+category and then broken down by the package, namespace, or location in which they occur.
+The priority of an issue can be Critical, High, Medium, or Low.
+Issues from static analysis reported on at same line number with the same category originate from
+different taint sources.
+7.1.1 Dockerfile Misconfiguration: Default User Privilege
+CWE-20
+OWASP Top 10: A6
+PCI 3.2: 6.5.6 High Risk Vulnerabilities
+Summary
+The Dockerfile does not specify a USER, so it defaults to running with a root user.
+Explanation
+When a Dockerfile does not specify a USER , Docker containers run with super user privileges by
+default. These super user privileges are propagated to the code running inside the container, which is
+usually more permission than necessary. Running the Docker container with super user privileges
+broadens the attack surface which might enable attackers to perform more serious forms of
+exploitation.
+Recommendation
+It is good practice to run your containers as a non-root user when possible.
+To modify a docker container to use a non-root user, the Dockerfile needs to specify a different user,
+such as:
+RUN useradd myLowPrivilegeUser
+USER myLowPrivilegeUser
+
+
+
+
+
+
+
+
+
+
+
+
 please explain line by line from given Docker file:
 
 FROM docker.allianzuk.cloud/azuk/azuk-corretto-17:latest
