@@ -28,7 +28,78 @@ USER myLowPrivilegeUser
 
 
 
-
+...............
+7.1.2 Dockerfile Misconfiguration: Dependency Confusion High
+CWE-20
+OWASP Top 10: A6
+PCI 3.2: 6.5.6 High Risk Vulnerabilities
+Summary
+Retrieving build dependencies using a non-specific version can leave the build system vulnerable to
+malicious binaries or cause the system to experience unexpected behavior.
+Explanation
+Dockerfiles can specify an unbound range of versions for dependencies and base images. If an
+attacker is able to add malicious versions of dependencies to a repository or trick the build system
+into downloading dependencies from a repository under the attacker's control, if docker is configured
+without specific versions of dependencies, then docker will silently download and run the
+compromised dependency.
+This type of weakness would be exploitable as a result of a supply chain attack where attackers can
+leverage misconfiguration by developers, typosquatting and can add malicious packages to open
+source repositories. An attack of this type exploits the trust in the published packages to gain access
+and exfiltrate data.
+In docker, the latest tag automatically indicates the version level of an image that doesn't use a
+digest or unique tag to provide a version for it. Docker automatically assigns the latest tag as
+mechanism to point to the most recent image manifest file. Because tags are mutable, an attacker
+can replace an image or layer using a latest (or weak tags such as imagename-lst, imagenamelast,
+myimage ).
+Example 1: The following configuration instructs Docker to pick the base image using the latest
+version of ubuntu .
+FROM ubuntu:Latest
+...
+Docker does not validate whether the repository configured to support the package manager is
+trustworthy.
+Example 2: The following configuration instructs the package manager zypper to retrive the latest
+version of the given package.
+...
+zypper install package
+...
+In Example 2 , if the repository is compromised, an attacker could simply upload a version that meets
+the dynamic criteria and cause zypper to download a malicious version of the dependency.
+Recommendation
+Perform version pinning or simple pinning. Version pinning explicitly specifies the version of images,
+libraries and support packages an application or system depends on. The primary goal of pinning is to
+ensure system stability to achieve repeatable deployments. Pinning ensures that end-users,
+This report contains Micro Focus CONFIDENTIAL information, including but not limited to Micro Focus's analysis, techniques for analysis and
+recommendations. This report may not be made public, used for competitive or consulting purposes or used outside of the recipient.
+10
+developers, and testers all use the same code base. Pinning can additionally ensure the use of safe
+dependencies; those which have gone through the rigorous process of application security validation
+and malware detection.
+When you invoke zypper (or other package managers) from docker, use the following formats:
+RUN zypper install <package_name>=<version> \
+RUN gem install <package_name> --version <version>
+RUN gem install <package_name> -v <version>
+RUN apk add <package_name>=<version>
+RUN apt-get update && apt-get install -y \
+<package_name>=<version> \
+<package_name>=<version> \
+<package_name>=<version> \
+&& rm -rf /var/lib/apt/lists/*
+Where <package_name> is the name of the dependency to install and <version> is the exact version
+or release the application should use.
+Fortify also recommends:
+- Ensure the repositories that the package managers use are trustworthy or that they are properly
+kept, and there is no install package substitution possible, including the addition of malicious code
+onto the package.
+- Avoid using public or untrusted repositories.
+- Scan packages for malware and security vulnerabilities prior to executing any regression tests.
+- Use digitally signed images.
+- Avoid using image tags such as latest or weak tags such as imagename-lst, imagename-last,
+myimage for deployments in production environments.
+- Stick to more stable tags, like specific version tags, although there is no guarantee that these
+cannot mutate either.
+- Do not create mutant tags.
+- Implement strict control over the source of images and their layers.
+............
 
 
 
