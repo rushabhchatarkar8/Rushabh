@@ -1,4 +1,16 @@
 ArrayList<Location> locations = importClientRequest.getClient().getLocations();
+int count = 1;
+
+for (Location location : locations) {
+    String lookupID = location.getLookupID();
+    System.out.println("LookupID " + count + ": " + lookupID);
+    count++;
+}
+
+
+
+
+ArrayList<Location> locations = importClientRequest.getClient().getLocations();
 
 for (Location location : locations) {
     String lookupID = location.getLookupID();
