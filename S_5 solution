@@ -1,4 +1,32 @@
 ArrayList<Location> locations = importClientRequest.getClient().getLocations();
+
+for (int index = 0; index < locations.size(); index++) {
+    String lookupID = locations.get(index).getLookupID();
+    System.out.println("LookupID at index " + index + ": " + lookupID);
+}
+
+
+
+
+
+
+
+
+
+ArrayList<Location> locations = importClientRequest.getClient().getLocations();
+
+for (int index = 0; index < locations.size(); index++) {
+    String lookupID = locations.get(index).getLookupID();
+    int position = index + 1;
+    System.out.println("LookupID " + position + ": " + lookupID);
+}
+
+
+
+
+
+
+ArrayList<Location> locations = importClientRequest.getClient().getLocations();
 int count = 1;
 
 for (Location location : locations) {
