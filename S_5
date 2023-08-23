@@ -1,4 +1,261 @@
+            for (int index = 0; index < locations.size(); index++) {
+                String lookupID = locations.get(index).getLookupID();
+                System.out.println("LookupID at index " + index + ": " + lookupID);
+                //
+            if (locations.get(index).getLookupID() != null) {
+                LOGGER.info("location LookUpID is not null");
+                ArrayList<uk.co.allianz.rap.lc.model.response.importclient.Location> locationsResponse = importClientResponse.getResult().getLocations();
+                lossControlDao.insertLocationData(locations.get(index).getLookupID() + "_" + importClientRequest.getClient().getLookupID(), locationsResponse.get(index).getLocationLookupID());
+                }
+            }
+
+
+
+
+
+
+
+
+
+
+package uk.co.allianz.rap.lc.service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importclient.Location;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+
+import java.util.ArrayList;
+import java.util.Map;
+
+import ch.qos.logback.classic.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * Extracting fields and data from the "data model".
+ * sent from loss-control-adapter and building the API request: ImportClient
+ */
+
+@Service
+public class ImportClientServiceImp implements ImportClientService {
+    private static final Logger LOGGER = (Logger) LoggerFactory
+            .getLogger(ImportClientServiceImp.class);
+    @Autowired
+    private TokenCache tokenCache;
+    @Autowired
+    private LossControlDao lossControlDao;
+    @Autowired
+    private LossControlServiceImpl lossControlServiceImpl;
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    public ImportClientResponse importClient(final String json, final String correlationId) throws CustomException, JsonProcessingException {
+        ImportClientResponse importClientResponse = null;
+        ImportClientRequest importClientRequest = objectMapper.readValue(json, ImportClientRequest.class);
         ArrayList<Location> locations = importClientRequest.getClient().getLocations();
+
+        //checking value already in DB or not ?
+        Map<String, Object> clientResult = lossControlDao.findLc360ClientID(importClientRequest.getClient().getLookupID());
+        //need flag...Client ID really exits in DB..Do i need to update ?
+
+        if (clientResult != null) {//Instead of flag here we used clientResult...Client and Location are present ? ... no need to insert in DB
+            LOGGER.info("Client and Location are present"); // so no need to insert ... line 53
+            //performed locationLookup
+            for (int index = 0; index < locations.size(); index++) {
+                String lookupID = locations.get(index).getLookupID();
+                System.out.println("LookupID at index " + index + ": " + lookupID);
+                Map<String, Object> lcLocationId = lossControlDao.findLc360LocationID(lookupID + "_" + importClientRequest.getClient().getLookupID());
+                String lc360LocationId = (String) lcLocationId.get(lcLocationId.keySet().iterator().next());
+                locations.get(index).setLookupID(lc360LocationId);
+            }
+
+            String lc360ClientId = (String) clientResult.get(clientResult.keySet().iterator().next());
+            //set client id and location id in pojo
+            importClientRequest.getClient().setLookupID(lc360ClientId);
+            objectMapper.writeValueAsString(importClientRequest);
+            LOGGER.info("Received JSON");
+            //passing enriched importClientRequest file ...request contains updated Client + Location >>invoking LC360
+            importClientResponse = lossControlServiceImpl.clientPost(importClientRequest, tokenCache.retrieveTokenFromCache(correlationId));
+            return importClientResponse;
+        } else {
+            LOGGER.info("Client and Location are not present");
+            importClientResponse = lossControlServiceImpl.clientPost(importClientRequest, tokenCache.retrieveTokenFromCache(correlationId));
+            lossControlDao.insertData(importClientRequest.getClient().getLookupID(), importClientResponse.getResult().getClientLookupID());
+            ArrayList<uk.co.allianz.rap.lc.model.response.importclient.Location> locationsResponse = importClientResponse.getResult().getLocations();
+
+            for (int index = 0; index < locations.size(); index++) {
+                String lookupID = locations.get(index).getLookupID();
+                System.out.println("LookupID at index " + index + ": " + lookupID);
+                lossControlDao.insertLocationData(locations.get(index).getLookupID() + "_" + importClientRequest.getClient().getLookupID(), locationsResponse.get(index).getLocationLookupID());
+            }
+        }
+        LOGGER.info("importClientResponse Successfully Received");
+        return importClientResponse;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//    public ImportClientResponse getClientResponse(final ImportClientRequest importClientRequest, final ArrayList<Location> locations, final String correlationId) throws CustomException {
+//        LOGGER.info("Client and Location are not present");
+//        ImportClientResponse importClientResponse = null;
+//        importClientResponse = lossControlServiceImpl.clientPost(importClientRequest, tokenCache.retrieveTokenFromCache(correlationId));
+//        lossControlDao.insertData(importClientRequest.getClient().getLookupID(), importClientResponse.getResult().getClientLookupID());
+//        ArrayList<uk.co.allianz.rap.lc.model.response.importclient.Location> locationsResponse = importClientResponse.getResult().getLocations();
+//        lossControlDao.insertLocationData(locations.get(0).getLookupID() + "_" + importClientRequest.getClient().getLookupID(), locationsResponse.get(0).getLocationLookupID());
+//        return importClientResponse;
+//    }
+
+
+//    public ImportClientResponse ifClientIsPresent(final ImportClientRequest importClientRequest, final ArrayList<Location> locations, final String correlationId) throws CustomException, JsonProcessingException {
+//        if (importClientRequest == null) {
+//            return null;
+//        }
+//        //finding LC360 client id in DB exist or not
+//        Map<String, Object> lcClientId = lossControlDao.findLc360ClientID(importClientRequest.getClient().getLookupID());
+//        ImportClientResponse importClientResponse = null;
+//        //finding LC360 location id in DB exist or not(combined location lookup ID and client id)
+//        Map<String, Object> lcLocationId = lossControlDao.findLc360LocationID(locations.get(0).getLookupID() + "_" + importClientRequest.getClient().getLookupID());
+//        if (lcClientId != null) {
+//            String lc360ClientId = (String) lcClientId.get(lcClientId.keySet().iterator().next());
+//            String lc360LocationId = (String) lcLocationId.get(lcLocationId.keySet().iterator().next());
+//            //set client id and location id in pojo
+//            importClientRequest.getClient().setLookupID(lc360ClientId);
+//            locations.get(0).setLookupID(lc360LocationId);
+//            objectMapper.writeValueAsString(importClientRequest);
+//            LOGGER.info("Received JSON");
+//            importClientResponse = lossControlServiceImpl.clientPost(importClientRequest, tokenCache.retrieveTokenFromCache(correlationId));
+//
+//        }
+//        return importClientResponse;
+//    }
+//}
+
+
+
+
+
+//package uk.co.allianz.rap.lc.service;
+//
+//import com.fasterxml.jackson.core.JsonProcessingException;
+//import com.fasterxml.jackson.databind.ObjectMapper;
+//import org.springframework.beans.factory.annotation.Autowired;
+//import org.springframework.stereotype.Service;
+//import uk.co.allianz.rap.lc.cache.TokenCache;
+//import uk.co.allianz.rap.lc.dao.LossControlDao;
+//import uk.co.allianz.rap.lc.exception.CustomException;
+//import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+//import uk.co.allianz.rap.lc.model.request.importclient.Location;
+//import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+//
+//import java.util.ArrayList;
+//import java.util.Map;
+//
+//import ch.qos.logback.classic.Logger;
+//import org.slf4j.LoggerFactory;
+//
+///**
+// * Extracting fields and data from the "data model".
+// * sent from loss-control-adapter and building the API request: ImportClient
+// */
+//
+//@Service
+//public class ImportClientServiceImp implements ImportClientService {
+//    private static final Logger LOGGER = (Logger) LoggerFactory
+//            .getLogger(ImportClientServiceImp.class);
+//    @Autowired
+//    private TokenCache tokenCache;
+//    @Autowired
+//    private LossControlDao lossControlDao;
+//    @Autowired
+//    private LossControlServiceImpl lossControlServiceImpl;
+//    @Autowired
+//    private ObjectMapper objectMapper;
+//
+//    public ImportClientResponse importClient(final String json, final String correlationId) throws CustomException, JsonProcessingException {
+//        ImportClientResponse importClientResponse = null;
+//        ImportClientRequest importClientRequest = objectMapper.readValue(json, ImportClientRequest.class);
+//        ArrayList<Location> locations = importClientRequest.getClient().getLocations();
+//        //finding client id in DB exist or not
+//        Map<String, Object> clientResult = lossControlDao.findByClientId(importClientRequest.getClient().getLookupID());
+//        if (clientResult != null) {
+//            importClientResponse = ifClientIsPresent(importClientRequest, locations, correlationId);// changed the method name ifClientIsPresent
+//        } else {
+//            importClientResponse = getClientResponse(importClientRequest, locations, correlationId);
+//        }
+//        LOGGER.info("importClientResponse Successfully Received");
+//        return importClientResponse;
+//
+//    }
+//
+//    public ImportClientResponse getClientResponse(final ImportClientRequest importClientRequest, final ArrayList<Location> locations, final String correlationId) throws CustomException {
+//        LOGGER.info("Client and Location are not present");
+//        ImportClientResponse importClientResponse = null;
+//        lossControlDao.insertClientId(importClientRequest.getClient().getLookupID());
+//        lossControlDao.insertLocationId(locations.get(0).getLookupID() + "_" + importClientRequest.getClient().getLookupID());
+//        importClientResponse = lossControlServiceImpl.clientPost(importClientRequest, tokenCache.retrieveTokenFromCache(correlationId));
+//        lossControlDao.updateLcClientId(importClientRequest.getClient().getLookupID(), importClientResponse.getResult().getClientLookupID());
+//        ArrayList<uk.co.allianz.rap.lc.model.response.importclient.Location> locationsResponse = importClientResponse.getResult().getLocations();
+//        // Lookup ID Response
+//        lossControlDao.updateLcLocationId(locations.get(0).getLookupID() + "_" + importClientRequest.getClient().getLookupID(), locationsResponse.get(0).getLocationLookupID());
+////boiller plate code here.. smae code again and again// clint creation ekach method ni whawi.. client creation importclient method madhun whavi
+//        return importClientResponse;
+//    }
+//
+//
+//    public ImportClientResponse ifClientIsPresent(final ImportClientRequest importClientRequest, final ArrayList<Location> locations, final String correlationId) throws CustomException, JsonProcessingException {
+//        if (importClientRequest == null) {
+//            return null;
+//        }
+//        //finding LC360 client id in DB exist or not
+//        Map<String, Object> lcClientId = lossControlDao.findLc360ClientID(importClientRequest.getClient().getLookupID());
+//        ImportClientResponse importClientResponse = null;
+//        //finding LC360 location id in DB exist or not(combined location lookup ID and client id)
+//        Map<String, Object> lcLocationId = lossControlDao.findLc360LocationID(locations.get(0).getLookupID() + "_" + importClientRequest.getClient().getLookupID());
+//        if (lcClientId != null) {
+//            String lc360ClientId = (String) lcClientId.get(lcClientId.keySet().iterator().next());
+//            String lc360LocationId = (String) lcLocationId.get(lcLocationId.keySet().iterator().next());
+//            //set client id and location id in pojo
+//            importClientRequest.getClient().setLookupID(lc360ClientId);
+//            locations.get(0).setLookupID(lc360LocationId);
+//            objectMapper.writeValueAsString(importClientRequest);
+//            LOGGER.info("Received JSON");
+//            importClientResponse = lossControlServiceImpl.clientPost(importClientRequest, tokenCache.retrieveTokenFromCache(correlationId));
+//
+//        }
+//        return importClientResponse;
+//    }
+//}
+
+
+
+
+
+
+
+
+///////
+
+ArrayList<Location> locations = importClientRequest.getClient().getLocations();
             Map<String, Object> lcLocationId = lossControlDao.findLc360LocationID(locations.get(0).getLookupID() + "_" + importClientRequest.getClient().getLookupID());
             String lc360LocationId = (String) lcLocationId.get(lcLocationId.keySet().iterator().next());
 
