@@ -1,3 +1,15 @@
+ArrayList<Location> locations = importClientRequest.getClient().getLocations();
+
+for (Location location : locations) {
+    String lookupID = location.getLookupID();
+    System.out.println("LookupID: " + lookupID);
+}
+
+
+
+
+
+
 package uk.co.allianz.rap.lc.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
