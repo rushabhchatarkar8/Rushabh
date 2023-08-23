@@ -1,4 +1,146 @@
+//Fixed my code //find bugs //detect the error in code
+
+package uk.co.allianz.rap.lc.service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importclient.Location;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+
+import java.util.ArrayList;
+import java.util.Map;
+
+import ch.qos.logback.classic.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * Extracting fields and data from the "data model".
+ * sent from loss-control-adapter and building the API request: ImportClient
+ */
+
+@Service
+public class ImportClientServiceImp implements ImportClientService {
+    private static final Logger LOGGER = (Logger) LoggerFactory.getLogger(ImportClientServiceImp.class);
+    @Autowired
+    private TokenCache tokenCache;
+    @Autowired
+    private LossControlDao lossControlDao;
+    @Autowired
+    private LossControlServiceImpl lossControlServiceImpl;
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    public ImportClientResponse importClient(final String json, final String correlationId) throws CustomException, JsonProcessingException {
+        ImportClientResponse importClientResponse = null;
+        ImportClientRequest importClientRequest = objectMapper.readValue(json, ImportClientRequest.class);
+        Map<String, Object> clientResult = lossControlDao.findLc360ClientID(importClientRequest.getClient().getLookupID());
+        String clientID = importClientRequest.getClient().getLookupID();
+
+        if (clientResult != null) {
+            LOGGER.info("Client are present");
+            ArrayList<Location> locations = importClientRequest.getClient().getLocations();
+
             for (int index = 0; index < locations.size(); index++) {
+                String lookupID = locations.get(index).getLookupID();
+                System.out.println("LookupID at index " + index + ": " + lookupID);
+                Map<String, Object> locationResult = lossControlDao.findLc360LocationID(locations.get(index).getLookupID());
+                //performed locationLookup
+                String lc360ClientId = (String) clientResult.get(clientResult.keySet().iterator().next());
+                //set client id and location id in pojo
+                importClientRequest.getClient().setLookupID(lc360ClientId);
+
+                if (locationResult != null) {
+                    LOGGER.info("Location are present");
+                    String lc360LocationId = (String) locationResult.get(locationResult.keySet().iterator().next());
+                    locations.get(index).setLookupID(lc360LocationId);
+                }
+                objectMapper.writeValueAsString(importClientRequest);
+                LOGGER.info("Received JSON");
+                importClientResponse = lossControlServiceImpl.clientPost(importClientRequest, tokenCache.retrieveTokenFromCache(correlationId));
+                if (locations.get(index).getLookupID() != null) {
+                    LOGGER.info("location LookUpID is not null");
+                    ArrayList<uk.co.allianz.rap.lc.model.response.importclient.Location> locationsResponse = importClientResponse.getResult().getLocations();
+                    lossControlDao.insertLocationData(locations.get(index).getLookupID() + "_" + clientID, locationsResponse.get(index).getLocationLookupID());
+                    System.out.println("lc360ClientId:" + lc360ClientId);
+                }
+            }
+
+//            if(locationResult != null){
+//                LOGGER.info("location not present ");
+//                ArrayList<uk.co.allianz.rap.lc.model.response.importclient.Location> locationsResponse = importClientResponse.getResult().getLocations();
+//                lossControlDao.insertLocationData(locations.get(0).getLookupID() + "_" + importClientRequest.getClient().getLookupID(), locationsResponse.get(0).getLocationLookupID());            }
+
+            return importClientResponse;
+        } else {
+            LOGGER.info("Client are not present");
+
+            if (importClientRequest.getClient().getLookupID() == null) {
+                LOGGER.info("Client LookUpID is null");
+            }
+            importClientResponse = lossControlServiceImpl.clientPost(importClientRequest, tokenCache.retrieveTokenFromCache(correlationId));//check condition if null not come here
+            lossControlDao.insertData(importClientRequest.getClient().getLookupID(), importClientResponse.getResult().getClientLookupID());
+            //
+            ArrayList<Location> locations1 = importClientRequest.getClient().getLocations();
+
+            for (int index = 0; index < locations1.size(); index++) {
+                String lookupID = locations1.get(index).getLookupID();
+                System.out.println("LookupID at index " + index + ": " + lookupID);
+                //
+                if (locations1.get(index).getLookupID() != null) {
+                    LOGGER.info("location LookUpID is not null");//location not present in DB
+                    ArrayList<uk.co.allianz.rap.lc.model.response.importclient.Location> locationsResponse = importClientResponse.getResult().getLocations();
+                    lossControlDao.insertLocationData(locations1.get(index).getLookupID() + "_" + clientID, locationsResponse.get(index).getLocationLookupID());
+                }
+            }
+        }
+        LOGGER.info("importClientResponse Successfully Received");
+        return importClientResponse;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+for (int index = 0; index < locations.size(); index++) {
                 String lookupID = locations.get(index).getLookupID();
                 System.out.println("LookupID at index " + index + ": " + lookupID);
                 //
