@@ -1,4 +1,25 @@
-            for (Location location : locations) {
+
+// for validation
+for (Location location : locations) {
+    if (importClientRequest.getClient() == null) {
+        throw new CustomValidationException("Client is null");
+    }
+    
+    if (location == null) {
+        throw new CustomValidationException("Location is null");
+    }
+
+
+
+
+
+
+
+
+
+
+
+for (Location location : locations) {
                 Map<String, Object> locationResult = lossControlDao.findLc360LocationID(location.getLookupID() + "_" + clientID);
                 if (locationResult != null) {
                     //            //3a. If lookup value exists for the loc,
