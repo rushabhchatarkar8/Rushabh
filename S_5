@@ -1,3 +1,18 @@
+boolean isValid = true; // Initialize the isValid flag to true
+
+if (importClientRequest.getClient() == null) {
+    LOGGER.info("Client is null");
+    isValid = false; // Set the flag to false if client is null
+}
+
+for (Location location : locations) {
+    if (location == null) {
+        LOGGER.info("Location is null");
+        isValid = false; // Set the flag to false if any location is null
+    }
+
+
+
 
 // for validation
 for (Location location : locations) {
