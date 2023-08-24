@@ -1,6 +1,37 @@
+            for (Location location : locations) {
+                Map<String, Object> locationResult = lossControlDao.findLc360LocationID(location.getLookupID() + "_" + clientID);
+                if (locationResult != null) {
+                    //            //3a. If lookup value exists for the loc,
+                    LOGGER.info("Location are present in DB");
+                    String lc360LocationId = (String) locationResult.get(locationResult.keySet().iterator().next());
+                    //3a.1 Update the lc360 loc id in request.
+                    location.setLookupID(lc360LocationId);
+                    objectMapper.writeValueAsString(importClientRequest);
+                    LOGGER.info("Received JSON");
+//                    3a.3 Send the modified request back
+                    importClientResponse = lossControlServiceImpl.clientPost(importClientRequest, tokenCache.retrieveTokenFromCache(correlationId));
+                } else {
+                    //look up doesn’t exist)
+                    objectMapper.writeValueAsString(importClientRequest);
+                    LOGGER.info("Received JSON");
+                    LOGGER.info("Location are not present in DB");
+                    //3a.1 Use the same JSON request
+//                    Send the same request back
+                    //. Invoke LC360
+                    importClientResponse = lossControlServiceImpl.clientPost(importClientRequest, tokenCache.retrieveTokenFromCache(correlationId));
+                    for (int index = 0; index < locations.size(); index++) {
+                        String lookupID = locations.get(index).getLookupID();
+                        if (locations.get(index).getLookupID() != null) {
+                            LOGGER.info("location LookUpID is not null");// location not present in DB
+                            ArrayList<uk.co.allianz.rap.lc.model.response.importclient.Location> locationsResponse = importClientResponse.getResult().getLocations();
+                            //4a. Process Response
+                            lossControlDao.insertLocationData(locations.get(index).getLookupID() + "_" + clientID, locationsResponse.get(index).getLocationLookupID());
+                        }
+                    }
+                }
+            }
 
-
-
+/////////////////////////////////////
 
 
 package uk.co.allianz.rap.lc.service;
