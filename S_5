@@ -1,3 +1,38 @@
+ArrayList<Location> sameLocations = new ArrayList<>();
+ArrayList<Location> differentLocations = new ArrayList<>();
+
+for (int index = 0; index < importClientRequestLocations.size(); index++) {
+    Location importClientRequestLocation = importClientRequestLocations.get(index);
+    Location otherLocation = otherLocations.get(index);
+
+    if (importClientRequestLocation.equals(otherLocation)) {
+        sameLocations.add(importClientRequestLocation); // Add the same location to the sameLocations list
+    } else {
+        differentLocations.add(importClientRequestLocation); // Add the different location to the differentLocations list
+    }
+}
+
+if (!sameLocations.isEmpty()) {
+    // Return the list of same locations in the if block
+    return sameLocations;
+} else {
+    // Return the list of different locations in the else block
+    return differentLocations;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 boolean isValid = true; // Initialize the isValid flag to true
 
 if (importClientRequest.getClient() == null) {
