@@ -1,3 +1,16 @@
+if (processedJson != null && processedJson.getResult() != null) {
+    if (processedJson.getResult().isSuccess()) {
+        // ...
+    } else {
+        // ...
+    }
+}
+
+
+
+
+
+
 public ArrayList<Location> locationResponse(ArrayList<Location> locations) {
     ArrayList<Location> validLocations = new ArrayList<>();
     
