@@ -1,3 +1,783 @@
+package uk.co.allianz.rap.lc.dao;
+
+import java.util.Map;
+
+public interface LossControlDao {
+
+    //client
+    void insertClinetData(String clientId, String lc360ClientId);
+    Map<String, Object> findLc360ClientID(String clientId);
+    ;
+
+
+
+
+    //location
+
+    void insertLocationData(String locationId, String lc360LocationId);
+
+    Map<String, Object> findLc360LocationID(String locationId);
+
+    Map<String, Object> findLocationID(String locationId);
+
+}
+
+
+
+/////////////////////////////////////////////
+package uk.co.allianz.rap.lc.service;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importclient.Location;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import java.util.ArrayList;
+import java.util.Map;
+import ch.qos.logback.classic.Logger;
+import org.slf4j.LoggerFactory;
+
+
+
+
+
+/**
+ * Extracting fields and data from the "data model".
+ * sent from loss-control-adapter and building the API request: ImportClient
+ */
+@Service
+public class ImportClientServiceImp implements ImportClientService {
+    private static final Logger LOGGER = (Logger) LoggerFactory.getLogger(ImportClientServiceImp.class);
+    @Autowired
+    private TokenCache tokenCache;
+    @Autowired
+    private LossControlDao lossControlDao;
+    @Autowired
+    private LossControlServiceImpl lossControlServiceImpl;
+    @Autowired
+    private ObjectMapper objectMapper;
+
+
+
+
+
+    public ImportClientResponse importClient(final String json, final String correlationId) throws CustomException, JsonProcessingException {
+
+
+
+        ImportClientRequest importClientRequest = objectMapper.readValue(json, ImportClientRequest.class);
+        String oci=importClientRequest.getClient().getLookupID();
+        ArrayList<Location> locations = importClientRequest.getClient().getLocations();
+        String clientId =clientResponse(importClientRequest.getClient().getLookupID());
+        System.out.println(clientId);
+        ArrayList<Location> updatedLocation = locationResponse(locations);
+
+
+
+        ImportClientRequest importClientRequest1 = preImportClientRequest(importClientRequest,clientId,updatedLocation,importClientRequest.getClient().getLookupID());
+
+
+
+        ImportClientResponse importClientResponse = lossControlServiceImpl.clientPost(importClientRequest1, tokenCache.retrieveTokenFromCache(correlationId));
+        updateLookUpTable(clientId, importClientResponse.getResult().getClientLookupID(),updatedLocation,oci,importClientResponse);
+        return importClientResponse;
+    }
+
+
+
+    public String clientResponse(String clientLookupId){
+        Map<String, Object> clientResult = lossControlDao.findLc360ClientID(clientLookupId);
+        if(clientResult != null){
+            String lc360ClientId = (String) clientResult.get(clientResult.keySet().iterator().next());
+            return lc360ClientId;
+        }else {
+            return clientLookupId;
+        }
+    }
+    public ArrayList<Location>  locationResponse(ArrayList<Location> locations){
+        for (int index = 0; index < locations.size(); index++) {
+            String lookupID = locations.get(index).getLookupID();
+            System.out.println("LookupID at index " + index + ": " + lookupID);
+            if (locations.get(index).getLookupID() == null) {
+                locations.remove(index);
+            }
+        }
+        return locations;
+    }
+    public ImportClientRequest preImportClientRequest(ImportClientRequest importClientRequest,String clientId,ArrayList<Location> updatedLocation,String orignalClientID) throws JsonProcessingException {
+
+
+
+        for (Location location : updatedLocation) {
+            Map<String, Object> locationResult = lossControlDao.findLc360LocationID(location.getLookupID() + "_" + orignalClientID);
+            if (locationResult != null) {
+                LOGGER.info("Location are present");
+                String lc360LocationId = (String) locationResult.get(locationResult.keySet().iterator().next());
+                location.setLookupID(lc360LocationId);
+                objectMapper.writeValueAsString(importClientRequest);
+                System.out.println(importClientRequest);
+            }
+        }
+        if(clientId.equals(importClientRequest.getClient().getLookupID())){
+            LOGGER.info("client is not present");
+            System.out.println(importClientRequest);
+            return importClientRequest;
+        }else {
+            importClientRequest.getClient().setLookupID(clientId);
+            objectMapper.writeValueAsString(importClientRequest);
+            System.out.println(importClientRequest);
+            return importClientRequest;
+        }
+    }
+    public void updateLookUpTable(String clientId, String lc360ClientId,ArrayList<Location> updatedLocation ,String originalClientId,ImportClientResponse importClientResponse) {
+        String id =originalClientId;
+        if (clientId.equals(lc360ClientId)) {
+            LOGGER.info("client is present in lookup table");
+        } else {
+            lossControlDao.insertClinetData(clientId, lc360ClientId);
+        }
+
+        for (int index = 0; index < updatedLocation.size(); index++) {
+            String lookupID = updatedLocation.get(index).getLookupID();
+
+
+
+            Map<String, Object> locationResult = lossControlDao.findLocationID(lookupID);
+            if (locationResult == null) {
+                ArrayList<uk.co.allianz.rap.lc.model.response.importclient.Location> locationsResponse = importClientResponse.getResult().getLocations();
+                lossControlDao.insertLocationData(updatedLocation.get(index).getLookupID() + "_" + originalClientId, locationsResponse.get(index).getLocationLookupID());
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+//package uk.co.allianz.rap.lc.service;
+//
+//import com.fasterxml.jackson.core.JsonProcessingException;
+//import com.fasterxml.jackson.databind.ObjectMapper;
+//import org.springframework.beans.factory.annotation.Autowired;
+//import org.springframework.stereotype.Service;
+//import uk.co.allianz.rap.lc.cache.TokenCache;
+//import uk.co.allianz.rap.lc.dao.LossControlDao;
+//import uk.co.allianz.rap.lc.exception.CustomException;
+//import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+//import uk.co.allianz.rap.lc.model.request.importclient.Location;
+//import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+//
+//import java.util.ArrayList;
+//import java.util.Map;
+//
+//import ch.qos.logback.classic.Logger;
+//import org.slf4j.LoggerFactory;
+//
+//
+///**
+// * Extracting fields and data from the "data model".
+// * sent from loss-control-adapter and building the API request: ImportClient
+// */
+//@Service
+//public class ImportClientServiceImp implements ImportClientService {
+//    private static final Logger LOGGER = (Logger) LoggerFactory.getLogger(ImportClientServiceImp.class);
+//    @Autowired
+//    private TokenCache tokenCache;
+//    @Autowired
+//    private LossControlDao lossControlDao;
+//    @Autowired
+//    private LossControlServiceImpl lossControlServiceImpl;
+//    @Autowired
+//    private ObjectMapper objectMapper;
+//
+//
+//    public ImportClientResponse importClient(final String json, final String correlationId) throws CustomException, JsonProcessingException {
+//
+//
+//        ImportClientRequest importClientRequest = objectMapper.readValue(json, ImportClientRequest.class);
+//        String oci = importClientRequest.getClient().getLookupID();
+//        ArrayList<Location> locations = importClientRequest.getClient().getLocations();
+//        String clientId = clientResponse(importClientRequest.getClient().getLookupID());
+//        System.out.println(clientId);
+//        ArrayList<Location> updatedLocation = locationResponse(locations);
+//        ImportClientRequest importClientRequest1 = preImportClientRequest(importClientRequest, clientId, updatedLocation, importClientRequest.getClient().getLookupID());
+//        ImportClientResponse importClientResponse = lossControlServiceImpl.clientPost(importClientRequest1, tokenCache.retrieveTokenFromCache(correlationId));
+//        updateLookUpTable(clientId, importClientResponse.getResult().getClientLookupID(), updatedLocation, oci, importClientResponse);
+//        return importClientResponse;
+//    }
+//    public String clientResponse(String clientLookupId) {
+//        Map<String, Object> clientResult = lossControlDao.findLc360ClientID(clientLookupId);
+//        if (clientResult != null) {
+//            String lc360ClientId = (String) clientResult.get(clientResult.keySet().iterator().next());
+//            return lc360ClientId;
+//        } else {
+//            return clientLookupId;
+//        }
+//    }
+//
+//    public ArrayList<Location> locationResponse(ArrayList<Location> locations) {
+//        for (int index = 0; index < locations.size(); index++) {
+//            String lookupID = locations.get(index).getLookupID();
+//            System.out.println("LookupID at index " + index + ": " + lookupID);
+//            if (locations.get(index).getLookupID() == null) {
+//                locations.remove(index);
+//            }
+//        }
+//        return locations;
+//    }
+//
+//    public ImportClientRequest preImportClientRequest(ImportClientRequest importClientRequest, String clientId, ArrayList<Location> updatedLocation, String orignalClientID) throws JsonProcessingException {
+//
+//
+//        for (Location location : updatedLocation) {
+//            Map<String, Object> locationResult = lossControlDao.findLc360LocationID(location.getLookupID() + "_" + orignalClientID);
+//            if (locationResult != null) {
+//                LOGGER.info("Location are present");
+//                String lc360LocationId = (String) locationResult.get(locationResult.keySet().iterator().next());
+//                location.setLookupID(lc360LocationId);
+//                objectMapper.writeValueAsString(importClientRequest);
+//                System.out.println(importClientRequest);
+//            }
+//        }
+//        if (clientId.equals(importClientRequest.getClient().getLookupID())) {
+//            LOGGER.info("client is not present");
+//            System.out.println(importClientRequest);
+//            return importClientRequest;
+//        } else {
+//            importClientRequest.getClient().setLookupID(clientId);
+//            objectMapper.writeValueAsString(importClientRequest);
+//            System.out.println(importClientRequest);
+//            return importClientRequest;
+//        }
+//    }
+//
+//    public void updateLookUpTable(String clientId, String lc360ClientId, ArrayList<Location> updatedLocation, String originalClientId, ImportClientResponse importClientResponse) {
+//        String id = originalClientId;
+//        if (clientId.equals(lc360ClientId)) {
+//            LOGGER.info("client is present in lookup table");
+//        } else {
+//            lossControlDao.insertClinetData(clientId, lc360ClientId);
+//        }
+//
+//        for (int index = 0; index < updatedLocation.size(); index++) {
+//            String lookupID = updatedLocation.get(index).getLookupID();
+//            Map<String, Object> locationResult = lossControlDao.findLc360LocationID(lookupID+"_"+id);// "select location_id from location_lookup where lc360_location_id = ? "
+//            System.out.println("locationResult:"+locationResult);
+//            if (locationResult == null) {//not inserting here if location_id present in DB
+//                ArrayList<uk.co.allianz.rap.lc.model.response.importclient.Location> locationsResponse = importClientResponse.getResult().getLocations();
+//                lossControlDao.insertLocationData(updatedLocation.get(index).getLookupID() + "_" + originalClientId, locationsResponse.get(index).getLocationLookupID());
+//            }
+//        }
+//    }
+//}
+
+
+//package uk.co.allianz.rap.lc.service;
+//import com.fasterxml.jackson.core.JsonProcessingException;
+//import com.fasterxml.jackson.databind.ObjectMapper;
+//import org.springframework.beans.factory.annotation.Autowired;
+//import org.springframework.stereotype.Service;
+//import uk.co.allianz.rap.lc.cache.TokenCache;
+//import uk.co.allianz.rap.lc.dao.LossControlDao;
+//import uk.co.allianz.rap.lc.exception.CustomException;
+//import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+//import uk.co.allianz.rap.lc.model.request.importclient.Location;
+//import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+//import java.util.ArrayList;
+//import java.util.Map;
+//import ch.qos.logback.classic.Logger;
+//import org.slf4j.LoggerFactory;
+//
+//
+//
+///**
+// * Extracting fields and data from the "data model".
+// * sent from loss-control-adapter and building the API request: ImportClient
+// */
+//@Service
+//public class ImportClientServiceImp implements ImportClientService {
+//    private static final Logger LOGGER = (Logger) LoggerFactory.getLogger(ImportClientServiceImp.class);
+//    @Autowired
+//    private TokenCache tokenCache;
+//    @Autowired
+//    private LossControlDao lossControlDao;
+//    @Autowired
+//    private LossControlServiceImpl lossControlServiceImpl;
+//    @Autowired
+//    private ObjectMapper objectMapper;
+//
+//
+//    public ImportClientResponse importClient(final String json, final String correlationId) throws CustomException, JsonProcessingException {
+//
+//        ImportClientRequest importClientRequest = objectMapper.readValue(json, ImportClientRequest.class);
+//        String oci=importClientRequest.getClient().getLookupID();
+//        ArrayList<Location> locations = importClientRequest.getClient().getLocations();
+//        String clientId =clientResponse(importClientRequest.getClient().getLookupID());
+//        System.out.println(clientId);
+//        ArrayList<Location> updatedLocation = locationResponse(locations);
+//
+//        ImportClientRequest importClientRequest1 = preImportClientRequest(importClientRequest,clientId,updatedLocation,importClientRequest.getClient().getLookupID());
+//
+//        ImportClientResponse importClientResponse = lossControlServiceImpl.clientPost(importClientRequest1, tokenCache.retrieveTokenFromCache(correlationId));
+//        updateLookUpTable(clientId, importClientResponse.getResult().getClientLookupID(),updatedLocation,oci,importClientResponse);
+//        return importClientResponse;
+//    }
+//
+//    public String clientResponse(String clientLookupId){
+//        Map<String, Object> clientResult = lossControlDao.findLc360ClientID(clientLookupId);
+//        if(clientResult != null){
+//            String lc360ClientId = (String) clientResult.get(clientResult.keySet().iterator().next());
+//            return lc360ClientId;
+//        }else {
+//            return clientLookupId;
+//        }
+//    }
+//    public ArrayList<Location>  locationResponse(ArrayList<Location> locations){
+//        for (int index = 0; index < locations.size(); index++) {
+//            String lookupID = locations.get(index).getLookupID();
+//            System.out.println("LookupID at index " + index + ": " + lookupID);
+//            if (locations.get(index).getLookupID() == null) {
+//                locations.remove(index);
+//            }
+//        }
+//        return locations;
+//    }
+//    public ImportClientRequest preImportClientRequest(ImportClientRequest importClientRequest,String clientId,ArrayList<Location> updatedLocation,String orignalClientID) throws JsonProcessingException {
+//
+//        for (Location location : updatedLocation) {
+//            Map<String, Object> locationResult = lossControlDao.findLc360LocationID(location.getLookupID() + "_" + orignalClientID);
+//            if (locationResult != null) {
+//                LOGGER.info("Location are present");
+//                String lc360LocationId = (String) locationResult.get(locationResult.keySet().iterator().next());
+//                location.setLookupID(lc360LocationId);
+//                objectMapper.writeValueAsString(importClientRequest);
+//                System.out.println(importClientRequest);
+//            }
+//        }
+//        if(clientId.equals(importClientRequest.getClient().getLookupID())){
+//            LOGGER.info("client is not present");
+//            System.out.println(importClientRequest);
+//            return importClientRequest;
+//        }else {
+//            importClientRequest.getClient().setLookupID(clientId);
+//            objectMapper.writeValueAsString(importClientRequest);
+//            System.out.println(importClientRequest);
+//            return importClientRequest;
+//        }
+//    }
+//    public void updateLookUpTable(String clientId, String lc360ClientId,ArrayList<Location> updatedLocation ,String originalClientId,ImportClientResponse importClientResponse) {
+//        String id =originalClientId;
+//        if (clientId.equals(lc360ClientId)) {
+//            LOGGER.info("client is present in lookup table");
+//        } else {
+//            lossControlDao.insertClinetData(clientId, lc360ClientId);
+//        }
+//        // String id =originalClientId;
+//        for (int index = 0; index < updatedLocation.size(); index++) {
+//            String lookupID = updatedLocation.get(index).getLookupID();
+//            System.out.println(lookupID);
+//            System.out.println(originalClientId);
+//            System.out.println(updatedLocation.get(index).getLookupID() + "_" + id);
+//            Map<String, Object> locationResult = lossControlDao.findLc360LocationID(updatedLocation.get(index).getLookupID() + "_" + id);
+//            if (locationResult != null) {//
+//                ArrayList<uk.co.allianz.rap.lc.model.response.importclient.Location> locationsResponse = importClientResponse.getResult().getLocations();
+//                lossControlDao.insertLocationData(updatedLocation.get(index).getLookupID() + "_" + originalClientId, locationsResponse.get(index).getLocationLookupID());
+//            }
+//        }
+//    }
+//}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+//////////////////////////////////////////////////////////////////
+
+package uk.co.allianz.rap.lc.dao;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Repository;
+
+
+
+import java.util.Map;
+
+
+
+@Repository
+public class LossControlDaoImpl implements LossControlDao {
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
+
+
+
+    //client methods
+
+
+
+    @Override
+    public void insertClinetData(final String clientId, final String lc360ClientId) {
+        String insertClient = "insert into client_lookup (client_id, lc360_client_id) values (?, ?)";
+        this.jdbcTemplate.update(insertClient, clientId, lc360ClientId);
+    }
+
+
+
+    @Override
+    public void insertLocationData(String locationId, String lc360LocationId) {
+        String insertLocation = "insert into location_lookup (location_id, lc360_location_id) values (?, ?)";
+        this.jdbcTemplate.update(insertLocation, locationId, lc360LocationId);
+    }
+
+
+
+    @Override
+    public Map<String, Object> findLc360ClientID(final String clientId) {
+        String lc360ClientId = "select lc360_client_id from client_lookup where client_id = ? ";
+        Map<String, Object> result;
+        try {
+            result = this.jdbcTemplate.queryForMap(lc360ClientId, clientId);
+        } catch (EmptyResultDataAccessException exception) {
+            return null;
+        }
+        return result;
+    }
+
+
+
+    @Override
+    public Map<String, Object> findLc360LocationID(final String locationId) {
+        String lc360LocationId = "select lc360_location_id from location_lookup where location_id = ? ";
+        Map<String, Object> result;
+        try {
+            result = this.jdbcTemplate.queryForMap(lc360LocationId, locationId);
+        } catch (EmptyResultDataAccessException exception) {
+            return null;
+        }
+        return result;
+    }
+
+
+
+    @Override
+    public Map<String, Object> findLocationID(String lc360LocationId) {
+        String location = "select location_id from location_lookup where lc360_location_id = ? ";
+        Map<String, Object> result;
+        try {
+            result = this.jdbcTemplate.queryForMap(location, lc360LocationId);
+        } catch (EmptyResultDataAccessException exception) {
+            return null;
+        }
+        return result;
+    }
+}
+
+
+
+//package uk.co.allianz.rap.lc.dao;
+//import org.springframework.beans.factory.annotation.Autowired;
+//import org.springframework.dao.EmptyResultDataAccessException;
+//import org.springframework.jdbc.core.JdbcTemplate;
+//import org.springframework.stereotype.Repository;
+//
+//
+//
+//import java.util.Map;
+//
+//
+//
+//@Repository
+//public class LossControlDaoImpl implements LossControlDao {
+//    @Autowired
+//    private JdbcTemplate jdbcTemplate;
+//
+//
+//
+//    //client methods
+//    ///////
+//    public Map<String, Object> findLocationID1(String lc360LocationId) {
+//        String location = "select location_id from location_lookup where lc360_location_id = ? ";
+//
+//        Map<String, Object> result;
+//        try {
+//            result = this.jdbcTemplate.queryForMap(location, lc360LocationId);
+//        } catch (EmptyResultDataAccessException exception) {
+//            return null;
+//        }
+//        return result;
+//    }
+///////////////////////////////////
+//    @Override
+//    public void insertClinetData(final String clientId, final String lc360ClientId) {
+//        String insertClient = "insert into client_lookup (client_id, lc360_client_id) values (?, ?)";
+//        this.jdbcTemplate.update(insertClient, clientId, lc360ClientId);
+//    }
+//
+//
+//
+//    @Override
+//    public void insertLocationData(String locationId, String lc360LocationId) {
+//        String insertLocation = "insert into location_lookup (location_id, lc360_location_id) values (?, ?)";
+//        this.jdbcTemplate.update(insertLocation, locationId, lc360LocationId);
+//    }
+//
+//
+//
+//    @Override
+//    public Map<String, Object> findLc360ClientID(final String clientId) {
+//        String lc360ClientId = "select lc360_client_id from client_lookup where client_id = ? ";
+//        Map<String, Object> result;
+//        try {
+//            result = this.jdbcTemplate.queryForMap(lc360ClientId, clientId);
+//        } catch (EmptyResultDataAccessException exception) {
+//            return null;
+//        }
+//        return result;
+//    }
+//
+//
+//
+//    @Override
+//    public Map<String, Object> findLc360LocationID(final String locationId) {
+//        String lc360LocationId = "select lc360_location_id from location_lookup where location_id = ? ";
+//        Map<String, Object> result;
+//        try {
+//            result = this.jdbcTemplate.queryForMap(lc360LocationId, locationId);
+//        } catch (EmptyResultDataAccessException exception) {
+//            return null;
+//        }
+//        return result;
+//    }
+//
+//
+//
+//    @Override
+//    public Map<String, Object> findLocationID(String lc360LocationId) {
+//        String location = "select location_id from location_lookup where lc360_location_id = ? ";
+//        Map<String, Object> result;
+//        try {
+//            result = this.jdbcTemplate.queryForMap(location, lc360LocationId);
+//        } catch (EmptyResultDataAccessException exception) {
+//            return null;
+//        }
+//        return result;
+//    }
+//}
+
+//package uk.co.allianz.rap.lc.dao;
+//import org.springframework.beans.factory.annotation.Autowired;
+//import org.springframework.dao.EmptyResultDataAccessException;
+//import org.springframework.jdbc.core.JdbcTemplate;
+//import org.springframework.stereotype.Repository;
+//
+//import java.util.Map;
+//
+//@Repository
+//public class LossControlDaoImpl implements LossControlDao {
+//    @Autowired
+//    private JdbcTemplate jdbcTemplate;
+//
+//    //client methods
+//
+//    @Override
+//    public void insertClinetData(final String clientId, final String lc360ClientId) {
+//        String insertClient = "insert into client_lookup (client_id, lc360_client_id) values (?, ?)";
+//        this.jdbcTemplate.update(insertClient, clientId, lc360ClientId);
+//    }
+//
+//    @Override
+//    public void insertLocationData(String locationId, String lc360LocationId) {
+//        String insertLocation = "insert into location_lookup (location_id, lc360_location_id) values (?, ?)";
+//        this.jdbcTemplate.update(insertLocation, locationId, lc360LocationId);
+//    }
+//
+//    @Override
+//    public Map<String, Object> findLc360ClientID(final String clientId) {
+//        String lc360ClientId = "select lc360_client_id from client_lookup where client_id = ? ";
+//        Map<String, Object> result;
+//        try {
+//            result = this.jdbcTemplate.queryForMap(lc360ClientId, clientId);
+//        } catch (EmptyResultDataAccessException exception) {
+//            return null;//enable flag when u get LC360 response back.. u
+//        }
+//        return result;
+//    }
+//
+//    @Override
+//    public Map<String, Object> findLc360LocationID(final String locationId) {
+//        String lc360LocationId = "select lc360_location_id from location_lookup where location_id = ? ";
+//        Map<String, Object> result;
+//        try {
+//            result = this.jdbcTemplate.queryForMap(lc360LocationId, locationId);
+//        } catch (EmptyResultDataAccessException exception) {
+//            return null;
+//        }
+//        return result;
+//    }
+//
+//    @Override
+//    public Map<String, Object> findLocationID(String locationId) {
+//
+//     String combineLocationId = "select * from location_lookup where location_id = ? ";
+//
+//        Map<String, Object> result;
+//        try {
+//            result = this.jdbcTemplate.queryForMap(combineLocationId, locationId);
+//        } catch (EmptyResultDataAccessException exception) {
+//            return null;
+//        }
+//        return result;    }
+//}
+
+
+
+
+//package uk.co.allianz.rap.lc.dao;
+//import org.springframework.beans.factory.annotation.Autowired;
+//import org.springframework.dao.EmptyResultDataAccessException;
+//import org.springframework.jdbc.core.JdbcTemplate;
+//import org.springframework.stereotype.Repository;
+//
+//import java.util.Map;
+//
+//@Repository
+//public class LossControlDaoImpl implements LossControlDao {
+//    @Autowired
+//    private JdbcTemplate jdbcTemplate;
+//
+//    //client methods
+//    @Override
+//    public void insertClientId(final String clientId) {
+//        String insert = "insert into client_lookup(client_id) values(?)";
+//        this.jdbcTemplate.update(insert, clientId);
+//    }
+////1st and 2nd method combine
+//    @Override
+//    public void updateLcClientId(final String clientId, final String lc360ClientId) {
+//        String update = "update client_lookup set lc360_client_id = ? where client_id = ?";
+//        this.jdbcTemplate.update(update, lc360ClientId, clientId);
+//    }
+//
+//    @Override
+//    public Map<String, Object> findByClientId(final String clientId) {
+//        String checkClientId = "select * from client_lookup where client_id =?";
+//        Map<String, Object> result;
+//        try {
+//            result = this.jdbcTemplate.queryForMap(checkClientId, clientId);
+//        } catch (EmptyResultDataAccessException exception) {
+//            return null;
+//        }
+//        return result;
+//    }
+//// 3rd + 4th methods combuined
+//    @Override
+//    public Map<String, Object> findLc360ClientID(final String clientId) {
+//        String lc360ClientId = "select lc360_client_id from client_lookup where client_id = ? ";//empty need to set flag..update client needed something(require an update) record need to be inserted..enabling flag for that......lc360 id not pressent
+//        Map<String, Object> result;// for location : if lookupId corresponding not present LC360 ID.. enable flg locationIDUpdated...based on this flag value when u get response back.. flag TRUe..fire insert query..then it insert 2 records
+//        try {
+//            result = this.jdbcTemplate.queryForMap(lc360ClientId, clientId);
+//        } catch (EmptyResultDataAccessException exception) {
+//            return null;
+//        }
+//        return result;
+//    }
+//
+//    // Locations methods
+//    @Override
+//    public void insertLocationId(final String locationId) {
+//        String insert = "insert into location_lookup(location_id) values(?)";
+//        this.jdbcTemplate.update(insert, locationId);
+//    }
+//
+//    @Override
+//    public void updateLcLocationId(final String locationId, final String lc360LocationId) {
+//        String update = "update location_lookup set lc360_location_id = ? where location_id = ?";
+//        this.jdbcTemplate.update(update, lc360LocationId, locationId);
+//    }
+//
+//    @Override
+//    public Map<String, Object> findByLocationId(final String locationId) {
+//        String checkLocationId = "select * from location_lookup where location_id =?";
+//        Map<String, Object> result;
+//        try {
+//            result = this.jdbcTemplate.queryForMap(checkLocationId, locationId);
+//        } catch (EmptyResultDataAccessException exception) {
+//            return null;
+//        }
+//        return result;
+//    }
+//
+//    @Override
+//    public Map<String, Object> findLc360LocationID(final String locationId) {
+//        String lc360LocationId = "select lc360_location_id from location_lookup where location_id = ? ";
+//        Map<String, Object> result;
+//        try {
+//            result = this.jdbcTemplate.queryForMap(lc360LocationId, locationId);
+//        } catch (EmptyResultDataAccessException exception) {
+//            return null;
+//        }
+//        return result;
+//    }
+//}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
 ArrayList<Location> sameLocations = new ArrayList<>();
 ArrayList<Location> differentLocations = new ArrayList<>();
 
