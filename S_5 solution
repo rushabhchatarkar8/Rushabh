@@ -1,3 +1,97 @@
+import static org.mockito.Mockito.*;
+
+import java.util.ArrayList;
+import java.util.Map;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.ResponseEntity;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.model.request.importclient.Location;
+import uk.co.allianz.rap.lc.service.LossControlServiceImpl;
+
+public class ImportClientServiceTest {
+
+    @Mock
+    private TokenCache tokenCache;
+
+    @Mock
+    private LossControlDao lossControlDao;
+
+    @Mock
+    private LossControlServiceImpl lossControlService;
+
+    @Mock
+    private ObjectMapper objectMapper;
+
+    @InjectMocks
+    private ImportClientServiceImp importClientService;
+
+    @BeforeEach
+    public void setup() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testImportClient() throws CustomException, JsonProcessingException {
+        String json = "your-json-data"; // Provide your JSON data here
+        String correlationId = "your-correlation-id";
+        String lookupId = "someLookupId";
+        String clientId = "someClientId";
+        
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        // Set up importClientRequest as needed
+
+        when(objectMapper.readValue(json, ImportClientRequest.class)).thenReturn(importClientRequest);
+        when(tokenCache.retrieveTokenFromCache(correlationId)).thenReturn("your-token");
+        when(lossControlDao.findLc360ClientID(lookupId)).thenReturn(createClientResultMap(clientId));
+        when(lossControlService.clientPost(any(), any())).thenReturn(createImportClientResponse());
+
+        ImportClientResponse response = importClientService.importClient(json, correlationId);
+
+        // Perform assertions based on expected response
+    }
+
+    // Helper method to create a mock client result map
+    private Map<String, Object> createClientResultMap(String clientId) {
+        // Create and return a mock result map with clientId
+        return null; // Implement as needed
+    }
+
+    // Helper method to create a mock ImportClientResponse
+    private ImportClientResponse createImportClientResponse() {
+        // Create and return a mock ImportClientResponse
+        return null; // Implement as needed
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 @Test
 public void testImportClient() throws CustomException, JsonProcessingException {
     String json = "your-json-data"; // Provide your JSON data here
