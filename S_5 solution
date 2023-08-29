@@ -1,3 +1,323 @@
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importclient.Location;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.LossControlServiceImpl;
+import java.util.ArrayList;
+import java.util.Map;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ImportClientServiceImpTest {
+
+    @InjectMocks
+    private ImportClientServiceImp importClientService;
+
+    @Mock
+    private TokenCache tokenCache;
+
+    @Mock
+    private LossControlDao lossControlDao;
+
+    @Mock
+    private LossControlServiceImpl lossControlServiceImpl;
+
+    @BeforeEach
+    public void setup() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testImportClient() throws Exception {
+        ImportClientRequest request = new ImportClientRequest();
+        // Set up your request object
+        
+        String correlationId = "correlationId";
+        String token = "testToken";
+        String clientId = "testClientId";
+        
+        ImportClientResponse response = new ImportClientResponse();
+        // Set up your response object
+        
+        when(tokenCache.retrieveTokenFromCache(correlationId)).thenReturn(token);
+        when(lossControlDao.findLc360ClientID(anyString())).thenReturn(Map.of("key", clientId));
+        when(lossControlServiceImpl.clientPost(any(), eq(token))).thenReturn(response);
+
+        ImportClientResponse result = importClientService.importClient("jsonString", correlationId);
+        
+        // Assertions
+        assertNotNull(result);
+        // Add more assertions based on the expected results and the 'result' variable
+    }
+
+    // Add more test methods for other functions in the ImportClientServiceImp class
+}
+
+
+
+
+
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importclient.Location;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.LossControlServiceImpl;
+import java.util.ArrayList;
+import java.util.Map;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ImportClientServiceImpTest2 {
+
+    @InjectMocks
+    private ImportClientServiceImp importClientService;
+
+    @Mock
+    private TokenCache tokenCache;
+
+    @Mock
+    private LossControlDao lossControlDao;
+
+    @Mock
+    private LossControlServiceImpl lossControlServiceImpl;
+
+    @BeforeEach
+    public void setup() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testImportClient() throws Exception {
+        ImportClientRequest request = new ImportClientRequest();
+        // Set up your request object
+        
+        String correlationId = "correlationId";
+        String token = "testToken";
+        String clientId = "testClientId";
+        
+        ImportClientResponse response = new ImportClientResponse();
+        // Set up your response object
+        
+        when(tokenCache.retrieveTokenFromCache(correlationId)).thenReturn(token);
+        when(lossControlDao.findLc360ClientID(anyString())).thenReturn(Map.of("key", clientId));
+        when(lossControlServiceImpl.clientPost(any(), eq(token))).thenReturn(response);
+
+        ImportClientResponse result = importClientService.importClient("jsonString", correlationId);
+        
+        // Assert the results
+        assertNotNull(result);
+        assertEquals(response, result);
+
+        // Verify that the methods were called with expected parameters
+        verify(tokenCache).retrieveTokenFromCache(correlationId);
+        verify(lossControlDao).findLc360ClientID(anyString());
+        verify(lossControlServiceImpl).clientPost(any(), eq(token));
+    }
+
+    // Add more test methods for other functions in the ImportClientServiceImp class
+}
+
+
+
+
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importclient.Location;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.LossControlServiceImpl;
+import java.util.ArrayList;
+import java.util.Map;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ImportClientServiceImpTest3 {
+
+    @InjectMocks
+    private ImportClientServiceImp importClientService;
+
+    @Mock
+    private TokenCache tokenCache;
+
+    @Mock
+    private LossControlDao lossControlDao;
+
+    @Mock
+    private LossControlServiceImpl lossControlServiceImpl;
+
+    @BeforeEach
+    public void setup() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testImportClient() throws Exception {
+        ImportClientRequest request = new ImportClientRequest();
+        // Set up your request object
+        
+        String correlationId = "correlationId";
+        String token = "testToken";
+        String clientId = "testClientId";
+        
+        ImportClientResponse response = new ImportClientResponse();
+        // Set up your response object
+        
+        when(tokenCache.retrieveTokenFromCache(correlationId)).thenReturn(token);
+        when(lossControlDao.findLc360ClientID(anyString())).thenReturn(Map.of("key", clientId));
+        when(lossControlServiceImpl.clientPost(any(), eq(token))).thenReturn(response);
+
+        ImportClientResponse result = importClientService.importClient("jsonString", correlationId);
+        
+        assertNotNull(result);  // Check that the result is not null
+        // Add more specific assertions based on your expected results and the 'result' variable
+    }
+
+    // Add more test methods for other functions in the ImportClientServiceImp class
+}
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importclient.Location;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.LossControlServiceImpl;
+import java.util.ArrayList;
+import java.util.Map;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ImportClientServiceImpTest4 {
+
+    @InjectMocks
+    private ImportClientServiceImp importClientService;
+
+    @Mock
+    private TokenCache tokenCache;
+
+    @Mock
+    private LossControlDao lossControlDao;
+
+    @Mock
+    private LossControlServiceImpl lossControlServiceImpl;
+
+    @BeforeEach
+    public void setup() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testImportClient() throws Exception {
+        ImportClientRequest request = new ImportClientRequest();
+        // Set up your request object
+        
+        String correlationId = "correlationId";
+        String token = "testToken";
+        String clientId = "testClientId";
+        
+        ImportClientResponse response = new ImportClientResponse();
+        // Set up your response object
+        
+        when(tokenCache.retrieveTokenFromCache(correlationId)).thenReturn(token);
+        when(lossControlDao.findLc360ClientID(anyString())).thenReturn(Map.of("key", clientId));
+        when(lossControlServiceImpl.clientPost(any(), eq(token))).thenReturn(response);
+
+        ImportClientResponse result = importClientService.importClient("jsonString", correlationId);
+        
+        assertEquals(response, result); // Assert that the response matches the expected result
+        
+        verify(tokenCache).retrieveTokenFromCache(correlationId);
+        verify(lossControlDao).findLc360ClientID(anyString());
+        verify(lossControlServiceImpl).clientPost(any(), eq(token));
+    }
+
+    // Add more test methods for other functions in the ImportClientServiceImp class
+}
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importclient.Location;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.LossControlServiceImpl;
+import java.util.ArrayList;
+import java.util.Map;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ImportClientServiceImpTest5 {
+
+    @InjectMocks
+    private ImportClientServiceImp importClientService;
+
+    @Mock
+    private TokenCache tokenCache;
+
+    @Mock
+    private LossControlDao lossControlDao;
+
+    @Mock
+    private LossControlServiceImpl lossControlServiceImpl;
+
+    @BeforeEach
+    public void setup() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testImportClient() throws Exception {
+        ImportClientRequest request = new ImportClientRequest();
+        // Set up your request object
+        
+        String correlationId = "correlationId";
+        String token = "testToken";
+        String clientId = "testClientId";
+        
+        ImportClientResponse response = new ImportClientResponse();
+        // Set up your response object
+        
+        when(tokenCache.retrieveTokenFromCache(correlationId)).thenReturn(token);
+        when(lossControlDao.findLc360ClientID(anyString())).thenReturn(Map.of("key", clientId));
+        when(lossControlServiceImpl.clientPost(any(), eq(token))).thenReturn(response);
+
+        ImportClientResponse result = importClientService.importClient("jsonString", correlationId);
+        
+        assertNotNull(result); // Check that the result is not null
+        // Add more assertions based on the expected results and the 'result' variable
+    }
+
+    // Add more test methods for other functions in the ImportClientServiceImp class
+}
+
+//////////////
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
