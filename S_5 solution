@@ -1,6 +1,86 @@
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import uk.co.allianz.rap.lc.model.request.importclient.Location;
+import uk.co.allianz.rap.lc.service.ImportClientServiceImp;
+
+public class ImportClientServiceImpTest {
+
+    @Mock
+    private ImportClientServiceImp importClientService;
+
+    @BeforeEach
+    public void setup() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testLocationResponseWithNullLookupID() {
+        Location location1 = new Location();
+        location1.setLookupID(null);
+
+        Location location2 = new Location();
+        location2.setLookupID("lookupId2");
+
+        List<Location> locations = new ArrayList<>();
+        locations.add(location1);
+        locations.add(location2);
+
+        when(importClientService.locationResponse(locations)).thenCallRealMethod();
+
+        List<Location> resultLocations = importClientService.locationResponse(locations);
+
+        assertEquals(1, resultLocations.size());
+        assertEquals("lookupId2", resultLocations.get(0).getLookupID());
+    }
+
+    @Test
+    public void testLocationResponseWithNonNullLookupID() {
+        Location location1 = new Location();
+        location1.setLookupID("lookupId1");
+
+        Location location2 = new Location();
+        location2.setLookupID("lookupId2");
+
+        List<Location> locations = new ArrayList<>();
+        locations.add(location1);
+        locations.add(location2);
+
+        when(importClientService.locationResponse(locations)).thenCallRealMethod();
+
+        List<Location> resultLocations = importClientService.locationResponse(locations);
+
+        assertEquals(2, resultLocations.size());
+        assertEquals("lookupId1", resultLocations.get(0).getLookupID());
+        assertEquals("lookupId2", resultLocations.get(1).getLookupID());
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 import java.util.HashMap;
 import java.util.Map;
 
