@@ -1,3 +1,81 @@
+
+
+package uk.co.allianz.rap.lc.model.response.importclient;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
+
+@SuppressWarnings("unused")
+@Data
+public class ImportClientResponse {
+    @JsonProperty("Result")
+    private Result result;
+    @JsonProperty("ImportRequestID")
+    private String importRequestID;
+}
+
+
+
+
+
+
+
+package uk.co.allianz.rap.lc.model.response.importclient;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import lombok.Data;
+
+import java.util.ArrayList;
+@SuppressWarnings("unused")
+@Data
+public class Result {
+    @JsonProperty("ClientID")
+    private String clientID;
+    @JsonProperty("ClientLookupID")
+    private String clientLookupID;
+    @JsonProperty("IsDeleted")
+    private boolean isDeleted;
+    @JsonProperty("Errors")
+    private ArrayList<Object> errors;
+    @JsonProperty("Warnings")
+    private Object warnings;
+    @JsonProperty("Success")
+    private boolean success;
+    @JsonProperty("Locations")
+    private ArrayList<Location> locations;
+    @JsonProperty("CommercialCoverages")
+    private ArrayList<Object> commercialCoverages;
+    @JsonProperty("Messages")
+    private ArrayList<Object> messages;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 package uk.co.allianz.rap.lc.rest;
 
 import org.springframework.beans.factory.annotation.Autowired;
