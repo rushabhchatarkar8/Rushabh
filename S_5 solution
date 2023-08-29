@@ -1,3 +1,79 @@
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import uk.co.allianz.rap.lc.model.response.importclient.ClientLookupResult;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.ImportClientServiceImp;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.when;
+
+public class ValidationRestTest {
+    @InjectMocks
+    private ValidationRest validationRest;
+
+    @Mock
+    private ImportClientServiceImp importClientServiceImp;
+
+    @Test
+    public void testProcessJson_SuccessfulImport() {
+        String json = "{\"validJson\": \"data\"}";
+        String correlationId = "correlationId";
+
+        ImportClientResponse mockResponse = new ImportClientResponse();
+        ClientLookupResult lookupResult = new ClientLookupResult();
+        lookupResult.setSuccess(true);
+        mockResponse.setResult(lookupResult);
+
+        when(importClientServiceImp.importClient(Mockito.any(), Mockito.any())).thenReturn(mockResponse);
+
+        ResponseEntity<?> response = validationRest.processJson(json, correlationId);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+    }
+
+    @Test
+    public void testProcessJson_UnsuccessfulImport() {
+        String json = "{\"validJson\": \"data\"}";
+        String correlationId = "correlationId";
+
+        ImportClientResponse mockResponse = new ImportClientResponse();
+        ClientLookupResult lookupResult = new ClientLookupResult();
+        lookupResult.setSuccess(false);
+        lookupResult.setErrors("Import failed");
+        mockResponse.setResult(lookupResult);
+
+        when(importClientServiceImp.importClient(Mockito.any(), Mockito.any())).thenReturn(mockResponse);
+
+        ResponseEntity<?> response = validationRest.processJson(json, correlationId);
+
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 if (processedJson != null && processedJson.getResult() != null) {
     if (processedJson.getResult().isSuccess()) {
         // ...
