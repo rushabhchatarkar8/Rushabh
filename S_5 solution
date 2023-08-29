@@ -1,4 +1,214 @@
 @Test
+public void testImportClient() throws CustomException, JsonProcessingException {
+    String json = "your-json-data"; // Provide your JSON data here
+    String correlationId = "your-correlation-id";
+    String lookupId = "someLookupId";
+    String clientId = "someClientId";
+    
+    ImportClientRequest importClientRequest = new ImportClientRequest();
+    // Set up importClientRequest as needed
+
+    when(objectMapper.readValue(json, ImportClientRequest.class)).thenReturn(importClientRequest);
+    when(tokenCache.retrieveTokenFromCache(correlationId)).thenReturn("your-token");
+    when(lossControlDao.findLc360ClientID(lookupId)).thenReturn(createClientResultMap(clientId));
+    when(lossControlService.clientPost(any(), any())).thenReturn(createImportClientResponse());
+
+    ImportClientResponse response = importClientService.importClient(json, correlationId);
+
+    // Verify interactions and assertions
+    verify(objectMapper).readValue(eq(json), eq(ImportClientRequest.class));
+    verify(tokenCache).retrieveTokenFromCache(correlationId);
+    verify(lossControlDao).findLc360ClientID(lookupId);
+    verify(lossControlService).clientPost(any(), any());
+
+    assertNotNull(response); // Assert that the response is not null
+    // Add more assertions based on your expected response and behavior
+}
+
+
+
+
+
+
+
+
+
+
+import static org.mockito.Mockito.*;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.request.importclient.Client;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importclient.Location;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.LossControlServiceImpl;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.*;
+
+public class ImportClientServiceImpTest {
+
+    private ImportClientServiceImp importClientService;
+
+    private TokenCache tokenCache;
+    private LossControlDao lossControlDao;
+    private LossControlServiceImpl lossControlServiceImpl;
+
+    @BeforeEach
+    public void setup() {
+        tokenCache = mock(TokenCache.class);
+        lossControlDao = mock(LossControlDao.class);
+        lossControlServiceImpl = mock(LossControlServiceImpl.class);
+
+        importClientService = new ImportClientServiceImp();
+        importClientService.tokenCache = tokenCache;
+        importClientService.lossControlDao = lossControlDao;
+        importClientService.lossControlServiceImpl = lossControlServiceImpl;
+    }
+
+    @Test
+    public void testImportClient() throws CustomException, JsonProcessingException {
+        // Mock data
+        String json = "{\"client\": {\"lookupID\": \"testLookup\", \"locations\": []}}";
+        String correlationId = "correlation123";
+        String lc360ClientId = "lc360Client123";
+
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        Client client = new Client();
+        client.setLookupID("testLookup");
+        client.setLocations(new ArrayList<>());
+        importClientRequest.setClient(client);
+
+        List<Location> updatedLocations = new ArrayList<>();
+
+        ImportClientResponse mockResponse = new ImportClientResponse();
+
+        when(tokenCache.retrieveTokenFromCache(anyString())).thenReturn("mockToken");
+        when(lossControlDao.findLc360ClientID(anyString())).thenReturn(Collections.singletonMap("key", lc360ClientId));
+        when(lossControlServiceImpl.clientPost(any(), any())).thenReturn(mockResponse);
+        when(lossControlServiceImp.locationResponse(anyList())).thenReturn(updatedLocations);
+        when(lossControlServiceImp.preImportClientRequest(any(), any(), anyList(), any())).thenReturn(importClientRequest);
+
+        ImportClientResponse result = importClientService.importClient(json, correlationId);
+
+        assertEquals(mockResponse, result);
+        verify(lossControlDao, times(1)).insertClinetData(anyString(), anyString());
+        verify(lossControlDao, times(0)).insertLocationData(anyString(), anyString());
+    }
+}
+
+
+
+
+
+
+
+
+import static org.mockito.Mockito.*;
+
+import java.util.ArrayList;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.log.LogContext;
+import uk.co.allianz.rap.lc.log.LogType;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importclient.Location;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.LossControlServiceImpl;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+
+class ImportClientServiceImpTest {
+
+    @Mock
+    private TokenCache tokenCache;
+
+    @Mock
+    private LossControlDao lossControlDao;
+
+    @Mock
+    private LossControlServiceImpl lossControlServiceImpl;
+
+    @Mock
+    private ObjectMapper objectMapper;
+
+    private ImportClientServiceImp importClientService;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+        importClientService = new ImportClientServiceImp();
+        importClientService.setTokenCache(tokenCache);
+        importClientService.setLossControlDao(lossControlDao);
+        importClientService.setLossControlServiceImpl(lossControlServiceImpl);
+        importClientService.setObjectMapper(objectMapper);
+    }
+
+    @Test
+    void testImportClient() throws CustomException, JsonProcessingException {
+        String json = "{...}"; // Your JSON data here
+        String correlationId = "correlationId";
+        
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        // Set up importClientRequest with necessary data
+        
+        String clientLookupId = "clientLookupId";
+        String clientId = "clientId";
+        
+        ArrayList<Location> locations = new ArrayList<>();
+        // Set up locations
+        
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        // Set up importClientResponse
+        
+        when(objectMapper.readValue(json, ImportClientRequest.class)).thenReturn(importClientRequest);
+        when(importClientRequest.getClient().getLookupID()).thenReturn(clientLookupId);
+        when(importClientRequest.getClient().getLocations()).thenReturn(locations);
+        when(lossControlDao.findLc360ClientID(clientLookupId)).thenReturn(clientId);
+        when(lossControlServiceImpl.clientPost(any(), any())).thenReturn(importClientResponse);
+
+        ImportClientResponse response = importClientService.importClient(json, correlationId);
+
+        // Verify the behavior
+        verify(objectMapper).readValue(eq(json), eq(ImportClientRequest.class));
+        verify(importClientRequest.getClient()).getLookupID();
+        verify(importClientRequest.getClient()).getLocations();
+        verify(lossControlDao).findLc360ClientID(clientLookupId);
+        verify(lossControlServiceImpl).clientPost(any(), any());
+
+        // Assertions
+        assertNotNull(response);
+        // Add more assertions based on your expected behavior
+    }
+    
+    // Add more test methods for different scenarios as needed
+
+}
+
+
+
+
+///////////////////////
+@Test
 public void testUpdateLookUpTableWhenClientIsPresent() {
     String clientId = "client123";
     String lc360ClientId = "lc360Client123";
