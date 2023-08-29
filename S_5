@@ -1,3 +1,58 @@
+    public ImportClientRequest preImportClientRequest(ImportClientRequest importClientRequest,String clientId,ArrayList<Location> updatedLocation,String orignalClientID) throws JsonProcessingException {
+        for (Location location : updatedLocation) {
+            Map<String, Object> locationResult = lossControlDao.findLc360LocationID(location.getLookupID() + "_" + orignalClientID);
+            if (locationResult != null) {
+                LOGGER.info("Location are present");
+                String lc360LocationId = (String) locationResult.get(locationResult.keySet().iterator().next());
+                location.setLookupID(lc360LocationId);
+                objectMapper.writeValueAsString(importClientRequest);
+//                System.out.println(importClientRequest);
+            }
+        }
+        if(clientId.equals(importClientRequest.getClient().getLookupID())){
+            LOGGER.info("client is not present");
+//            System.out.println(importClientRequest);
+            return importClientRequest;
+        }else {
+            importClientRequest.getClient().setLookupID(clientId);
+            objectMapper.writeValueAsString(importClientRequest);
+//            System.out.println(importClientRequest);
+            return importClientRequest;
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 public ArrayList<Location> locationResponse(ArrayList<Location> locations) {
     ArrayList<Location> validLocations = new ArrayList<>();
     for (Location location : locations) {
