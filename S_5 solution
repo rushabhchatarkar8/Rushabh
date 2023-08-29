@@ -1,6 +1,135 @@
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import org.junit.jupiter.api.Test;
+import java.util.ArrayList;
+
+public class ImportClientServiceTest22 {
+
+    @Test
+    public void testLocationResponseWithValidLocations() {
+        // Create some mock Location objects
+        Location location1 = new Location("id1");
+        Location location2 = new Location("id2");
+        Location location3 = new Location(null); // Invalid location
+
+        ArrayList<Location> locations = new ArrayList<>();
+        locations.add(location1);
+        locations.add(location2);
+        locations.add(location3);
+
+        ImportClientService importClientService = new ImportClientService(); // Instantiate your class
+        ArrayList<Location> validLocations = importClientService.locationResponse(locations);
+
+        assertEquals(2, validLocations.size());
+        assertTrue(validLocations.contains(location1));
+        assertTrue(validLocations.contains(location2));
+    }
+
+    @Test
+    public void testLocationResponseWithEmptyLocations() {
+        ArrayList<Location> locations = new ArrayList<>();
+
+        ImportClientService importClientService = new ImportClientService(); // Instantiate your class
+        ArrayList<Location> validLocations = importClientService.locationResponse(locations);
+
+        assertTrue(validLocations.isEmpty());
+    }
+
+    @Test
+    public void testLocationResponseWithNullLocations() {
+        ImportClientService importClientService = new ImportClientService(); // Instantiate your class
+        ArrayList<Location> validLocations = importClientService.locationResponse(null);
+
+        assertTrue(validLocations.isEmpty());
+    }
+}
+
+
+
+
+
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
+import uk.co.allianz.rap.lc.model.request.importclient.Location;
+
+import java.util.ArrayList;
+
+public class ImportClientServiceImpTest33 {
+
+    private ImportClientServiceImp importClientServiceImp;
+
+    @BeforeEach
+    public void setup() {
+        importClientServiceImp = new ImportClientServiceImp();
+    }
+
+    @Test
+    public void testLocationResponseWithNullLookupID() {
+        Location location1 = new Location();
+        location1.setLookupID(null);
+
+        Location location2 = new Location();
+        location2.setLookupID("someLookupId");
+
+        ArrayList<Location> locations = new ArrayList<>();
+        locations.add(location1);
+        locations.add(location2);
+
+        ArrayList<Location> validLocations = importClientServiceImp.locationResponse(locations);
+
+        assertEquals(1, validLocations.size());
+        assertEquals("someLookupId", validLocations.get(0).getLookupID());
+    }
+
+    @Test
+    public void testLocationResponseWithNonNullLookupID() {
+        Location location1 = new Location();
+        location1.setLookupID("lookupId1");
+
+        Location location2 = new Location();
+        location2.setLookupID("lookupId2");
+
+        ArrayList<Location> locations = new ArrayList<>();
+        locations.add(location1);
+        locations.add(location2);
+
+        ArrayList<Location> validLocations = importClientServiceImp.locationResponse(locations);
+
+        assertEquals(2, validLocations.size());
+        assertEquals("lookupId1", validLocations.get(0).getLookupID());
+        assertEquals("lookupId2", validLocations.get(1).getLookupID());
+    }
+}
+//////////////////////
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 import java.util.ArrayList;
 import java.util.List;
 
