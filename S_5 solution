@@ -1,3 +1,76 @@
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importclient.Location;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.LossControlServiceImpl;
+import java.util.ArrayList;
+import java.util.Map;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
+public class ImportClientServiceImpTest {
+
+    @InjectMocks
+    private ImportClientServiceImp importClientService;
+
+    @Mock
+    private TokenCache tokenCache;
+
+    @Mock
+    private LossControlDao lossControlDao;
+
+    @Mock
+    private LossControlServiceImpl lossControlServiceImpl;
+
+    @Mock
+    private ObjectMapper objectMapper; // Mock the ObjectMapper
+
+    @BeforeEach
+    public void setup() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testImportClient() throws Exception {
+        ImportClientRequest request = new ImportClientRequest();
+        // Set up your request object
+        
+        String correlationId = "correlationId";
+        String token = "testToken";
+        String clientId = "testClientId";
+        
+        ImportClientResponse response = new ImportClientResponse();
+        // Set up your response object
+        
+        when(tokenCache.retrieveTokenFromCache(correlationId)).thenReturn(token);
+        when(lossControlDao.findLc360ClientID(anyString())).thenReturn(Map.of("key", clientId));
+        when(lossControlServiceImpl.clientPost(any(), eq(token))).thenReturn(response);
+
+        ImportClientResponse result = importClientService.importClient("jsonString", correlationId);
+        
+        assertNotNull(result); // Check that the result is not null
+        // Add more assertions based on the expected results and the 'result' variable
+    }
+
+    // Add more test methods for other functions in the ImportClientServiceImp class
+}
+
+
+
+
+
+
+
+
+
+
 java.lang.NullPointerException: Cannot invoke "com.fasterxml.jackson.databind.ObjectMapper.readValue(String, java.lang.Class)" because "this.objectMapper" is null
 
 
