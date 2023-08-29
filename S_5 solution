@@ -1,3 +1,11 @@
+java.lang.NullPointerException: Cannot invoke "uk.co.allianz.rap.lc.service.ValidationServiceImpl.processJson(String)" because "this.validationServiceImpl" is null
+        when(validationServiceImpl.processJson(json)).thenThrow(new CustomException("Validation failed"));
+
+
+
+
+
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
