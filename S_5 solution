@@ -9,6 +9,140 @@ public void testUpdateLookUpTableWhenClientIsPresent() {
     // Call the method
     importClientService.updateLookUpTable(clientId, lc360ClientId, updatedLocation, originalClientId, importClientResponse);
 
+    // Verify the call to LOGGER
+    verify(LOGGER).info("client is present in lookup table");
+
+    // Verify that lossControlDao.insertClinetData was not called
+    verify(lossControlDao, never()).insertClinetData(anyString(), anyString());
+
+    // Verify that lossControlDao.findLocationID was not called
+    verify(lossControlDao, never()).findLocationID(anyString());
+
+    // Add more assertions if needed based on your actual implementation
+}
+
+@Test
+public void testUpdateLookUpTableWhenClientIsNotPresent() {
+    String clientId = "client123";
+    String lc360ClientId = "differentLc360Client";
+    ArrayList<Location> updatedLocation = new ArrayList<>();
+    String originalClientId = "originalClient123";
+    ImportClientResponse importClientResponse = new ImportClientResponse();
+
+    // Mock behavior for lossControlDao.insertClinetData()
+    when(lossControlDao.insertClinetData(clientId, lc360ClientId)).thenReturn(true);
+
+    // Mock behavior for lossControlDao.findLocationID() returning null
+    when(lossControlDao.findLocationID(anyString())).thenReturn(null);
+
+    // Mock behavior for importClientResponse.getResult().getLocations()
+    ArrayList<uk.co.allianz.rap.lc.model.response.importclient.Location> locationsResponse = new ArrayList<>();
+    uk.co.allianz.rap.lc.model.response.importclient.Location locationResponse = new uk.co.allianz.rap.lc.model.response.importclient.Location();
+    locationResponse.setLocationLookupID("location123");
+    locationsResponse.add(locationResponse);
+    importClientResponse.getResult().setLocations(locationsResponse);
+
+    // Call the method
+    importClientService.updateLookUpTable(clientId, lc360ClientId, updatedLocation, originalClientId, importClientResponse);
+
+    // Verify the call to LOGGER
+    verify(LOGGER).info("client is present in lookup table");
+
+    // Verify the call to lossControlDao.insertClinetData
+    verify(lossControlDao).insertClinetData(clientId, lc360ClientId);
+
+    // Verify the call to lossControlDao.findLocationID
+    verify(lossControlDao).findLocationID(anyString());
+
+    // Verify the call to lossControlDao.insertLocationData
+    verify(lossControlDao).insertLocationData(anyString(), anyString());
+
+    // Add more assertions if needed based on your actual implementation
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@Test
+public void testUpdateLookUpTableWhenClientIsNotPresent() {
+    String clientId = "client123";
+    String lc360ClientId = "differentLc360Client";
+    ArrayList<Location> updatedLocation = new ArrayList<>();
+    String originalClientId = "originalClient123";
+    ImportClientResponse importClientResponse = new ImportClientResponse();
+
+    // Mock behavior for lossControlDao.insertClinetData()
+    doNothing().when(lossControlDao).insertClinetData(clientId, lc360ClientId);
+
+    // Mock behavior for lossControlDao.findLocationID() returning null
+    when(lossControlDao.findLocationID(anyString())).thenReturn(null);
+
+    // Mock behavior for importClientResponse.getResult().getLocations()
+    ArrayList<uk.co.allianz.rap.lc.model.response.importclient.Location> locationsResponse = new ArrayList<>();
+    uk.co.allianz.rap.lc.model.response.importclient.Location locationResponse = new uk.co.allianz.rap.lc.model.response.importclient.Location();
+    locationResponse.setLocationLookupID("location123");
+    locationsResponse.add(locationResponse);
+    importClientResponse.getResult().setLocations(locationsResponse);
+
+    // Call the method
+    importClientService.updateLookUpTable(clientId, lc360ClientId, updatedLocation, originalClientId, importClientResponse);
+
+    // Verify the call to LOGGER
+    verify(LOGGER).info("client is present in lookup table");
+
+    // Verify the call to lossControlDao.insertClinetData
+    verify(lossControlDao).insertClinetData(clientId, lc360ClientId);
+
+    // Verify the call to lossControlDao.findLocationID
+    verify(lossControlDao).findLocationID(anyString());
+
+    // Verify the call to lossControlDao.insertLocationData
+    verify(lossControlDao).insertLocationData(anyString(), anyString());
+
+    // Add more assertions if needed based on your actual implementation
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+@Test
+public void testUpdateLookUpTableWhenClientIsPresent() {
+    String clientId = "client123";
+    String lc360ClientId = "lc360Client123";
+    ArrayList<Location> updatedLocation = new ArrayList<>();
+    String originalClientId = "originalClient123";
+    ImportClientResponse importClientResponse = new ImportClientResponse();
+
+    // Call the method
+    importClientService.updateLookUpTable(clientId, lc360ClientId, updatedLocation, originalClientId, importClientResponse);
+
     // Assuming your LOGGER logs are captured and verified by your logging framework
     // Verify the call to LOGGER
     verify(LOGGER).info("client is present in lookup table");
