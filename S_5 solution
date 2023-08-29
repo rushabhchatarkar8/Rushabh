@@ -1,3 +1,31 @@
+ public String clientResponse(String clientLookupId){
+        Map<String, Object> clientResult = lossControlDao.findLc360ClientID(clientLookupId);
+        if(clientResult != null){
+            String lc360ClientId = (String) clientResult.get(clientResult.keySet().iterator().next());
+            return lc360ClientId;
+        }else {
+            return clientLookupId;
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
         String oci=importClientRequest.getClient().getLookupID();
         ArrayList<Location> locations = importClientRequest.getClient().getLocations();
