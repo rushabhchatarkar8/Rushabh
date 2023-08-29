@@ -17,6 +17,337 @@ import java.util.ArrayList;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+public class ValidationRestTest1 {
+    @InjectMocks
+    private ValidationRest validationRest;
+
+    @Mock
+    private ValidationServiceImpl validationServiceImpl;
+
+    @Mock
+    private ImportClientServiceImp importClientServiceImp;
+
+    @BeforeEach
+    void setUp() {
+        // Initialize mocks if needed
+    }
+
+    @Test
+    public void testProcessJson_SuccessfulImport() {
+        String json = "{\"validJson\": \"data\"}";
+        String correlationId = "correlationId";
+
+        // Mock validation response
+        when(validationServiceImpl.processJson(json)).thenReturn(json);
+
+        ImportClientResponse mockResponse = new ImportClientResponse();
+        Result result = new Result();
+        result.setSuccess(true);
+        mockResponse.setResult(result);
+        when(importClientServiceImp.importClient(json, correlationId)).thenReturn(mockResponse);
+
+        ResponseEntity<?> response = validationRest.processJson(json, correlationId);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+    }
+
+    @Test
+    public void testProcessJson_UnsuccessfulImport() {
+        String json = "{\"validJson\": \"data\"}";
+        String correlationId = "correlationId";
+
+        // Mock validation response
+        when(validationServiceImpl.processJson(json)).thenReturn(json);
+
+        ImportClientResponse mockResponse = new ImportClientResponse();
+        Result result = new Result();
+        result.setSuccess(false);
+        result.setErrors(new ArrayList<>());
+        mockResponse.setResult(result);
+        when(importClientServiceImp.importClient(json, correlationId)).thenReturn(mockResponse);
+
+        ResponseEntity<?> response = validationRest.processJson(json, correlationId);
+
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
+        assertNotNull(response.getBody());
+    }
+
+    @Test
+    public void testProcessJson_ValidationFailure() {
+        String json = "{\"invalidJson\": \"data\"}";
+        String correlationId = "correlationId";
+
+        // Mock validation to throw an exception
+        when(validationServiceImpl.processJson(json)).thenThrow(new CustomException("Validation failed"));
+
+        ResponseEntity<?> response = validationRest.processJson(json, correlationId);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(response.getBody());
+    }
+}
+
+
+
+
+
+
+
+
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.log.LogContext;
+import uk.co.allianz.rap.lc.log.LogType;
+import uk.co.allianz.rap.lc.model.response.importclient.ClientLookupResult;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.ImportClientServiceImp;
+import uk.co.allianz.rap.lc.service.ValidationServiceImpl;
+
+import java.util.ArrayList;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class ValidationRestTest2 {
+    @InjectMocks
+    private ValidationRest validationRest;
+
+    @Mock
+    private ValidationServiceImpl validationServiceImpl;
+
+    @Mock
+    private ImportClientServiceImp importClientServiceImp;
+
+    @Test
+    public void testProcessJson_SuccessfulImport() {
+        String json = "{\"validJson\": \"data\"}";
+        String correlationId = "correlationId";
+
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        Result result = new Result();
+        result.setSuccess(true);
+        importClientResponse.setResult(result);
+
+        when(validationServiceImpl.processJson(json)).thenReturn(json);
+        when(importClientServiceImp.importClient(json, correlationId)).thenReturn(importClientResponse);
+
+        ResponseEntity<?> response = validationRest.processJson(json, correlationId);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+    }
+
+    @Test
+    public void testProcessJson_UnsuccessfulImport() {
+        String json = "{\"validJson\": \"data\"}";
+        String correlationId = "correlationId";
+
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        Result result = new Result();
+        result.setSuccess(false);
+        result.setErrors(new ArrayList<>());
+        importClientResponse.setResult(result);
+
+        when(validationServiceImpl.processJson(json)).thenReturn(json);
+        when(importClientServiceImp.importClient(json, correlationId)).thenReturn(importClientResponse);
+
+        ResponseEntity<?> response = validationRest.processJson(json, correlationId);
+
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
+        assertNotNull(response.getBody());
+    }
+
+    @Test
+    public void testProcessJson_ProcessedJsonNull() {
+        String json = "{\"validJson\": \"data\"}";
+        String correlationId = "correlationId";
+
+        when(validationServiceImpl.processJson(json)).thenReturn(json);
+        when(importClientServiceImp.importClient(json, correlationId)).thenReturn(null);
+
+        ResponseEntity<?> response = validationRest.processJson(json, correlationId);
+
+        assertNull(response.getBody());
+    }
+
+    @Test
+    public void testProcessJson_ProcessedJsonResultNull() {
+        String json = "{\"validJson\": \"data\"}";
+        String correlationId = "correlationId";
+
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+
+        when(validationServiceImpl.processJson(json)).thenReturn(json);
+        when(importClientServiceImp.importClient(json, correlationId)).thenReturn(importClientResponse);
+
+        ResponseEntity<?> response = validationRest.processJson(json, correlationId);
+
+        assertNull(response.getBody());
+    }
+
+    @Test
+    public void testProcessJson_CustomException() {
+        String json = "{\"validJson\": \"data\"}";
+        String correlationId = "correlationId";
+
+        when(validationServiceImpl.processJson(json)).thenThrow(new CustomException("Validation failed"));
+
+        ResponseEntity<?> response = validationRest.processJson(json, correlationId);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(response.getBody());
+    }
+}
+
+
+///
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.log.LogContext;
+import uk.co.allianz.rap.lc.log.LogType;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.response.importclient.ClientLookupResult;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.model.response.importclient.Result;
+import uk.co.allianz.rap.lc.service.ImportClientServiceImp;
+import uk.co.allianz.rap.lc.service.ValidationServiceImpl;
+
+import java.util.ArrayList;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class ValidationRestTest3 {
+    @InjectMocks
+    private ValidationRest validationRest;
+
+    @Mock
+    private ValidationServiceImpl validationServiceImpl;
+
+    @Mock
+    private ImportClientServiceImp importClientServiceImp;
+
+    @BeforeEach
+    void setUp() {
+        // Initialize mocks if needed
+    }
+
+    @Test
+    public void testProcessJson_SuccessfulImport() {
+        String json = "{\"validJson\": \"data\"}";
+        String correlationId = "correlationId";
+
+        // Mock validation response
+        when(validationServiceImpl.processJson(json)).thenReturn(json);
+
+        // Mock import response with successful import
+        ImportClientResponse importResponse = createSuccessfulImportResponse();
+        when(importClientServiceImp.importClient(json, correlationId)).thenReturn(importResponse);
+
+        ResponseEntity<?> response = validationRest.processJson(json, correlationId);
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+    }
+
+    @Test
+    public void testProcessJson_UnsuccessfulImport() {
+        String json = "{\"validJson\": \"data\"}";
+        String correlationId = "correlationId";
+
+        // Mock validation response
+        when(validationServiceImpl.processJson(json)).thenReturn(json);
+
+        // Mock import response with unsuccessful import
+        ImportClientResponse importResponse = createUnsuccessfulImportResponse();
+        when(importClientServiceImp.importClient(json, correlationId)).thenReturn(importResponse);
+
+        ResponseEntity<?> response = validationRest.processJson(json, correlationId);
+
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
+        assertNotNull(response.getBody());
+    }
+
+    @Test
+    public void testProcessJson_ValidationFailure() {
+        String json = "{\"invalidJson\": \"data\"}";
+        String correlationId = "correlationId";
+
+        // Mock validation response
+        when(validationServiceImpl.processJson(json)).thenThrow(new CustomException("Validation failed"));
+
+        ResponseEntity<?> response = validationRest.processJson(json, correlationId);
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(response.getBody());
+    }
+
+    // Helper method to create a successful ImportClientResponse
+    private ImportClientResponse createSuccessfulImportResponse() {
+        ImportClientResponse importResponse = new ImportClientResponse();
+        Result result = new Result();
+        result.setSuccess(true);
+        importResponse.setResult(result);
+        return importResponse;
+    }
+
+    // Helper method to create an unsuccessful ImportClientResponse
+    private ImportClientResponse createUnsuccessfulImportResponse() {
+        ImportClientResponse importResponse = new ImportClientResponse();
+        Result result = new Result();
+        result.setSuccess(false);
+        result.setErrors(new ArrayList<>());
+        importResponse.setResult(result);
+        return importResponse;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.log.LogContext;
+import uk.co.allianz.rap.lc.log.LogType;
+import uk.co.allianz.rap.lc.model.response.importclient.ClientLookupResult;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.ImportClientServiceImp;
+import uk.co.allianz.rap.lc.service.ValidationServiceImpl;
+
+import java.util.ArrayList;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 public class ValidationRestTest3 {
     @InjectMocks
     private ValidationRest validationRest;
