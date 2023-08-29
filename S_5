@@ -1,4 +1,61 @@
-    public ImportClientRequest preImportClientRequest(ImportClientRequest importClientRequest,String clientId,ArrayList<Location> updatedLocation,String orignalClientID) throws JsonProcessingException {
+
+
+
+
+    public void updateLookUpTable(String clientId, String lc360ClientId,ArrayList<Location> updatedLocation ,String originalClientId,ImportClientResponse importClientResponse) {
+        String id =originalClientId;
+        if (clientId.equals(lc360ClientId)) {
+            LOGGER.info("client is present in lookup table");
+        } else {
+            lossControlDao.insertClinetData(clientId, lc360ClientId);
+        }
+        for (int index = 0; index < updatedLocation.size(); index++) {
+            String lookupID = updatedLocation.get(index).getLookupID();
+            Map<String, Object> locationResult = lossControlDao.findLocationID(lookupID);
+//            System.out.println("locationResult"+locationResult);
+            if (locationResult == null) {
+                ArrayList<uk.co.allianz.rap.lc.model.response.importclient.Location> locationsResponse = importClientResponse.getResult().getLocations();
+//                System.out.println("locationsResponse"+locationsResponse);
+                lossControlDao.insertLocationData(updatedLocation.get(index).getLookupID() + "_" + originalClientId, locationsResponse.get(index).getLocationLookupID());
+            }
+        }
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+public ImportClientRequest preImportClientRequest(ImportClientRequest importClientRequest,String clientId,ArrayList<Location> updatedLocation,String orignalClientID) throws JsonProcessingException {
         for (Location location : updatedLocation) {
             Map<String, Object> locationResult = lossControlDao.findLc360LocationID(location.getLookupID() + "_" + orignalClientID);
             if (locationResult != null) {
