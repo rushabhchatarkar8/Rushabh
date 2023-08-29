@@ -1,3 +1,21 @@
+    public ImportClientResponse importClient(final String json, final String correlationId) throws CustomException, JsonProcessingException {
+            ImportClientRequest importClientRequest = objectMapper.readValue(json, ImportClientRequest.class);
+        String oci=importClientRequest.getClient().getLookupID();
+        ArrayList<Location> locations = importClientRequest.getClient().getLocations();
+        String clientId =clientResponse(importClientRequest.getClient().getLookupID());
+//        System.out.println(clientId);
+        ArrayList<Location> updatedLocation = locationResponse(locations);
+        ImportClientRequest importClientRequest1 = preImportClientRequest(importClientRequest,clientId,updatedLocation,importClientRequest.getClient().getLookupID());
+        ImportClientResponse importClientResponse = lossControlServiceImpl.clientPost(importClientRequest1, tokenCache.retrieveTokenFromCache(correlationId));
+        updateLookUpTable(clientId, importClientResponse.getResult().getClientLookupID(),updatedLocation,oci,importClientResponse);
+        return importClientResponse;
+    }
+
+
+
+
+
+
 
 
 
