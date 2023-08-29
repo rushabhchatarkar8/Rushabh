@@ -1,3 +1,33 @@
+public ArrayList<Location> locationResponse(ArrayList<Location> locations) {
+    ArrayList<Location> validLocations = new ArrayList<>();
+    for (Location location : locations) {
+        String lookupID = location.getLookupID();
+//        System.out.println("LookupID: " + lookupID);
+        if (lookupID != null) {
+            validLocations.add(location);
+        }
+    }
+    return validLocations;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 package uk.co.allianz.rap.lc.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
