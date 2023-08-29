@@ -1,6 +1,80 @@
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+public class ImportClientServiceImpTest {
+
+    @Mock
+    private LossControlDao lossControlDao;
+
+    private ImportClientServiceImp importClientService;
+
+    @BeforeEach
+    public void setup() {
+        MockitoAnnotations.openMocks(this);
+        importClientService = new ImportClientServiceImp();
+        importClientService.lossControlDao = lossControlDao;
+    }
+
+    @Test
+    public void testPreImportClientRequestWithLocation() throws Exception {
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        String clientId = "client123";
+        ArrayList<Location> updatedLocation = new ArrayList<>();
+        Location location = new Location();
+        location.setLookupID("location123");
+        updatedLocation.add(location);
+        String originalClientId = "originalClient123";
+
+        Map<String, Object> locationResult = new HashMap<>();
+        locationResult.put("someKey", "lc360Location123");
+        when(lossControlDao.findLc360LocationID("location123_originalClient123")).thenReturn(locationResult);
+
+        ImportClientRequest result = importClientService.preImportClientRequest(importClientRequest, clientId, updatedLocation, originalClientId);
+
+        assertNotNull(result);
+        assertEquals("lc360Location123", result.getClient().getLocations().get(0).getLookupID());
+        verify(lossControlDao, times(1)).findLc360LocationID("location123_originalClient123");
+    }
+
+    @Test
+    public void testPreImportClientRequestWithClient() throws Exception {
+        ImportClientRequest importClientRequest = new ImportClientRequest();
+        importClientRequest.getClient().setLookupID("client123");
+        String clientId = "client123";
+        ArrayList<Location> updatedLocation = new ArrayList<>();
+        String originalClientId = "originalClient123";
+
+        ImportClientRequest result = importClientService.preImportClientRequest(importClientRequest, clientId, updatedLocation, originalClientId);
+
+        assertNotNull(result);
+        assertEquals("client123", result.getClient().getLookupID());
+        verify(lossControlDao, never()).findLc360LocationID(anyString());
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+////////
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 import org.junit.jupiter.api.Test;
 import java.util.ArrayList;
 
