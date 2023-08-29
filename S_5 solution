@@ -2,6 +2,7 @@ java.lang.NullPointerException: Cannot invoke "uk.co.allianz.rap.lc.service.Vali
         when(validationServiceImpl.processJson(json)).thenThrow(new CustomException("Validation failed"));
 
 
+        when(validationServiceImpl.processJson(json)).thenReturn(json);
 
 
 
