@@ -1,3 +1,551 @@
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.log.LogContext;
+import uk.co.allianz.rap.lc.log.LogType;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.ImportClientServiceImp;
+import uk.co.allianz.rap.lc.service.ValidationServiceImpl;
+
+public class ValidationRestTest1 {
+
+    @Mock
+    private ValidationServiceImpl validationService;
+
+    @Mock
+    private ImportClientServiceImp importClientService;
+
+    @InjectMocks
+    private ValidationRest validationRest;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testProcessJson_ValidInput_Success() throws Exception {
+        // Arrange
+        String json = "{...}"; // Replace with valid JSON
+        String correlationId = "correlationId";
+
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        // Set up mock behavior
+        when(validationService.processJson(json)).thenReturn(json);
+        when(importClientService.importClient(json, correlationId)).thenReturn(importClientResponse);
+        importClientResponse.getResult().setSuccess(true);
+
+        // Act
+        ResponseEntity<?> response = validationRest.processJson(json, correlationId);
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        // Add more assertions if needed
+    }
+
+    @Test
+    public void testProcessJson_ImportFailure_ReturnsUnprocessableEntity() throws Exception {
+        // Arrange
+        String json = "{...}"; // Replace with valid JSON
+        String correlationId = "correlationId";
+
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        // Set up mock behavior
+        when(validationService.processJson(json)).thenReturn(json);
+        when(importClientService.importClient(json, correlationId)).thenReturn(importClientResponse);
+        importClientResponse.getResult().setSuccess(false);
+        importClientResponse.getResult().getErrors().add("Error message");
+
+        // Act
+        ResponseEntity<?> response = validationRest.processJson(json, correlationId);
+
+        // Assert
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
+        // Add more assertions if needed
+    }
+
+    @Test
+    public void testProcessJson_InvalidJson_ReturnsBadRequest() throws Exception {
+        // Arrange
+        String json = "{...}"; // Replace with invalid JSON
+        String correlationId = "correlationId";
+
+        // Set up mock behavior
+        when(validationService.processJson(json)).thenThrow(CustomException.class);
+
+        // Act
+        ResponseEntity<?> response = validationRest.processJson(json, correlationId);
+
+        // Assert
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        // Add more assertions if needed
+    }
+
+    @Test
+    public void testProcessJson_Exception_ReturnsInternalServerError() throws Exception {
+        // Arrange
+        String json = "{...}"; // Replace with valid JSON
+        String correlationId = "correlationId";
+
+        // Set up mock behavior
+        when(validationService.processJson(json)).thenReturn(json);
+        when(importClientService.importClient(json, correlationId)).thenThrow(Exception.class);
+
+        // Act
+        ResponseEntity<?> response = validationRest.processJson(json, correlationId);
+
+        // Assert
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        // Add more assertions if needed
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import static org.mockito.Mockito.*;
+
+@RunWith(MockitoJUnitRunner.class)
+public class ValidationRestTest2 {
+
+    @InjectMocks
+    private ValidationRest validationRest;
+
+    @Mock
+    private ValidationServiceImpl validationService;
+
+    @Mock
+    private ImportClientServiceImp importClientService;
+
+    @Mock
+    private Logger logger;
+
+    @Test
+    public void testProcessJson_SuccessfulImport() throws CustomException, JsonProcessingException {
+        String json = "{...}"; // Replace with your JSON data
+        String correlationId = "123";
+
+        // Mock validation service behavior
+        when(validationService.processJson(json)).thenReturn(json);
+
+        // Mock import client response
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        Result result = new Result();
+        result.setSuccess(true);
+        importClientResponse.setResult(result);
+        when(importClientService.importClient(json, correlationId)).thenReturn(importClientResponse);
+
+        // Mock logger behavior
+        when(logger.isInfoEnabled()).thenReturn(true);
+
+        ResponseEntity<?> responseEntity = validationRest.processJson(json, correlationId);
+
+        // Verify that the response entity is OK
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+        // Verify logger messages
+        verify(logger).info(LogType.mark(LogContext.ACTION_TYPE, LogContext.IMPORT_CLIENT_REQUEST_SUCCESS),
+                " client imported Successfully in LC360 {}", HttpStatus.OK.value());
+    }
+
+    @Test
+    public void testProcessJson_UnsuccessfulImport() throws CustomException, JsonProcessingException {
+        String json = "{...}"; // Replace with your JSON data
+        String correlationId = "123";
+
+        // Mock validation service behavior
+        when(validationService.processJson(json)).thenReturn(json);
+
+        // Mock import client response
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        Result result = new Result();
+        result.setSuccess(false);
+        result.setErrors(Collections.singletonList("Invalid data"));
+        importClientResponse.setResult(result);
+        when(importClientService.importClient(json, correlationId)).thenReturn(importClientResponse);
+
+        // Mock logger behavior
+        when(logger.isInfoEnabled()).thenReturn(true);
+
+        ResponseEntity<?> responseEntity = validationRest.processJson(json, correlationId);
+
+        // Verify that the response entity is UNPROCESSABLE_ENTITY
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, responseEntity.getStatusCode());
+
+        // Verify logger messages
+        verify(logger).info("Error: [Invalid data]");
+        verify(logger).info(" client imported Unsuccessfully in LC360 {}", HttpStatus.UNPROCESSABLE_ENTITY);
+    }
+
+    @Test
+    public void testProcessJson_InvalidJson() throws CustomException, JsonProcessingException {
+        String json = ""; // Invalid JSON
+        String correlationId = "123";
+
+        // Mock logger behavior
+        when(logger.isInfoEnabled()).thenReturn(true);
+
+        ResponseEntity<?> responseEntity = validationRest.processJson(json, correlationId);
+
+        // Verify that the response entity is BAD_REQUEST
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+
+        // Verify logger messages
+        verify(logger).info("JSON is empty");
+    }
+}
+
+
+
+
+
+
+
+
+
+
+import static org.mockito.Mockito.*;
+
+@RunWith(MockitoJUnitRunner.class)
+public class ValidationRestTest3 {
+
+    @Mock
+    private ValidationServiceImpl validationService;
+
+    @Mock
+    private ImportClientServiceImp importClientService;
+
+    @InjectMocks
+    private ValidationRest validationRest;
+
+    @Test
+    public void testProcessJson_Success() throws CustomException, JsonProcessingException {
+        String json = "valid json data";
+        String correlationId = "correlationId";
+
+        String validateInput = "validated json data";
+        ImportClientResponse importResponse = new ImportClientResponse();
+        Result result = new Result();
+        result.setSuccess(true);
+        importResponse.setResult(result);
+
+        when(validationService.processJson(json)).thenReturn(validateInput);
+        when(importClientService.importClient(validateInput, correlationId)).thenReturn(importResponse);
+
+        ResponseEntity<?> responseEntity = validationRest.processJson(json, correlationId);
+
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals(importResponse, responseEntity.getBody());
+
+        verify(validationService, times(1)).processJson(json);
+        verify(importClientService, times(1)).importClient(validateInput, correlationId);
+    }
+
+    @Test
+    public void testProcessJson_Failure() throws CustomException, JsonProcessingException {
+        String json = "valid json data";
+        String correlationId = "correlationId";
+
+        String validateInput = "validated json data";
+        ImportClientResponse importResponse = new ImportClientResponse();
+        Result result = new Result();
+        result.setSuccess(false);
+        importResponse.setResult(result);
+
+        when(validationService.processJson(json)).thenReturn(validateInput);
+        when(importClientService.importClient(validateInput, correlationId)).thenReturn(importResponse);
+
+        ResponseEntity<?> responseEntity = validationRest.processJson(json, correlationId);
+
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, responseEntity.getStatusCode());
+
+        verify(validationService, times(1)).processJson(json);
+        verify(importClientService, times(1)).importClient(validateInput, correlationId);
+    }
+
+    @Test
+    public void testProcessJson_InvalidJson() throws CustomException, JsonProcessingException {
+        String json = "invalid json data";
+        String correlationId = "correlationId";
+
+        when(validationService.processJson(json)).thenThrow(new CustomException("Invalid JSON format"));
+
+        ResponseEntity<?> responseEntity = validationRest.processJson(json, correlationId);
+
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+
+        verify(validationService, times(1)).processJson(json);
+        verify(importClientService, never()).importClient(any(), any());
+    }
+
+    @Test
+    public void testProcessJson_Exception() throws CustomException, JsonProcessingException {
+        String json = "valid json data";
+        String correlationId = "correlationId";
+
+        when(validationService.processJson(json)).thenReturn(json);
+        when(importClientService.importClient(json, correlationId)).thenThrow(new RuntimeException("Some error"));
+
+        ResponseEntity<?> responseEntity = validationRest.processJson(json, correlationId);
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
+
+        verify(validationService, times(1)).processJson(json);
+        verify(importClientService, times(1)).importClient(json, correlationId);
+    }
+}
+
+
+
+
+
+
+
+
+import static org.mockito.Mockito.*;
+
+@RunWith(MockitoJUnitRunner.class)
+public class ValidationRestTest4 {
+
+    @InjectMocks
+    private ValidationRest validationRest;
+
+    @Mock
+    private ValidationServiceImpl validationServiceImpl;
+
+    @Mock
+    private ImportClientServiceImp importClientServiceImp;
+
+    @Test
+    public void testValidJsonImportSuccess() {
+        // Arrange
+        String json = "{...}"; // valid JSON
+        String correlationId = "correlation-id";
+
+        when(validationServiceImpl.processJson(json)).thenReturn(json);
+
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        Result result = new Result();
+        result.setSuccess(true);
+        importClientResponse.setResult(result);
+
+        when(importClientServiceImp.importClient(json, correlationId)).thenReturn(importClientResponse);
+
+        // Act
+        ResponseEntity<?> responseEntity = validationRest.processJson(json, correlationId);
+
+        // Assert
+        assertNotNull(responseEntity);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        // You can also perform additional assertions based on the expected response
+    }
+
+    @Test
+    public void testValidJsonImportFailure() {
+        // Arrange
+        String json = "{...}"; // valid JSON
+        String correlationId = "correlation-id";
+
+        when(validationServiceImpl.processJson(json)).thenReturn(json);
+
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        Result result = new Result();
+        result.setSuccess(false);
+        result.setErrors(Arrays.asList("Error 1", "Error 2"));
+        importClientResponse.setResult(result);
+
+        when(importClientServiceImp.importClient(json, correlationId)).thenReturn(importClientResponse);
+
+        // Act
+        ResponseEntity<?> responseEntity = validationRest.processJson(json, correlationId);
+
+        // Assert
+        assertNotNull(responseEntity);
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, responseEntity.getStatusCode());
+        // You can also perform additional assertions based on the expected response
+    }
+
+    @Test
+    public void testInvalidJson() {
+        // Arrange
+        String json = "invalid JSON";
+        String correlationId = "correlation-id";
+
+        when(validationServiceImpl.processJson(json)).thenThrow(new CustomException("Invalid JSON"));
+
+        // Act
+        ResponseEntity<?> responseEntity = validationRest.processJson(json, correlationId);
+
+        // Assert
+        assertNotNull(responseEntity);
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+        // You can also perform additional assertions based on the expected response
+    }
+
+    @Test
+    public void testInternalServerError() {
+        // Arrange
+        String json = "{...}"; // valid JSON
+        String correlationId = "correlation-id";
+
+        when(validationServiceImpl.processJson(json)).thenReturn(json);
+
+        when(importClientServiceImp.importClient(json, correlationId)).thenThrow(new RuntimeException("Some error occurred"));
+
+        // Act
+        ResponseEntity<?> responseEntity = validationRest.processJson(json, correlationId);
+
+        // Assert
+        assertNotNull(responseEntity);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
+        // You can also perform additional assertions based on the expected response
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+import static org.mockito.Mockito.*;
+
+@RunWith(MockitoJUnitRunner.class)
+public class ValidationRestTest5 {
+
+    @Mock
+    private ValidationServiceImpl validationService;
+
+    @Mock
+    private ImportClientServiceImp importClientService;
+
+    @InjectMocks
+    private ValidationRest validationRest;
+
+    @Test
+    public void testProcessJson_SuccessfulImport() throws Exception {
+        String json = "valid_json";
+        String correlationId = "correlation_id";
+
+        // Mocking validationService.processJson
+        when(validationService.processJson(json)).thenReturn(json);
+
+        // Mocking importClientService.importClient
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        Result result = new Result();
+        result.setSuccess(true);
+        importClientResponse.setResult(result);
+        when(importClientService.importClient(json, correlationId)).thenReturn(importClientResponse);
+
+        ResponseEntity<?> responseEntity = validationRest.processJson(json, correlationId);
+
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertNotNull(responseEntity.getBody());
+    }
+
+    @Test
+    public void testProcessJson_FailedImport() throws Exception {
+        String json = "valid_json";
+        String correlationId = "correlation_id";
+
+        // Mocking validationService.processJson
+        when(validationService.processJson(json)).thenReturn(json);
+
+        // Mocking importClientService.importClient
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        Result result = new Result();
+        result.setSuccess(false);
+        List<Object> errors = new ArrayList<>();
+        errors.add("Error message");
+        result.setErrors(errors);
+        importClientResponse.setResult(result);
+        when(importClientService.importClient(json, correlationId)).thenReturn(importClientResponse);
+
+        ResponseEntity<?> responseEntity = validationRest.processJson(json, correlationId);
+
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, responseEntity.getStatusCode());
+        assertNotNull(responseEntity.getBody());
+    }
+
+    @Test
+    public void testProcessJson_InvalidJson() throws Exception {
+        String json = ""; // Invalid JSON
+        String correlationId = "correlation_id";
+
+        ResponseEntity<?> responseEntity = validationRest.processJson(json, correlationId);
+
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+        assertNotNull(responseEntity.getBody());
+    }
+
+    @Test
+    public void testProcessJson_CustomException() throws Exception {
+        String json = "valid_json";
+        String correlationId = "correlation_id";
+
+        // Mocking validationService.processJson to throw CustomException
+        when(validationService.processJson(json)).thenThrow(new CustomException("Custom error message"));
+
+        ResponseEntity<?> responseEntity = validationRest.processJson(json, correlationId);
+
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+        assertNotNull(responseEntity.getBody());
+    }
+
+    @Test
+    public void testProcessJson_Exception() throws Exception {
+        String json = "valid_json";
+        String correlationId = "correlation_id";
+
+        // Mocking validationService.processJson
+        when(validationService.processJson(json)).thenReturn(json);
+
+        // Mocking importClientService.importClient to throw Exception
+        when(importClientService.importClient(json, correlationId)).thenThrow(new Exception("General exception"));
+
+        ResponseEntity<?> responseEntity = validationRest.processJson(json, correlationId);
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
+        assertNotNull(responseEntity.getBody());
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 java.lang.NullPointerException: Cannot invoke "uk.co.allianz.rap.lc.service.ValidationServiceImpl.processJson(String)" because "this.validationServiceImpl" is null
         when(validationServiceImpl.processJson(json)).thenThrow(new CustomException("Validation failed"));
 
