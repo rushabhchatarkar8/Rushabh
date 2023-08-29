@@ -1,3 +1,87 @@
+import static org.mockito.Mockito.*;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.model.request.importclient.Location;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+
+public class ImportClientServiceImpTest {
+
+    @Mock
+    private LossControlDao lossControlDao;
+
+    @InjectMocks
+    private ImportClientServiceImp importClientService;
+
+    @BeforeEach
+    public void setup() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testUpdateLookUpTableWithMatchingClientIds() {
+        String clientId = "123";
+        String lc360ClientId = "123";
+        ArrayList<Location> updatedLocations = new ArrayList<>();
+        String originalClientId = "456";
+        ImportClientResponse importClientResponse = createMockImportClientResponse();
+
+        importClientService.updateLookUpTable(clientId, lc360ClientId, updatedLocations, originalClientId, importClientResponse);
+
+        verify(lossControlDao, never()).insertClinetData(any(), any());
+        verify(lossControlDao, never()).insertLocationData(any(), any());
+    }
+
+    @Test
+    public void testUpdateLookUpTableWithDifferentClientIds() {
+        String clientId = "123";
+        String lc360ClientId = "456";
+        ArrayList<Location> updatedLocations = new ArrayList<>();
+        String originalClientId = "789";
+        ImportClientResponse importClientResponse = createMockImportClientResponse();
+
+        importClientService.updateLookUpTable(clientId, lc360ClientId, updatedLocations, originalClientId, importClientResponse);
+
+        verify(lossControlDao).insertClinetData(clientId, lc360ClientId);
+        verify(lossControlDao, times(updatedLocations.size())).insertLocationData(any(), any());
+    }
+
+    private ImportClientResponse createMockImportClientResponse() {
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        ImportClientResponse.Result result = new ImportClientResponse.Result();
+        List<uk.co.allianz.rap.lc.model.response.importclient.Location> locations = new ArrayList<>();
+        uk.co.allianz.rap.lc.model.response.importclient.Location location = new uk.co.allianz.rap.lc.model.response.importclient.Location();
+        location.setLocationLookupID("location123");
+        locations.add(location);
+        result.setLocations(locations);
+        importClientResponse.setResult(result);
+        return importClientResponse;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
