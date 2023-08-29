@@ -1,4 +1,79 @@
- public String clientResponse(String clientLookupId){
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.service.ImportClientServiceImp;
+
+public class ImportClientServiceImpTest {
+
+    @Mock
+    private LossControlDao lossControlDao;
+
+    @InjectMocks
+    private ImportClientServiceImp importClientService;
+
+    @BeforeEach
+    public void setup() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testClientResponseWithExistingClient() {
+        String clientLookupId = "existingLookupId";
+        String lc360ClientId = "lc360Client123";
+
+        Map<String, Object> mockResult = new HashMap<>();
+        mockResult.put("someKey", lc360ClientId);
+        when(lossControlDao.findLc360ClientID(clientLookupId)).thenReturn(mockResult);
+
+        String result = importClientService.clientResponse(clientLookupId);
+
+        assertEquals(lc360ClientId, result);
+        verify(lossControlDao, times(1)).findLc360ClientID(clientLookupId);
+    }
+
+    @Test
+    public void testClientResponseWithNonExistingClient() {
+        String clientLookupId = "nonExistingLookupId";
+
+        when(lossControlDao.findLc360ClientID(clientLookupId)).thenReturn(null);
+
+        String result = importClientService.clientResponse(clientLookupId);
+
+        assertEquals(clientLookupId, result);
+        verify(lossControlDao, times(1)).findLc360ClientID(clientLookupId);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+public String clientResponse(String clientLookupId){
         Map<String, Object> clientResult = lossControlDao.findLc360ClientID(clientLookupId);
         if(clientResult != null){
             String lc360ClientId = (String) clientResult.get(clientResult.keySet().iterator().next());
