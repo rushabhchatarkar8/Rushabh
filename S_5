@@ -1,3 +1,1022 @@
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.ImportClientServiceImp;
+import uk.co.allianz.rap.lc.service.ValidationServiceImpl;
+
+public class ValidationRestTestN6 {
+
+    @Mock
+    private ValidationServiceImpl validationService;
+
+    @Mock
+    private ImportClientServiceImp importClientService;
+
+    @InjectMocks
+    private ValidationRest validationRest;
+
+    @BeforeEach
+    public void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testProcessJson_Success() throws Exception {
+        String json = "{\"key\":\"value\"}";
+        String correlationId = "correlation-id";
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        importClientResponse.setResult(new Result());
+        importClientResponse.getResult().setSuccess(true);
+
+        when(validationService.processJson(anyString())).thenReturn(json);
+        when(importClientService.importClient(anyString(), anyString())).thenReturn(importClientResponse);
+
+        ResponseEntity<?> responseEntity = validationRest.processJson(json, correlationId);
+
+        // Assert the response
+        assertNotNull(responseEntity);
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals(importClientResponse, responseEntity.getBody());
+
+        verify(validationService, times(1)).processJson(json);
+        verify(importClientService, times(1)).importClient(json, correlationId);
+    }
+
+    @Test
+    public void testProcessJson_ValidationError() throws Exception {
+        String json = "{\"key\":\"value\"}";
+        String correlationId = "correlation-id";
+
+        when(validationService.processJson(anyString())).thenThrow(new CustomException("Invalid JSON format"));
+
+        ResponseEntity<?> responseEntity = validationRest.processJson(json, correlationId);
+
+        // Assert the response
+        assertNotNull(responseEntity);
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+        assertTrue(responseEntity.getBody().toString().contains("Invalid JSON format"));
+
+        verify(validationService, times(1)).processJson(json);
+        verify(importClientService, never()).importClient(anyString(), anyString());
+    }
+
+    @Test
+    public void testProcessJson_OtherException() throws Exception {
+        String json = "{\"key\":\"value\"}";
+        String correlationId = "correlation-id";
+
+        when(validationService.processJson(anyString())).thenReturn(json);
+        when(importClientService.importClient(anyString(), anyString())).thenThrow(new RuntimeException("Internal Server Error"));
+
+        ResponseEntity<?> responseEntity = validationRest.processJson(json, correlationId);
+
+        // Assert the response
+        assertNotNull(responseEntity);
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
+        assertTrue(responseEntity.getBody().toString().contains("Invalid JSON format"));
+
+        verify(validationService, times(1)).processJson(json);
+        verify(importClientService, times(1)).importClient(json, correlationId);
+    }
+}
+
+//
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.ValidationServiceImpl;
+import uk.co.allianz.rap.lc.service.ImportClientServiceImp;
+
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+@WebMvcTest(ValidationRest.class)
+public class ValidationRestTestN5 {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockBean
+    private ValidationServiceImpl validationService;
+
+    @MockBean
+    private ImportClientServiceImp importClientService;
+
+    @Test
+    public void testValidJson() throws Exception {
+        String json = "{\"key\": \"value\"}";
+        String correlationId = "123456";
+        String validatedJson = "{\"key\": \"value\"}";
+        ImportClientResponse response = new ImportClientResponse();
+        response.setResult(new Result());
+        response.getResult().setSuccess(true);
+
+        when(validationService.processJson(json)).thenReturn(validatedJson);
+        when(importClientService.importClient(validatedJson, correlationId)).thenReturn(response);
+
+        MockHttpServletRequestBuilder request = post("/survey-submission")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Correlation-ID", correlationId)
+                .content(json);
+
+        mockMvc.perform(request)
+                .andExpect(status().isOk())
+                .andExpect(content().json("{\"result\":{\"success\":true}}"));
+    }
+
+    @Test
+    public void testEmptyJson() throws Exception {
+        String correlationId = "123456";
+
+        MockHttpServletRequestBuilder request = post("/survey-submission")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Correlation-ID", correlationId);
+
+        mockMvc.perform(request)
+                .andExpect(status().isBadRequest())
+                .andExpect(content().string("JSON is empty"));
+    }
+
+    @Test
+    public void testInvalidJson() throws Exception {
+        String json = "invalid json";
+        String correlationId = "123456";
+
+        when(validationService.processJson(json)).thenThrow(new CustomException("Invalid JSON format"));
+
+        MockHttpServletRequestBuilder request = post("/survey-submission")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("Correlation-ID", correlationId)
+                .content(json);
+
+        mockMvc.perform(request)
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().string("Invalid JSON format"));
+    }
+
+    // Add more test cases to cover different scenarios and branches
+}
+
+
+
+//new 4
+@Test
+public void testProcessJson_Success() throws Exception {
+    // Mock input JSON
+    String json = "{ ... }";
+
+    // Mock dependencies
+    when(validationService.processJson(anyString())).thenReturn(json);
+    ImportClientResponse importClientResponse = new ImportClientResponse(); // Mock your response here
+    when(importClientService.importClient(json, anyString())).thenReturn(importClientResponse);
+
+    // Perform the POST request
+    ResponseEntity<?> responseEntity = validationRest.processJson(json, "correlationId");
+
+    // Assert the response
+    assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    // Add more assertions as needed
+}
+
+@Test
+public void testProcessJson_ValidationFailed() throws Exception {
+    // Mock input JSON
+    String json = "{ ... }";
+
+    // Mock validation service to throw an exception
+    when(validationService.processJson(anyString())).thenThrow(new CustomException("Validation failed"));
+
+    // Perform the POST request
+    ResponseEntity<?> responseEntity = validationRest.processJson(json, "correlationId");
+
+    // Assert the response
+    assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+    // Add more assertions as needed
+}
+// Write more test methods to cover other scenarios
+
+
+import static org.mockito.Mockito.*;
+
+@RunWith(MockitoJUnitRunner.class)
+public class ValidationRestTest {
+
+    @InjectMocks
+    private ValidationRest validationRest;
+
+    @Mock
+    private ValidationServiceImpl validationService;
+
+    @Mock
+    private ImportClientServiceImp importClientService;
+
+    // Other mocks or dependencies can be added here
+
+    @Before
+    public void setUp() {
+        MockitoAnnotations.initMocks(this);
+    }
+
+    // Your test methods will go here
+}
+
+//
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.ValidationServiceImpl;
+import uk.co.allianz.rap.lc.service.ImportClientServiceImp;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+public class ValidationRestTestN3 {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    @MockBean
+    private ValidationServiceImpl validationService;
+
+    @MockBean
+    private ImportClientServiceImp importClientService;
+
+    @BeforeEach
+    public void setup() {
+        // Mock your service behavior here if needed
+    }
+
+    @Test
+    public void testProcessJson_Success() throws Exception {
+        // Mocking
+        String json = "{...}"; // Your JSON payload
+        String correlationId = "correlationId";
+        ImportClientResponse mockResponse = new ImportClientResponse();
+        mockResponse.getResult().setSuccess(true);
+
+        when(validationService.processJson(json)).thenReturn(json);
+        when(importClientService.importClient(json, correlationId)).thenReturn(mockResponse);
+
+        // Test
+        mockMvc.perform(post("/survey-submission")
+            .content(json)
+            .header("Correlation-ID", correlationId)
+            .contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk());
+
+        // Verify
+        verify(validationService, times(1)).processJson(json);
+        verify(importClientService, times(1)).importClient(json, correlationId);
+    }
+
+    // Similar tests for other scenarios
+}
+
+//
+import static org.mockito.Mockito.*;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.log.LogContext;
+import uk.co.allianz.rap.lc.log.LogType;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.ImportClientServiceImp;
+import uk.co.allianz.rap.lc.service.ValidationServiceImpl;
+import org.slf4j.LoggerFactory;
+
+public class ValidationRestTestN2 {
+
+    @Test
+    public void testProcessJson_ValidInput_Success() throws CustomException {
+        ValidationServiceImpl validationService = mock(ValidationServiceImpl.class);
+        ImportClientServiceImp importClientService = mock(ImportClientServiceImp.class);
+
+        ValidationRest validationRest = new ValidationRest(validationService, importClientService);
+
+        String validJson = "{\"key\": \"value\"}";
+        String correlationId = "123456";
+
+        when(validationService.processJson(validJson)).thenReturn(validJson);
+
+        ImportClientResponse response = new ImportClientResponse();
+        when(importClientService.importClient(validJson, correlationId)).thenReturn(response);
+
+        ResponseEntity<?> expectedResponse = ResponseEntity.ok(response);
+
+        ResponseEntity<?> actualResponse = validationRest.processJson(validJson, correlationId);
+
+        assertEquals(expectedResponse, actualResponse);
+
+        verify(validationService, times(1)).processJson(validJson);
+        verify(importClientService, times(1)).importClient(validJson, correlationId);
+    }
+
+    // Similar tests can be written for other scenarios (e.g., invalid JSON, exception cases)
+}
+
+
+
+//
+import static org.mockito.Mockito.*;
+
+@RunWith(MockitoJUnitRunner.class)
+public class ValidationRestTestN1 {
+
+    @InjectMocks
+    private ValidationRest validationRest;
+
+    @Mock
+    private ValidationServiceImpl validationService;
+
+    @Mock
+    private ImportClientServiceImp importClientService;
+
+    @Mock
+    private ImportClientResponse importClientResponse;
+
+    @Test
+    public void testProcessJson_Success() throws Exception {
+        // Arrange
+        String json = "{\"key\": \"value\"}";
+        String correlationId = "123";
+
+        when(validationService.processJson(json)).thenReturn(json);
+        when(importClientService.importClient(json, correlationId)).thenReturn(importClientResponse);
+        when(importClientResponse.getResult()).thenReturn(new Result());
+        when(importClientResponse.getResult().isSuccess()).thenReturn(true);
+
+        // Act
+        ResponseEntity<?> responseEntity = validationRest.processJson(json, correlationId);
+
+        // Assert
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals(importClientResponse, responseEntity.getBody());
+    }
+
+    @Test
+    public void testProcessJson_UnprocessableEntity() throws Exception {
+        // Arrange
+        String json = "{\"key\": \"value\"}";
+        String correlationId = "123";
+        List<Object> errors = new ArrayList<>();
+        errors.add("Error message");
+
+        when(validationService.processJson(json)).thenReturn(json);
+        when(importClientService.importClient(json, correlationId)).thenReturn(importClientResponse);
+        when(importClientResponse.getResult()).thenReturn(new Result());
+        when(importClientResponse.getResult().isSuccess()).thenReturn(false);
+        when(importClientResponse.getResult().getErrors()).thenReturn(errors);
+
+        // Act
+        ResponseEntity<?> responseEntity = validationRest.processJson(json, correlationId);
+
+        // Assert
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, responseEntity.getStatusCode());
+        assertEquals(errors, responseEntity.getBody());
+    }
+
+    // Additional test cases for other scenarios can be added here
+}
+
+///////////////
+////////////
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.ImportClientServiceImp;
+import uk.co.allianz.rap.lc.service.ValidationServiceImpl;
+
+class ValidationRestTestOf {
+
+    @Mock
+    private ValidationServiceImpl validationService;
+
+    @Mock
+    private ImportClientServiceImp importClientService;
+
+    @InjectMocks
+    private ValidationRest validationRest;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    void testValidJsonAndSuccessfulImport() throws CustomException {
+        String json = "valid JSON here";
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        importClientResponse.setResult(/* set result here */);
+        when(validationService.processJson(any())).thenReturn(json);
+        when(importClientService.importClient(any(), any())).thenReturn(importClientResponse);
+
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        // Add more assertions as needed
+    }
+
+    @Test
+    void testValidJsonAndUnsuccessfulImport() throws CustomException {
+        String json = "valid JSON here";
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        importClientResponse.setResult(/* set result here */);
+        importClientResponse.getResult().setSuccess(false);
+        when(validationService.processJson(any())).thenReturn(json);
+        when(importClientService.importClient(any(), any())).thenReturn(importClientResponse);
+
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
+        // Add more assertions as needed
+    }
+
+    @Test
+    void testEmptyJson() {
+        String json = "";
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        // Add more assertions as needed
+    }
+
+    @Test
+    void testCustomException() throws CustomException {
+        String json = "valid JSON here";
+        when(validationService.processJson(any())).thenThrow(new CustomException("Custom exception"));
+
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        // Add more assertions as needed
+    }
+
+    @Test
+    void testOtherException() throws CustomException {
+        String json = "valid JSON here";
+        when(validationService.processJson(any())).thenReturn(json);
+        when(importClientService.importClient(any(), any())).thenThrow(new RuntimeException());
+
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        // Add more assertions as needed
+    }
+
+    // Add more test cases to cover different scenarios
+}
+
+
+//
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.ImportClientServiceImp;
+import uk.co.allianz.rap.lc.service.ValidationServiceImpl;
+
+import java.util.Collections;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+class ValidationRestTestOe {
+
+    @Mock
+    private ValidationServiceImpl validationService;
+
+    @Mock
+    private ImportClientServiceImp importClientService;
+
+    @InjectMocks
+    private ValidationRest validationRest;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    void testValidJsonAndSuccessfulImport() throws CustomException {
+        String json = "valid JSON here";
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        importClientResponse.setResult(/* set result here */);
+        when(validationService.processJson(any())).thenReturn(json);
+        when(importClientService.importClient(any(), any())).thenReturn(importClientResponse);
+
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+    }
+
+    @Test
+    void testValidJsonAndFailedImport() throws CustomException {
+        String json = "valid JSON here";
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        importClientResponse.setResult(/* set result with failure here */);
+        when(validationService.processJson(any())).thenReturn(json);
+        when(importClientService.importClient(any(), any())).thenReturn(importClientResponse);
+
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
+        assertNotNull(response.getBody());
+    }
+
+    @Test
+    void testEmptyJson() {
+        ResponseEntity<?> response = validationRest.processJson("", "correlationId");
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void testCustomException() throws CustomException {
+        String json = "valid JSON here";
+        when(validationService.processJson(any())).thenThrow(new CustomException("Custom exception"));
+
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(response.getBody());
+    }
+
+    @Test
+    void testOtherException() throws CustomException {
+        String json = "valid JSON here";
+        when(validationService.processJson(any())).thenReturn(json);
+        when(importClientService.importClient(any(), any())).thenThrow(new RuntimeException());
+
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertNotNull(response.getBody());
+    }
+
+    @Test
+    void testInvalidJsonFormat() {
+        String json = "invalid JSON";
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(response.getBody());
+    }
+
+    // Add more test cases to cover different scenarios
+}
+
+
+//
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.ImportClientServiceImp;
+import uk.co.allianz.rap.lc.service.ValidationServiceImpl;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+class ValidationRestTestOd {
+
+    @Mock
+    private ValidationServiceImpl validationService;
+
+    @Mock
+    private ImportClientServiceImp importClientService;
+
+    @InjectMocks
+    private ValidationRest validationRest;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    void testValidJsonAndSuccessfulImport() throws CustomException {
+        String json = "valid JSON here";
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        importClientResponse.setResult(/* set result here */);
+        when(validationService.processJson(any())).thenReturn(json);
+        when(importClientService.importClient(any(), any())).thenReturn(importClientResponse);
+
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        // More assertions as needed
+    }
+
+    @Test
+    void testValidJsonAndUnsuccessfulImport() throws CustomException {
+        String json = "valid JSON here";
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        Result result = new Result();
+        result.setSuccess(false);
+        result.setErrors(/* set errors here */);
+        importClientResponse.setResult(result);
+        when(validationService.processJson(any())).thenReturn(json);
+        when(importClientService.importClient(any(), any())).thenReturn(importClientResponse);
+
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
+        // More assertions as needed
+    }
+
+    @Test
+    void testEmptyJson() {
+        String json = "";
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        // More assertions as needed
+    }
+
+    @Test
+    void testCustomException() throws CustomException {
+        String json = "valid JSON here";
+        when(validationService.processJson(any())).thenThrow(new CustomException("Custom exception"));
+
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        // More assertions as needed
+    }
+
+    @Test
+    void testOtherException() throws CustomException {
+        String json = "valid JSON here";
+        when(validationService.processJson(any())).thenReturn(json);
+        when(importClientService.importClient(any(), any())).thenThrow(new RuntimeException());
+
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        // More assertions as needed
+    }
+
+    // Add more test cases to cover different scenarios
+
+    // Test cases to cover logging statements and different branches
+}
+
+//
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.ImportClientServiceImp;
+import uk.co.allianz.rap.lc.service.ValidationServiceImpl;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+class ValidationRestTestOc {
+
+    @Mock
+    private ValidationServiceImpl validationService;
+
+    @Mock
+    private ImportClientServiceImp importClientService;
+
+    @InjectMocks
+    private ValidationRest validationRest;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    void testValidJsonWithSuccessfulImport() throws CustomException {
+        String json = "valid JSON here";
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        importClientResponse.setResult(/* set result here */);
+        when(validationService.processJson(any())).thenReturn(json);
+        when(importClientService.importClient(any(), any())).thenReturn(importClientResponse);
+
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+    }
+
+    @Test
+    void testValidJsonWithUnsuccessfulImport() throws CustomException {
+        String json = "valid JSON here";
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        importClientResponse.setResult(/* set result here */);
+        importClientResponse.getResult().setSuccess(false);
+        when(validationService.processJson(any())).thenReturn(json);
+        when(importClientService.importClient(any(), any())).thenReturn(importClientResponse);
+
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
+        assertNotNull(response.getBody());
+    }
+
+    @Test
+    void testEmptyJson() {
+        String json = "";
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void testCustomException() throws CustomException {
+        String json = "valid JSON here";
+        when(validationService.processJson(any())).thenThrow(new CustomException("Custom exception"));
+
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertNotNull(response.getBody());
+    }
+
+    @Test
+    void testOtherException() throws CustomException {
+        String json = "valid JSON here";
+        when(validationService.processJson(any())).thenReturn(json);
+        when(importClientService.importClient(any(), any())).thenThrow(new RuntimeException());
+
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    }
+
+    // Add more test cases to cover different scenarios
+}
+
+//
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.ImportClientServiceImp;
+import uk.co.allianz.rap.lc.service.ValidationServiceImpl;
+
+import java.util.Collections;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+class ValidationRestTestOb {
+
+    @Mock
+    private ValidationServiceImpl validationService;
+
+    @Mock
+    private ImportClientServiceImp importClientService;
+
+    @InjectMocks
+    private ValidationRest validationRest;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    void testValidJsonAndImportSuccess() throws CustomException {
+        String json = "valid JSON here";
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        Result result = new Result();
+        result.setSuccess(true);
+        importClientResponse.setResult(result);
+        
+        when(validationService.processJson(any())).thenReturn(json);
+        when(importClientService.importClient(any(), any())).thenReturn(importClientResponse);
+
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertTrue(response.getBody() instanceof ImportClientResponse);
+    }
+
+    @Test
+    void testValidJsonAndImportFailure() throws CustomException {
+        String json = "valid JSON here";
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        Result result = new Result();
+        result.setSuccess(false);
+        result.setErrors(Collections.singletonList("Error message"));
+        importClientResponse.setResult(result);
+
+        when(validationService.processJson(any())).thenReturn(json);
+        when(importClientService.importClient(any(), any())).thenReturn(importClientResponse);
+
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
+        assertTrue(response.getBody() instanceof List);
+    }
+
+    @Test
+    void testEmptyJson() {
+        String json = "";
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void testCustomException() throws CustomException {
+        String json = "valid JSON here";
+        when(validationService.processJson(any())).thenThrow(new CustomException("Custom exception"));
+
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void testOtherException() throws CustomException {
+        String json = "valid JSON here";
+        when(validationService.processJson(any())).thenReturn(json);
+        when(importClientService.importClient(any(), any())).thenThrow(new RuntimeException());
+
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    }
+    
+    // Add more test cases to cover different scenarios
+}
+
+
+
+
+
+
+
+
+
+
+//
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.ImportClientServiceImp;
+import uk.co.allianz.rap.lc.service.ValidationServiceImpl;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
+
+class ValidationRestTestOa {
+
+    @Mock
+    private ValidationServiceImpl validationService;
+
+    @Mock
+    private ImportClientServiceImp importClientService;
+
+    @InjectMocks
+    private ValidationRest validationRest;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    void testValidJson() throws CustomException {
+        String json = "valid JSON here";
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        importClientResponse.setResult(/* set result here */);
+        when(validationService.processJson(any())).thenReturn(json);
+        when(importClientService.importClient(any(), any())).thenReturn(importClientResponse);
+
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        // More assertions as needed
+    }
+
+    @Test
+    void testEmptyJson() {
+        String json = "";
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        // More assertions as needed
+    }
+
+    @Test
+    void testCustomException() throws CustomException {
+        String json = "valid JSON here";
+        when(validationService.processJson(any())).thenThrow(new CustomException("Custom exception"));
+
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        // More assertions as needed
+    }
+
+    @Test
+    void testOtherException() throws CustomException {
+        String json = "valid JSON here";
+        when(validationService.processJson(any())).thenReturn(json);
+        when(importClientService.importClient(any(), any())).thenThrow(new RuntimeException());
+
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        // More assertions as needed
+    }
+
+    // Add more test cases to cover different scenarios
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 package uk.co.allianz.rap.lc.rest;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
