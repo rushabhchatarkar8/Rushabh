@@ -1,3 +1,206 @@
+
+package uk.co.allianz.rap.lc.service;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import uk.co.allianz.rap.lc.cache.TokenCache;
+import uk.co.allianz.rap.lc.dao.LossControlDao;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.request.importclient.ImportClientRequest;
+import uk.co.allianz.rap.lc.model.request.importclient.Location;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import java.util.ArrayList;
+import java.util.Map;
+import ch.qos.logback.classic.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * Extracting fields and data from the "data model".
+ * sent from loss-control-adapter and building the API request: ImportClient
+ */
+@Service
+public class ImportClientServiceImp implements ImportClientService {
+    private static final Logger LOGGER = (Logger) LoggerFactory.getLogger(ImportClientServiceImp.class);
+    @Autowired
+    private TokenCache tokenCache;
+    @Autowired
+    private LossControlDao lossControlDao;
+    @Autowired
+    private LossControlServiceImpl lossControlServiceImpl;
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    public ImportClientResponse importClient(final String json, final String correlationId) throws CustomException, JsonProcessingException {
+        ImportClientRequest importClientRequest = objectMapper.readValue(json, ImportClientRequest.class);
+        String clientLookupID = importClientRequest.getClient().getLookupID();
+        ArrayList<Location> locations = importClientRequest.getClient().getLocations();
+        String clientId = clientResponse(importClientRequest.getClient().getLookupID());
+        ArrayList<Location> updatedLocation = locationResponse(locations);
+        ImportClientRequest updatedImportClientRequest = preImportClientRequest(importClientRequest, clientId, updatedLocation, importClientRequest.getClient().getLookupID());
+        ImportClientResponse importClientResponse = lossControlServiceImpl.clientPost(updatedImportClientRequest, tokenCache.retrieveTokenFromCache(correlationId));
+        updateLookUpTable(clientId, importClientResponse.getResult().getClientLookupID(), updatedLocation, clientLookupID, importClientResponse);
+        return importClientResponse;
+    }
+
+    //checking client is present or not in client lookup Table
+    public String clientResponse(final String clientLookupId) {
+        Map<String, Object> clientResult = lossControlDao.findLc360ClientID(clientLookupId);
+        if (clientResult != null) {
+            String lc360ClientId = (String) clientResult.get(clientResult.keySet().iterator().next());
+            LOGGER.info("Client is present in Client lookup Table.");
+            return lc360ClientId;
+        } else {
+            LOGGER.info("Client is not present in Client lookup Table.");
+            return clientLookupId;
+        }
+    }
+
+    //checking location lookupID null or not
+    public ArrayList<Location> locationResponse(final ArrayList<Location> locations) {
+        LOGGER.info("checking Location lookupID null or not.");
+    ArrayList<Location> validLocations = new ArrayList<>();
+    for (Location location : locations) {
+        String lookupID = location.getLookupID();
+        if (lookupID != null) {
+            validLocations.add(location);
+        }
+    }
+    return validLocations;
+    }
+
+    // Enriched Import Client Request
+    public ImportClientRequest preImportClientRequest(final ImportClientRequest importClientRequest, final String clientId, final ArrayList<Location> updatedLocation, final String updatedClientID) throws JsonProcessingException {
+        LOGGER.info("start Enriched Import Client Request");
+        for (Location location : updatedLocation) {
+            Map<String, Object> locationResult = lossControlDao.findLc360LocationID(location.getLookupID() + "_" + updatedClientID);
+            if (locationResult != null) {
+                LOGGER.info("Location are present");
+                String lc360LocationId = (String) locationResult.get(locationResult.keySet().iterator().next());
+                location.setLookupID(lc360LocationId);
+                objectMapper.writeValueAsString(importClientRequest);
+            }
+        }
+        if (clientId.equals(importClientRequest.getClient().getLookupID())) {
+            LOGGER.info("client is not present");
+            return importClientRequest;
+        } else {
+            importClientRequest.getClient().setLookupID(clientId);
+            LOGGER.info("setting clientLookupID in importClientRequest");
+            objectMapper.writeValueAsString(importClientRequest);
+            return importClientRequest;
+        }
+    }
+    public void updateLookUpTable(final String clientId, final String lc360ClientId, final ArrayList<Location> updatedLocation, final String clientLookupID, final ImportClientResponse importClientResponse) {
+        LOGGER.info("start updating LookUpTable");
+        if (clientId.equals(lc360ClientId)) {
+            LOGGER.info("client is present in lookup table");
+        } else {
+            lossControlDao.insertClinetData(clientId, lc360ClientId);
+            LOGGER.info("updated client in lookup table");
+        }
+        for (int index = 0; index < updatedLocation.size(); index++) {
+            String lookupID = updatedLocation.get(index).getLookupID();
+            Map<String, Object> locationResult = lossControlDao.findLocationID(lookupID);
+            if (locationResult == null) {
+                LOGGER.info("location is not present in lookup table");
+                ArrayList<uk.co.allianz.rap.lc.model.response.importclient.Location> locationsResponse = importClientResponse.getResult().getLocations();
+                lossControlDao.insertLocationData(updatedLocation.get(index).getLookupID() + "_" + clientLookupID, locationsResponse.get(index).getLocationLookupID());
+                LOGGER.info("location is updated in lookup table");
+            }
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+package uk.co.allianz.rap.lc.service;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParser;
+import com.google.json.JsonSanitizer;
+import org.springframework.stereotype.Service;
+import uk.co.allianz.rap.lc.exception.CustomException;
+
+/***
+ * Build standard JSON validation on incoming data.
+ */
+@Service
+public class ValidationServiceImpl implements ValidationService {
+    public String processJson(final String json) throws CustomException, JsonProcessingException {
+        // Parse the JSON string into a JsonElement
+        JsonElement jsonElement;
+        jsonElement = JsonParser.parseString(json);
+        // Check if the JSON is a single value (string or number) or empty object/array
+        if (isSingleValue(jsonElement)) {
+            throw new CustomException("JSON is a single value. ");
+        } else if (isEmptyObject(jsonElement) || isEmptyArray(jsonElement)) {
+            throw new CustomException("JSON is empty object/array. ");
+        }
+        String sanitizedJson = JsonSanitizer.sanitize(json);
+        return sanitizedJson;
+    }
+
+    // Helper method to check if the JSON element is a single value
+    public boolean isSingleValue(final JsonElement jsonElement) {
+        return !jsonElement.isJsonObject() && !jsonElement.isJsonArray();
+    }
+
+    // Helper method to check if the JSON element is an empty object ({})
+    public boolean isEmptyObject(final JsonElement jsonElement) {
+        return jsonElement.isJsonObject() && jsonElement.getAsJsonObject().entrySet().isEmpty();
+    }
+
+    // Helper method to check if the JSON element is an empty array ([])
+    private boolean isEmptyArray(final JsonElement jsonElement) {
+        return jsonElement.isJsonArray() && jsonElement.getAsJsonArray().size() == 0;
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 package uk.co.allianz.rap.lc.rest;
 
 import org.springframework.beans.factory.annotation.Autowired;
