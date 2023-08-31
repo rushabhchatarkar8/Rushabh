@@ -10,6 +10,106 @@ import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
 import uk.co.allianz.rap.lc.service.ImportClientServiceImp;
 import uk.co.allianz.rap.lc.service.ValidationServiceImpl;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+public class ValidationRestTest {
+
+    @Mock
+    private ValidationServiceImpl validationService;
+
+    @Mock
+    private ImportClientServiceImp importClientService;
+
+    @InjectMocks
+    private ValidationRest validationRest;
+
+    @BeforeEach
+    public void setup() {
+        MockitoAnnotations.openMocks(this);
+    }
+
+    @Test
+    public void testProcessJson_Success() throws CustomException {
+        String json = "your-valid-json";
+        String correlationId = "your-correlation-id";
+        String validatedJson = "validated-json";
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        // Set up mock behavior
+        when(validationService.processJson(json)).thenReturn(validatedJson);
+        when(importClientService.importClient(validatedJson, correlationId)).thenReturn(importClientResponse);
+
+        ResponseEntity<?> responseEntity = validationRest.processJson(json, correlationId);
+
+        assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        assertEquals(importClientResponse, responseEntity.getBody());
+
+        verify(validationService).processJson(json);
+        verify(importClientService).importClient(validatedJson, correlationId);
+    }
+
+    @Test
+    public void testProcessJson_ValidationError() throws CustomException {
+        String json = "your-invalid-json";
+        String correlationId = "your-correlation-id";
+        CustomException customException = new CustomException("Invalid JSON format");
+        // Set up mock behavior
+        when(validationService.processJson(json)).thenThrow(customException);
+
+        ResponseEntity<?> responseEntity = validationRest.processJson(json, correlationId);
+
+        assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+        assertEquals("Invalid JSON format", responseEntity.getBody());
+
+        verify(validationService).processJson(json);
+        verifyNoInteractions(importClientService);
+    }
+
+    @Test
+    public void testProcessJson_OtherException() throws CustomException {
+        String json = "your-json";
+        String correlationId = "your-correlation-id";
+        Exception exception = new Exception("Some other exception");
+        // Set up mock behavior
+        when(validationService.processJson(json)).thenReturn(json);
+        when(importClientService.importClient(json, correlationId)).thenThrow(exception);
+
+        ResponseEntity<?> responseEntity = validationRest.processJson(json, correlationId);
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, responseEntity.getStatusCode());
+        assertEquals("Invalid JSON format", responseEntity.getBody()); // Adjust the expected message accordingly
+
+        verify(validationService).processJson(json);
+        verify(importClientService).importClient(json, correlationId);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.ImportClientServiceImp;
+import uk.co.allianz.rap.lc.service.ValidationServiceImpl;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
