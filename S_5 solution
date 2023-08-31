@@ -1,3 +1,56 @@
+@Test
+void testImportResponseHandling() throws CustomException {
+    String json = "valid JSON here";
+    ImportClientResponse importClientResponse = new ImportClientResponse();
+    Result result = new Result();
+    result.setSuccess(true);
+    importClientResponse.setResult(result);
+    
+    when(validationService.processJson(any())).thenReturn(json);
+    when(importClientService.importClient(any(), any())).thenReturn(importClientResponse);
+
+    ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+    assertEquals(HttpStatus.OK, response.getStatusCode());
+    // Check that the log messages are as expected
+    // More assertions as needed
+}
+
+@Test
+void testImportResponseHandlingWithError() throws CustomException {
+    String json = "valid JSON here";
+    ImportClientResponse importClientResponse = new ImportClientResponse();
+    Result result = new Result();
+    result.setSuccess(false);
+    
+    // Simulate an error list
+    ArrayList<Object> errors = new ArrayList<>();
+    errors.add("Error 1");
+    errors.add("Error 2");
+    result.setErrors(errors);
+    
+    importClientResponse.setResult(result);
+    
+    when(validationService.processJson(any())).thenReturn(json);
+    when(importClientService.importClient(any(), any())).thenReturn(importClientResponse);
+
+    ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+    assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
+    // Check that the log messages are as expected
+    // More assertions as needed
+}
+
+
+
+
+
+
+
+
+
+
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
