@@ -1,3 +1,734 @@
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.ImportClientServiceImp;
+import uk.co.allianz.rap.lc.service.ValidationServiceImpl;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+
+class ValidationRestTest29 {
+
+    private ValidationServiceImpl validationService;
+    private ImportClientServiceImp importClientService;
+    private ValidationRest validationRest;
+
+    @BeforeEach
+    void setUp() {
+        validationService = new ValidationServiceImpl();
+        importClientService = new ImportClientServiceImp();
+        validationRest = new ValidationRest(validationService);
+        importClientService.setValidationServiceImpl(validationService);
+    }
+
+    @Test
+    void testValidJsonAndSuccessfulImport() throws CustomException {
+        String json = "valid JSON here";
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        importClientResponse.setResult(/* set result here */);
+
+        String validateInput = validationService.processJson(json);
+        ImportClientResponse processedJson = importClientService.importClient(validateInput, "correlationId");
+
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertEquals(processedJson, response.getBody());
+        // More assertions as needed
+    }
+
+    @Test
+    void testEmptyJson() {
+        String json = "";
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        // More assertions as needed
+    }
+
+    @Test
+    void testCustomException() throws CustomException {
+        String json = "valid JSON here";
+        String errorMessage = "Custom exception";
+        validationService = new ValidationServiceImpl() {
+            @Override
+            public String processJson(String json) throws CustomException {
+                throw new CustomException(errorMessage);
+            }
+        };
+        validationRest = new ValidationRest(validationService);
+
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        assertEquals(errorMessage, response.getBody());
+        // More assertions as needed
+    }
+
+    @Test
+    void testOtherException() throws CustomException {
+        String json = "valid JSON here";
+        String errorMessage = "Invalid JSON format";
+        importClientService = new ImportClientServiceImp() {
+            @Override
+            public ImportClientResponse importClient(String json, String correlationId) {
+                throw new RuntimeException();
+            }
+        };
+        importClientService.setValidationServiceImpl(validationService);
+        validationRest = new ValidationRest(validationService);
+
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        assertEquals(errorMessage, response.getBody());
+        // More assertions as needed
+    }
+
+    // Add more test cases to cover different scenarios
+
+    // Test cases to cover logging statements and different branches
+}
+
+
+
+
+
+import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.ImportClientServiceImp;
+import uk.co.allianz.rap.lc.service.ValidationServiceImpl;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class ValidationRestTest27 {
+
+    @Test
+    void testValidJsonAndSuccessfulImport() throws CustomException {
+        String json = "valid JSON here";
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        importClientResponse.setResult(/* set result here */);
+
+        ValidationServiceImpl validationService = new ValidationServiceImpl();
+        ImportClientServiceImp importClientService = new ImportClientServiceImp();
+
+        ValidationRest validationRest = new ValidationRest(validationService);
+        validationRest.importClientServiceImp = importClientService;
+
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        // More assertions as needed
+    }
+
+    @Test
+    void testEmptyJson() {
+        String json = "";
+
+        ValidationServiceImpl validationService = new ValidationServiceImpl();
+        ImportClientServiceImp importClientService = new ImportClientServiceImp();
+
+        ValidationRest validationRest = new ValidationRest(validationService);
+        validationRest.importClientServiceImp = importClientService;
+
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        // More assertions as needed
+    }
+
+    @Test
+    void testCustomException() {
+        String json = "valid JSON here";
+
+        ValidationServiceImpl validationService = new ValidationServiceImpl();
+        ImportClientServiceImp importClientService = new ImportClientServiceImp();
+
+        ValidationRest validationRest = new ValidationRest(validationService);
+        validationRest.importClientServiceImp = importClientService;
+
+        assertThrows(CustomException.class, () -> validationRest.processJson(json, "correlationId"));
+    }
+
+    @Test
+    void testOtherException() throws CustomException {
+        String json = "valid JSON here";
+
+        ValidationServiceImpl validationService = new ValidationServiceImpl();
+        ImportClientServiceImp importClientService = new ImportClientServiceImp() {
+            @Override
+            public ImportClientResponse importClient(String json, String correlationId) throws CustomException {
+                throw new RuntimeException();
+            }
+        };
+
+        ValidationRest validationRest = new ValidationRest(validationService);
+        validationRest.importClientServiceImp = importClientService;
+
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        // More assertions as needed
+    }
+
+    // Add more test cases to cover different scenarios
+
+    // Test cases to cover logging statements and different branches
+}
+
+
+
+
+import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.ImportClientServiceImp;
+import uk.co.allianz.rap.lc.service.ValidationServiceImpl;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+
+class ValidationRestTest26 {
+
+    private static class ValidationServiceImplStub implements ValidationServiceImpl {
+        @Override
+        public String processJson(String json) {
+            return json; // Simple stub implementation
+        }
+    }
+
+    private static class ImportClientServiceStub implements ImportClientServiceImp {
+        @Override
+        public ImportClientResponse importClient(String json, String correlationId) {
+            ImportClientResponse response = new ImportClientResponse();
+            // Set response fields as needed for test cases
+            return response;
+        }
+    }
+
+    @Test
+    void testValidJsonAndSuccessfulImport() throws CustomException {
+        ValidationServiceImplStub validationServiceStub = new ValidationServiceImplStub();
+        ImportClientServiceStub importClientServiceStub = new ImportClientServiceStub();
+        ValidationRest validationRest = new ValidationRest(validationServiceStub, importClientServiceStub);
+
+        String json = "valid JSON here";
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        // Add assertions for response body or log messages if needed
+    }
+
+    @Test
+    void testEmptyJson() throws CustomException {
+        ValidationServiceImplStub validationServiceStub = new ValidationServiceImplStub();
+        ImportClientServiceStub importClientServiceStub = new ImportClientServiceStub();
+        ValidationRest validationRest = new ValidationRest(validationServiceStub, importClientServiceStub);
+
+        String json = "";
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        // Add assertions for response body or log messages if needed
+    }
+
+    @Test
+    void testCustomException() {
+        ValidationServiceImplStub validationServiceStub = new ValidationServiceImplStub() {
+            @Override
+            public String processJson(String json) throws CustomException {
+                throw new CustomException("Custom exception");
+            }
+        };
+        ImportClientServiceStub importClientServiceStub = new ImportClientServiceStub();
+        ValidationRest validationRest = new ValidationRest(validationServiceStub, importClientServiceStub);
+
+        String json = "valid JSON here";
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        // Add assertions for response body or log messages if needed
+    }
+
+    // Add more test cases to cover different scenarios
+
+    // Test cases to cover logging statements and different branches
+}
+
+
+
+
+///////////////////
+import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.log.LogType;
+import uk.co.allianz.rap.lc.log.LogContext;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.ImportClientServiceImp;
+import uk.co.allianz.rap.lc.service.ValidationServiceImpl;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+
+class ValidationRestTest24 {
+
+    private static class ValidationServiceImplStub implements ValidationServiceImpl {
+        @Override
+        public String processJson(String json) {
+            return json; // Simple stub implementation
+        }
+    }
+
+    private static class ImportClientServiceStub implements ImportClientServiceImp {
+        @Override
+        public ImportClientResponse importClient(String json, String correlationId) {
+            ImportClientResponse response = new ImportClientResponse();
+            Result result = new Result();
+            response.setResult(result);
+            return response;
+        }
+    }
+
+    @Test
+    void testValidJsonAndSuccessfulImport() throws CustomException {
+        ValidationServiceImplStub validationServiceStub = new ValidationServiceImplStub();
+        ImportClientServiceStub importClientServiceStub = new ImportClientServiceStub();
+        ValidationRest validationRest = new ValidationRest(validationServiceStub, importClientServiceStub);
+
+        String json = "valid JSON here";
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+    }
+
+    @Test
+    void testEmptyJson() {
+        ValidationServiceImplStub validationServiceStub = new ValidationServiceImplStub();
+        ImportClientServiceStub importClientServiceStub = new ImportClientServiceStub();
+        ValidationRest validationRest = new ValidationRest(validationServiceStub, importClientServiceStub);
+
+        String json = "";
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void testCustomException() {
+        ValidationServiceImplStub validationServiceStub = new ValidationServiceImplStub() {
+            @Override
+            public String processJson(String json) throws CustomException {
+                throw new CustomException("Custom exception");
+            }
+        };
+        ImportClientServiceStub importClientServiceStub = new ImportClientServiceStub();
+        ValidationRest validationRest = new ValidationRest(validationServiceStub, importClientServiceStub);
+
+        String json = "valid JSON here";
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void testOtherException() {
+        ValidationServiceImplStub validationServiceStub = new ValidationServiceImplStub() {
+            @Override
+            public String processJson(String json) throws Exception {
+                throw new Exception("Other exception");
+            }
+        };
+        ImportClientServiceStub importClientServiceStub = new ImportClientServiceStub();
+        ValidationRest validationRest = new ValidationRest(validationServiceStub, importClientServiceStub);
+
+        String json = "valid JSON here";
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    }
+
+    @Test
+    void testImportSuccessWithSuccessResponse() throws CustomException {
+        ValidationServiceImplStub validationServiceStub = new ValidationServiceImplStub();
+        ImportClientServiceStub importClientServiceStub = new ImportClientServiceStub() {
+            @Override
+            public ImportClientResponse importClient(String json, String correlationId) {
+                ImportClientResponse response = new ImportClientResponse();
+                Result result = new Result();
+                result.setSuccess(true);
+                response.setResult(result);
+                return response;
+            }
+        };
+        ValidationRest validationRest = new ValidationRest(validationServiceStub, importClientServiceStub);
+
+        String json = "valid JSON here";
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertTrue(response.getBody().toString().contains("imported Successfully"));
+    }
+
+    @Test
+    void testImportFailureWithErrorResponse() throws CustomException {
+        ValidationServiceImplStub validationServiceStub = new ValidationServiceImplStub();
+        ImportClientServiceStub importClientServiceStub = new ImportClientServiceStub() {
+            @Override
+            public ImportClientResponse importClient(String json, String correlationId) {
+                ImportClientResponse response = new ImportClientResponse();
+                Result result = new Result();
+                result.setSuccess(false);
+                ArrayList<Object> errors = new ArrayList<>();
+                errors.add("Error 1");
+                result.setErrors(errors);
+                response.setResult(result);
+                return response;
+            }
+        };
+        ValidationRest validationRest = new ValidationRest(validationServiceStub, importClientServiceStub);
+
+        String json = "valid JSON here";
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
+        assertTrue(response.getBody().toString().contains("Error: [Error 1]"));
+    }
+
+    // Test cases to cover logging statements and different branches
+}
+
+
+
+import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.ImportClientServiceImp;
+import uk.co.allianz.rap.lc.service.ValidationServiceImpl;
+
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+
+class ValidationRestTest23 {
+
+    private static class ValidationServiceImplStub implements ValidationServiceImpl {
+        @Override
+        public String processJson(String json) {
+            return json;
+        }
+    }
+
+    private static class ImportClientServiceStub implements ImportClientServiceImp {
+        @Override
+        public ImportClientResponse importClient(String json, String correlationId) {
+            ImportClientResponse response = new ImportClientResponse();
+            // Set response fields as needed for test cases
+            return response;
+        }
+    }
+
+    @Test
+    void testValidJsonAndSuccessfulImport() throws CustomException {
+        ValidationServiceImplStub validationServiceStub = new ValidationServiceImplStub();
+        ImportClientServiceStub importClientServiceStub = new ImportClientServiceStub();
+        ValidationRest validationRest = new ValidationRest(validationServiceStub, importClientServiceStub);
+
+        String json = "valid JSON here";
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        // Add assertions for response body or log messages if needed
+    }
+
+    @Test
+    void testEmptyJson() throws CustomException {
+        ValidationServiceImplStub validationServiceStub = new ValidationServiceImplStub();
+        ImportClientServiceStub importClientServiceStub = new ImportClientServiceStub();
+        ValidationRest validationRest = new ValidationRest(validationServiceStub, importClientServiceStub);
+
+        String json = "";
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        // Add assertions for response body or log messages if needed
+    }
+
+    @Test
+    void testCustomException() {
+        ValidationServiceImplStub validationServiceStub = new ValidationServiceImplStub() {
+            @Override
+            public String processJson(String json) throws CustomException {
+                throw new CustomException("Custom exception");
+            }
+        };
+        ImportClientServiceStub importClientServiceStub = new ImportClientServiceStub();
+        ValidationRest validationRest = new ValidationRest(validationServiceStub, importClientServiceStub);
+
+        String json = "valid JSON here";
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        // Add assertions for response body or log messages if needed
+    }
+
+    @Test
+    void testExceptionInImport() {
+        ValidationServiceImplStub validationServiceStub = new ValidationServiceImplStub();
+        ImportClientServiceStub importClientServiceStub = new ImportClientServiceStub() {
+            @Override
+            public ImportClientResponse importClient(String json, String correlationId) {
+                throw new RuntimeException("Something went wrong during import");
+            }
+        };
+        ValidationRest validationRest = new ValidationRest(validationServiceStub, importClientServiceStub);
+
+        String json = "valid JSON here";
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        // Add assertions for response body or log messages if needed
+    }
+
+    // Test cases to cover other branches, logging, etc.
+}
+
+
+
+import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.service.ImportClientServiceImp;
+import uk.co.allianz.rap.lc.service.ValidationServiceImpl;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+
+class ValidationRestTest22 {
+
+    @Test
+    void testValidJsonAndSuccessfulImport() throws CustomException {
+        ValidationServiceImpl validationService = new ValidationServiceImpl();
+        ImportClientServiceImp importClientService = new ImportClientServiceImp();
+        ValidationRest validationRest = new ValidationRest(validationService, importClientService);
+
+        String json = "{\"key\": \"value\"}";
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+    }
+
+    @Test
+    void testEmptyJson() {
+        ValidationServiceImpl validationService = new ValidationServiceImpl();
+        ImportClientServiceImp importClientService = new ImportClientServiceImp();
+        ValidationRest validationRest = new ValidationRest(validationService, importClientService);
+
+        String json = "";
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void testCustomException() {
+        ValidationServiceImpl validationService = new ValidationServiceImpl() {
+            @Override
+            public String processJson(String json) throws CustomException {
+                throw new CustomException("Custom exception");
+            }
+        };
+        ImportClientServiceImp importClientService = new ImportClientServiceImp();
+        ValidationRest validationRest = new ValidationRest(validationService, importClientService);
+
+        String json = "{\"key\": \"value\"}";
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+    }
+
+    @Test
+    void testOtherException() {
+        ValidationServiceImpl validationService = new ValidationServiceImpl();
+        ImportClientServiceImp importClientService = new ImportClientServiceImp() {
+            @Override
+            public ImportClientResponse importClient(String json, String correlationId) {
+                throw new RuntimeException("Other exception");
+            }
+        };
+        ValidationRest validationRest = new ValidationRest(validationService, importClientService);
+
+        String json = "{\"key\": \"value\"}";
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+    }
+}
+
+
+
+
+import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.ImportClientServiceImp;
+import uk.co.allianz.rap.lc.service.ValidationServiceImpl;
+
+import static org.junit.jupiter.api.Assertions.*;
+
+class ValidationRestTest21 {
+
+    private static class ValidationServiceImplStub implements ValidationServiceImpl {
+        @Override
+        public String processJson(String json) {
+            return json;
+        }
+    }
+
+    private static class ImportClientServiceStub implements ImportClientServiceImp {
+        @Override
+        public ImportClientResponse importClient(String json, String correlationId) {
+            ImportClientResponse response = new ImportClientResponse();
+            // Set response fields as needed for test cases
+            return response;
+        }
+    }
+
+    @Test
+    void testValidJsonAndSuccessfulImport() throws CustomException {
+        ValidationServiceImplStub validationServiceStub = new ValidationServiceImplStub();
+        ImportClientServiceStub importClientServiceStub = new ImportClientServiceStub();
+        ValidationRest validationRest = new ValidationRest(validationServiceStub, importClientServiceStub);
+
+        String json = "valid JSON here";
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        // Add assertions for response body or log messages if needed
+    }
+
+    @Test
+    void testEmptyJson() {
+        ValidationServiceImplStub validationServiceStub = new ValidationServiceImplStub();
+        ImportClientServiceStub importClientServiceStub = new ImportClientServiceStub();
+        ValidationRest validationRest = new ValidationRest(validationServiceStub, importClientServiceStub);
+
+        String json = "";
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        // Add assertions for response body or log messages if needed
+    }
+
+    @Test
+    void testCustomException() {
+        ValidationServiceImplStub validationServiceStub = new ValidationServiceImplStub() {
+            @Override
+            public String processJson(String json) throws CustomException {
+                throw new CustomException("Custom exception");
+            }
+        };
+        ImportClientServiceStub importClientServiceStub = new ImportClientServiceStub();
+        ValidationRest validationRest = new ValidationRest(validationServiceStub, importClientServiceStub);
+
+        String json = "valid JSON here";
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.BAD_REQUEST, response.getStatusCode());
+        // Add assertions for response body or log messages if needed
+    }
+
+    @Test
+    void testOtherException() {
+        ValidationServiceImplStub validationServiceStub = new ValidationServiceImplStub() {
+            @Override
+            public String processJson(String json) throws CustomException {
+                throw new RuntimeException("Other exception");
+            }
+        };
+        ImportClientServiceStub importClientServiceStub = new ImportClientServiceStub();
+        ValidationRest validationRest = new ValidationRest(validationServiceStub, importClientServiceStub);
+
+        String json = "valid JSON here";
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
+        // Add assertions for response body or log messages if needed
+    }
+
+    @Test
+    void testImportResponseHandlingSuccess() throws CustomException {
+        ValidationServiceImplStub validationServiceStub = new ValidationServiceImplStub();
+        ImportClientServiceStub importClientServiceStub = new ImportClientServiceStub() {
+            @Override
+            public ImportClientResponse importClient(String json, String correlationId) {
+                ImportClientResponse response = new ImportClientResponse();
+                Result result = new Result();
+                result.setSuccess(true);
+                response.setResult(result);
+                return response;
+            }
+        };
+        ValidationRest validationRest = new ValidationRest(validationServiceStub, importClientServiceStub);
+
+        String json = "valid JSON here";
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        // Add assertions for response body or log messages if needed
+    }
+
+    @Test
+    void testImportResponseHandlingError() throws CustomException {
+        ValidationServiceImplStub validationServiceStub = new ValidationServiceImplStub();
+        ImportClientServiceStub importClientServiceStub = new ImportClientServiceStub() {
+            @Override
+            public ImportClientResponse importClient(String json, String correlationId) {
+                ImportClientResponse response = new ImportClientResponse();
+                Result result = new Result();
+                result.setSuccess(false);
+                // Simulate an error list
+                ArrayList<Object> errors = new ArrayList<>();
+                errors.add("Error 1");
+                errors.add("Error 2");
+                result.setErrors(errors);
+                response.setResult(result);
+                return response;
+            }
+        };
+        ValidationRest validationRest = new ValidationRest(validationServiceStub, importClientServiceStub);
+
+        String json = "valid JSON here";
+        ResponseEntity<?> response = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, response.getStatusCode());
+        // Add assertions for response body or log messages if needed
+    }
+}
+
+
+
+
+/////////////
+
+
+
+
+
 @Test
 void testImportResponseHandling() throws CustomException {
     String json = "valid JSON here";
