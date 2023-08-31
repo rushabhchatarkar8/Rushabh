@@ -8,6 +8,121 @@ import uk.co.allianz.rap.lc.service.ImportClientServiceImp;
 import uk.co.allianz.rap.lc.service.ValidationServiceImpl;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
+class ValidationRestTest {
+
+    private ValidationServiceImpl validationService;
+    private ImportClientServiceImp importClientService;
+    private ValidationRest validationRest;
+
+    @BeforeEach
+    void setUp() {
+        validationService = mock(ValidationServiceImpl.class);
+        importClientService = mock(ImportClientServiceImp.class);
+        validationRest = new ValidationRest(validationService, importClientService);
+    }
+
+    @Test
+    void testValidJsonAndSuccessfulImport() throws CustomException {
+        String json = "valid JSON here";
+        ImportClientResponse response = new ImportClientResponse();
+        Result result = new Result();
+        result.setSuccess(true);
+        response.setResult(result);
+
+        when(validationService.processJson(json)).thenReturn(json);
+        when(importClientService.importClient(json, "correlationId")).thenReturn(response);
+
+        ResponseEntity<?> actualResponse = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.OK, actualResponse.getStatusCode());
+        assertNotNull(actualResponse.getBody());
+    }
+
+    @Test
+    void testEmptyJson() {
+        String json = "";
+
+        ResponseEntity<?> actualResponse = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.BAD_REQUEST, actualResponse.getStatusCode());
+        assertEquals("JSON is empty", actualResponse.getBody());
+    }
+
+    @Test
+    void testCustomException() throws CustomException {
+        String json = "valid JSON here";
+
+        when(validationService.processJson(json)).thenThrow(new CustomException("Custom exception"));
+
+        ResponseEntity<?> actualResponse = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.BAD_REQUEST, actualResponse.getStatusCode());
+        assertEquals("Custom exception", actualResponse.getBody());
+    }
+
+    @Test
+    void testOtherException() throws CustomException {
+        String json = "valid JSON here";
+
+        when(validationService.processJson(json)).thenThrow(new RuntimeException("Other exception"));
+
+        ResponseEntity<?> actualResponse = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, actualResponse.getStatusCode());
+        assertEquals("Invalid JSON format", actualResponse.getBody());
+    }
+
+    @Test
+    void testImportFailureWithErrorResponse() throws CustomException {
+        String json = "valid JSON here";
+        ImportClientResponse response = new ImportClientResponse();
+        Result result = new Result();
+        result.setSuccess(false);
+        ArrayList<Object> errors = new ArrayList<>();
+        errors.add("Error 1");
+        result.setErrors(errors);
+        response.setResult(result);
+
+        when(validationService.processJson(json)).thenReturn(json);
+        when(importClientService.importClient(json, "correlationId")).thenReturn(response);
+
+        ResponseEntity<?> actualResponse = validationRest.processJson(json, "correlationId");
+
+        assertEquals(HttpStatus.UNPROCESSABLE_ENTITY, actualResponse.getStatusCode());
+        assertTrue(actualResponse.getBody().toString().contains("Error: [Error 1]"));
+    }
+
+    // Test cases to cover logging statements and different branches
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.ImportClientServiceImp;
+import uk.co.allianz.rap.lc.service.ValidationServiceImpl;
+
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 
 class ValidationRestTest29 {
