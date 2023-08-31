@@ -1,4 +1,111 @@
-    public ImportClientResponse importClient(final String json, final String correlationId) throws CustomException, JsonProcessingException {
+package uk.co.allianz.rap.lc.rest;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RestController;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.log.LogContext;
+import uk.co.allianz.rap.lc.log.LogType;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.ImportClientServiceImp;
+import uk.co.allianz.rap.lc.service.ValidationServiceImpl;
+import ch.qos.logback.classic.Logger;
+import org.slf4j.LoggerFactory;
+
+@RestController
+public class ValidationRest {
+    private static final Logger LOGGER = (Logger) LoggerFactory
+            .getLogger(ValidationRest.class);
+    @Autowired
+    private ValidationServiceImpl validationServiceImpl;
+    @Autowired
+    private ImportClientServiceImp importClientServiceImp;
+
+    public ValidationRest(final ValidationServiceImpl validationServiceImpl) {
+        this.validationServiceImpl = validationServiceImpl;
+    }
+
+    /***
+     * Build the end point/Resource path: POST: surveySubmission
+     *     Build standard JSON validation on incoming data
+     *     Consumed the correlation id.
+     */
+    @PostMapping(path = "/survey-submission", consumes = MediaType.APPLICATION_JSON_VALUE, produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> processJson(@RequestBody(required = false) final String json, @RequestHeader("Correlation-ID") final String correlationId) {
+        if (json == null || json.isEmpty()) {
+            // JSON is empty or not present
+            LOGGER.info("JSON is empty");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("JSON is empty");
+        }
+        try {
+            //for validate JSON
+            String validateInput = validationServiceImpl.processJson(json);
+            //For import only client
+            ImportClientResponse processedJson = importClientServiceImp.importClient(validateInput, correlationId);
+            //checking processedJson is not null processedJson.getResult() is also not null
+            if (processedJson != null && processedJson.getResult() != null) {
+                if (processedJson.getResult().isSuccess()) {
+                    LOGGER.info(LogType.mark(LogContext.ACTION_TYPE, LogContext.IMPORT_CLIENT_REQUEST_SUCCESS), " client imported Successfully in LC360 {}", HttpStatus.OK.value());
+                } else {
+                    LOGGER.info("Error: " + processedJson.getResult().getErrors());
+                    LOGGER.info(" client imported Unsuccessfully in LC360 {}", HttpStatus.UNPROCESSABLE_ENTITY);
+                    return ResponseEntity.unprocessableEntity().body(processedJson.getResult().getErrors());
+                }
+            }
+            return ResponseEntity.ok(processedJson);
+        } catch (CustomException e) {
+            // Invalid JSON format or single value detected CustomException.
+            if (LOGGER.isErrorEnabled()) {
+                LOGGER.error(LogType.mark(LogContext.ACTION_TYPE, LogContext.IMPORT_CLIENT_REQUEST_FAILED), "Import Client request Failed in LC360 {}", HttpStatus.BAD_REQUEST.value());
+            }
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            // Other exceptions
+            LOGGER.error(LogType.mark(LogContext.ACTION_TYPE, LogContext.IMPORT_CLIENT_REQUEST_FAILED), "Invalid JSON: {} ", HttpStatus.INTERNAL_SERVER_ERROR.value());
+            return ResponseEntity.internalServerError().body("Invalid JSON format");
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+public ImportClientResponse importClient(final String json, final String correlationId) throws CustomException, JsonProcessingException {
             ImportClientRequest importClientRequest = objectMapper.readValue(json, ImportClientRequest.class);
         String oci=importClientRequest.getClient().getLookupID();
         ArrayList<Location> locations = importClientRequest.getClient().getLocations();
