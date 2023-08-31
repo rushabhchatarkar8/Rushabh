@@ -5,6 +5,106 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.service.ImportClientServiceImp;
+import uk.co.allianz.rap.lc.service.ValidationServiceImpl;
+
+import java.util.ArrayList;
+
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mockito.MockitoAnnotations.openMocks;
+
+class ValidationRestTest {
+
+    @Mock
+    private ValidationServiceImpl validationService;
+
+    @Mock
+    private ImportClientServiceImp importClientService;
+
+    @InjectMocks
+    private ValidationRest validationRest;
+
+    @BeforeEach
+    void setUp() {
+        openMocks(this);
+    }
+
+    @Test
+    void testProcessJson_Success() throws Exception {
+        // Mock behavior of validationService
+        when(validationService.processJson(anyString())).thenReturn("{\"valid\": true}");
+
+        // Mock behavior of importClientService
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        ImportClientResponse.Result result = new ImportClientResponse.Result(true, null);
+        importClientResponse.setResult(result);
+        when(importClientService.importClient("{\"valid\": true}", "correlationId"))
+            .thenReturn(importClientResponse);
+
+        // Execute the method
+        ResponseEntity<?> response = validationRest.processJson("{\"valid\": true}", "correlationId");
+
+        // Verify the response and interactions
+        assert response.getStatusCode() == HttpStatus.OK;
+        verify(importClientService).importClient("{\"valid\": true}", "correlationId");
+        // Add more assertions or verifications as needed
+    }
+
+    @Test
+    void testProcessJson_ValidationError() throws Exception {
+        // Mock behavior of validationService
+        when(validationService.processJson(anyString())).thenThrow(new CustomException("Invalid JSON"));
+
+        // Execute the method
+        ResponseEntity<?> response = validationRest.processJson("{\"invalid\": true}", "correlationId");
+
+        // Verify the response and interactions
+        assert response.getStatusCode() == HttpStatus.BAD_REQUEST;
+        verify(validationService).processJson("{\"invalid\": true}");
+        // Add more assertions or verifications as needed
+    }
+
+    @Test
+    void testProcessJson_ImportError() throws Exception {
+        // Mock behavior of validationService
+        when(validationService.processJson(anyString())).thenReturn("{\"valid\": true}");
+
+        // Mock behavior of importClientService
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        ArrayList<Object> errors = new ArrayList<>();
+        errors.add("Import error");
+        ImportClientResponse.Result result = new ImportClientResponse.Result(false, errors);
+        importClientResponse.setResult(result);
+        when(importClientService.importClient("{\"valid\": true}", "correlationId"))
+            .thenReturn(importClientResponse);
+
+        // Execute the method
+        ResponseEntity<?> response = validationRest.processJson("{\"valid\": true}", "correlationId");
+
+        // Verify the response and interactions
+        assert response.getStatusCode() == HttpStatus.UNPROCESSABLE_ENTITY;
+        verify(importClientService).importClient("{\"valid\": true}", "correlationId");
+        // Add more assertions or verifications as needed
+    }
+
+    // Add more test cases to cover other scenarios if needed
+}
+
+
+
+
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.Mockito;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
