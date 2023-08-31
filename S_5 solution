@@ -1,5 +1,87 @@
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.ResponseEntity;
+import uk.co.allianz.rap.lc.exception.CustomException;
+import uk.co.allianz.rap.lc.service.ImportClientServiceImp;
+import uk.co.allianz.rap.lc.service.ValidationServiceImpl;
+import uk.co.allianz.rap.lc.rest.ValidationRest;
+import uk.co.allianz.rap.lc.model.response.importclient.ImportClientResponse;
+import uk.co.allianz.rap.lc.model.response.importclient.Result;
+
+import java.util.ArrayList;
+
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.when;
+
+class ValidationRestTest {
+
+    @Mock
+    private ImportClientServiceImp importClientServiceImp;
+
+    @Mock
+    private ValidationServiceImpl validationServiceImpl;
+
+    private ValidationRest validationRest;
+
+    @BeforeEach
+    void setUp() {
+        MockitoAnnotations.openMocks(this);
+        validationRest = new ValidationRest(validationServiceImpl);
+    }
+
+    @Test
+    void testProcessJson_Success() throws Exception {
+        // Mock the behavior of validationService
+        String json = "{\"valid\": true}";
+        when(validationServiceImpl.processJson(anyString())).thenReturn(json);
+
+        // Mock the behavior of importClientServiceImp
+        String correlationId = "123";
+        ImportClientResponse importClientResponse = new ImportClientResponse();
+        Result result = new Result();
+        result.setSuccess(true);
+        result.setErrors(new ArrayList<>());
+        importClientResponse.setResult(result);
+        when(importClientServiceImp.importClient(json, correlationId)).thenReturn(importClientResponse);
+
+        // Execute the method
+        ResponseEntity<?> response = validationRest.processJson(json, correlationId);
+
+        // Add assertions based on the behavior you expect
+        // For example, assert the response status, content, etc.
+    }
+
+    @Test
+    void testProcessJson_CustomException() throws Exception {
+        // Mock the behavior of validationService to throw a CustomException
+        String json = "{\"invalid\": true}";
+        when(validationServiceImpl.processJson(anyString())).thenThrow(new CustomException("Invalid JSON"));
+
+        // Execute the method
+        ResponseEntity<?> response = validationRest.processJson(json, "123");
+
+        // Add assertions based on the behavior you expect when a CustomException is thrown
+    }
+
+    // Add more test cases to cover other scenarios
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
